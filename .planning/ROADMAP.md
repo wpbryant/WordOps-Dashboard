@@ -16,7 +16,7 @@ None
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Project setup, backend API skeleton, authentication system
+- [x] **Phase 1: Foundation** - Project setup, backend API skeleton, authentication system
 - [ ] **Phase 2: Site Management** - Sites list, detail view, create/update/delete operations
 - [ ] **Phase 3: Server Dashboard** - Netdata integration, service status, log viewer
 - [ ] **Phase 4: Deployment** - Nginx config, systemd service, production setup
@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01: Project scaffolding and backend setup
-- [ ] 01-02: JWT authentication system
+- [x] 01-02: JWT authentication system
 - [x] 01-03: WordOps CLI wrapper module
 
 ### Phase 2: Site Management
@@ -76,7 +76,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 2/3 | In progress | - |
+| 1. Foundation | 3/3 | Complete | 2026-01-17 |
 | 2. Site Management | 0/4 | Not started | - |
 | 3. Server Dashboard | 0/3 | Not started | - |
 | 4. Deployment | 0/2 | Not started | - |
