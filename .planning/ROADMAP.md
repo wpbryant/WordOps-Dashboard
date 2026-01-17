@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: TBD
 
 Plans:
-- [ ] 01-01: Project scaffolding and backend setup
+- [x] 01-01: Project scaffolding and backend setup
 - [ ] 01-02: JWT authentication system
 - [ ] 01-03: WordOps CLI wrapper module
 
@@ -76,7 +76,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/3 | Not started | - |
+| 1. Foundation | 1/3 | In progress | - |
 | 2. Site Management | 0/4 | Not started | - |
 | 3. Server Dashboard | 0/3 | Not started | - |
 | 4. Deployment | 0/2 | Not started | - |
