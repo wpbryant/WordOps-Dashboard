@@ -1,8 +1,11 @@
 """WordOps Dashboard API - Main FastAPI application."""
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.auth.dependencies import get_current_user
+from backend.auth.models import User
+from backend.auth.routes import router as auth_router
 from backend.config import settings
 
 app = FastAPI(
@@ -31,3 +34,16 @@ async def health_check() -> dict:
 async def api_health_check() -> dict:
     """API versioned health check endpoint."""
     return {"status": "healthy", "version": "0.1.0"}
+
+
+# Include authentication routes
+app.include_router(auth_router)
+
+
+@app.get("/api/v1/protected")
+async def protected_endpoint(current_user: User = Depends(get_current_user)) -> dict:
+    """Protected endpoint requiring authentication.
+
+    Requires valid JWT token in Authorization header.
+    """
+    return {"message": "Access granted", "user": current_user.username}
