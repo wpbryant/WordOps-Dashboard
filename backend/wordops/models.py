@@ -53,3 +53,19 @@ class CreateSiteRequest(BaseModel):
         """Pydantic model configuration."""
 
         use_enum_values = True
+
+
+class UpdateSiteRequest(BaseModel):
+    """Request body for updating site settings.
+
+    All fields are optional - only provided fields will be updated.
+    """
+
+    ssl: bool | None = None  # Enable/disable SSL
+    cache: CacheType | None = None  # Change cache type
+    php_version: str | None = None  # Change PHP version
+
+    class Config:
+        """Pydantic model configuration."""
+
+        use_enum_values = True
