@@ -5,32 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Site management through a web UI — create, configure, and delete sites without touching the command line.
-**Current focus:** Phase 1 — Foundation
+**Current focus:** Phase 2 — Site Management
 
 ## Current Position
 
-Phase: 1 of 4 (Foundation)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-01-17 — Completed 01-02-PLAN.md
+Phase: 2 of 4 (Site Management)
+Plan: 1 of 4 in current phase
+Status: In progress
+Last activity: 2026-01-18 — Completed 02-01-PLAN.md
 
-Progress: ███░░░░░░░ 25%
+Progress: ████░░░░░░ 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 3 min
-- Total execution time: 0.13 hours
+- Total plans completed: 4
+- Average duration: 2.5 min
+- Total execution time: 0.17 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 8 min | 2.7 min |
+| 02-site-management | 1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (2 min), 01-02 (2 min), 01-03 (4 min)
+- Last 5 plans: 01-01 (2 min), 01-02 (2 min), 01-03 (4 min), 02-01 (2 min)
 - Trend: —
 
 ## Accumulated Context
@@ -47,6 +48,8 @@ Recent decisions affecting current work:
 - **OAuth2 form login**: Standard OAuth2PasswordRequestForm (01-02) - Swagger UI compatibility
 - **CLI execution**: asyncio.create_subprocess_exec with list args (01-03) - Security against command injection
 - **Domain validation**: Strict allowlist pattern for domain names (01-03) - Prevent shell injection
+- **Query param alias**: Use 'type' alias for site_type in API (02-01) - Clean API interface
+- **Error handling**: 503 Service Unavailable for WordOpsError (02-01) - Indicates backend CLI issue
 
 ### Deferred Issues
 
@@ -58,6 +61,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-17T23:11:10Z
-Stopped at: Completed 01-02-PLAN.md (Phase 1 complete)
+Last session: 2026-01-18T01:55:39Z
+Stopped at: Completed 02-01-PLAN.md
 Resume file: None
