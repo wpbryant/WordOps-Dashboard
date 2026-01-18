@@ -5,33 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Site management through a web UI — create, configure, and delete sites without touching the command line.
-**Current focus:** Phase 2 — Site Management
+**Current focus:** Phase 2 — Site Management (Complete)
 
 ## Current Position
 
 Phase: 2 of 4 (Site Management)
-Plan: 3 of 4 in current phase
-Status: In progress
-Last activity: 2026-01-18 — Completed 02-03-PLAN.md
+Plan: 4 of 4 in current phase
+Status: Phase complete
+Last activity: 2026-01-18 — Completed 02-04-PLAN.md
 
-Progress: ██████░░░░ 50%
+Progress: ███████░░░ 58%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 2.2 min
-- Total execution time: 0.21 hours
+- Total plans completed: 7
+- Average duration: 2.3 min
+- Total execution time: 0.27 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 8 min | 2.7 min |
-| 02-site-management | 3 | 5 min | 1.7 min |
+| 02-site-management | 4 | 8 min | 2.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-03 (4 min), 02-01 (2 min), 02-02 (1 min), 02-03 (2 min)
+- Last 5 plans: 02-01 (2 min), 02-02 (1 min), 02-03 (2 min), 02-04 (3 min)
 - Trend: stable
 
 ## Accumulated Context
@@ -54,6 +54,9 @@ Recent decisions affecting current work:
 - **None for 404**: Return None from sites.py for not found, convert to 404 in routes (02-02) - Clean separation
 - **Site creation timeout**: 300s for create operations (02-03) - Operations take significant time
 - **Cache flag mapping**: Both REDIS and WPREDIS map to --wpredis (02-03) - WordOps CLI behavior
+- **Confirmation for DELETE**: Required confirm=true query param prevents accidental deletions (02-04)
+- **Separate update commands**: WordOps CLI uses separate commands for SSL, cache, PHP (02-04)
+- **Update timeout 120s**: Reasonable timeout for SSL/cache/PHP changes (02-04)
 
 ### Deferred Issues
 
@@ -65,6 +68,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-18T02:01:00Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-01-18T13:09:17Z
+Stopped at: Completed 02-04-PLAN.md
 Resume file: None
