@@ -354,3 +354,106 @@ async def create_site(
         )
 
     return site
+
+
+async def update_site(
+    domain: str,
+    ssl: bool | None = None,
+    cache: CacheType | None = None,
+    php_version: str | None = None,
+) -> Site:
+    """
+    Update an existing WordOps site.
+
+    Args:
+        domain: The domain name of the site
+        ssl: Enable (True) or disable (False) SSL, or None to skip
+        cache: New cache type, or None to skip
+        php_version: New PHP version, or None to skip
+
+    Returns:
+        Updated Site object
+
+    Raises:
+        ValueError: If domain validation fails or site not found
+        CommandFailedError: If update fails
+    """
+    if not validate_domain(domain):
+        raise ValueError(f"Invalid domain name: {domain}")
+
+    # Verify site exists first
+    existing = await get_site_info(domain)
+    if existing is None:
+        raise ValueError(f"Site not found: {domain}")
+
+    # Build update commands - WordOps uses separate commands for different updates
+    commands_to_run = []
+
+    # SSL toggle
+    if ssl is not None:
+        if ssl and not existing.ssl:
+            # Enable SSL
+            commands_to_run.append(["site", "update", domain, "--letsencrypt"])
+        elif not ssl and existing.ssl:
+            # Disable SSL (remove letsencrypt)
+            commands_to_run.append(["site", "update", domain, "--letsencrypt=off"])
+
+    # Cache change
+    if cache is not None:
+        cache_flags = {
+            CacheType.NONE: "--wpfc=off",  # Disable cache
+            CacheType.WPFC: "--wpfc",
+            CacheType.WPSC: "--wpsc",
+            CacheType.WPREDIS: "--wpredis",
+            CacheType.REDIS: "--wpredis",
+        }
+        if cache in cache_flags:
+            commands_to_run.append(["site", "update", domain, cache_flags[cache]])
+
+    # PHP version change
+    if php_version is not None:
+        if not re.match(r"^\d+\.\d+$", php_version):
+            raise ValueError(f"Invalid PHP version format: {php_version}")
+        commands_to_run.append(["site", "update", domain, f"--php={php_version}"])
+
+    # Execute all update commands
+    for args in commands_to_run:
+        await run_command(args, timeout=120)
+
+    # Return updated site info
+    updated = await get_site_info(domain)
+    return updated if updated else existing
+
+
+async def delete_site(domain: str, force: bool = False) -> bool:
+    """
+    Delete a WordOps site.
+
+    Args:
+        domain: The domain name of the site to delete
+        force: If True, skip confirmation (required for API)
+
+    Returns:
+        True if deletion was successful
+
+    Raises:
+        ValueError: If domain validation fails or site not found
+        CommandFailedError: If deletion fails
+    """
+    if not validate_domain(domain):
+        raise ValueError(f"Invalid domain name: {domain}")
+
+    # Verify site exists first
+    existing = await get_site_info(domain)
+    if existing is None:
+        raise ValueError(f"Site not found: {domain}")
+
+    # Build delete command
+    # --no-prompt skips confirmation, --files removes site files
+    args = ["site", "delete", domain, "--no-prompt"]
+    if force:
+        args.append("--files")  # Also remove site files
+
+    await run_command(args, timeout=60)
+
+    return True
