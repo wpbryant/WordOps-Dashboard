@@ -17,7 +17,7 @@ None
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - Project setup, backend API skeleton, authentication system
-- [ ] **Phase 2: Site Management** - Sites list, detail view, create/update/delete operations
+- [x] **Phase 2: Site Management** - Sites list, detail view, create/update/delete operations
 - [ ] **Phase 3: Server Dashboard** - Netdata integration, service status, log viewer
 - [ ] **Phase 4: Deployment** - Nginx config, systemd service, production setup
 
@@ -42,10 +42,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 02-01-PLAN.md - Sites API router with list endpoint and filtering
-- [ ] 02-02-PLAN.md - Site detail endpoint for single site info
-- [ ] 02-03-PLAN.md - Create site CLI wrapper and POST endpoint
-- [ ] 02-04-PLAN.md - Update and delete site operations
+- [x] 02-01: Sites API router with list endpoint and filtering
+- [x] 02-02: Site detail endpoint for single site info
+- [x] 02-03: Create site CLI wrapper and POST endpoint
+- [x] 02-04: Update and delete site operations
 
 ### Phase 3: Server Dashboard
 **Goal**: Server monitoring with Netdata metrics and log viewing
@@ -77,6 +77,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-01-17 |
-| 2. Site Management | 0/4 | Planned | - |
+| 2. Site Management | 4/4 | Complete | 2026-01-18 |
 | 3. Server Dashboard | 0/3 | Not started | - |
 | 4. Deployment | 0/2 | Not started | - |
