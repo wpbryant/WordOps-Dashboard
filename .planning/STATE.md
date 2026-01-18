@@ -10,29 +10,29 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 2 of 4 (Site Management)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-18 — Completed 02-01-PLAN.md
+Last activity: 2026-01-18 — Completed 02-02-PLAN.md
 
-Progress: ████░░░░░░ 33%
+Progress: █████░░░░░ 42%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 2.5 min
-- Total execution time: 0.17 hours
+- Total plans completed: 5
+- Average duration: 2.2 min
+- Total execution time: 0.18 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 8 min | 2.7 min |
-| 02-site-management | 1 | 2 min | 2 min |
+| 02-site-management | 2 | 3 min | 1.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (2 min), 01-02 (2 min), 01-03 (4 min), 02-01 (2 min)
-- Trend: —
+- Last 5 plans: 01-02 (2 min), 01-03 (4 min), 02-01 (2 min), 02-02 (1 min)
+- Trend: improving
 
 ## Accumulated Context
 
@@ -50,6 +50,8 @@ Recent decisions affecting current work:
 - **Domain validation**: Strict allowlist pattern for domain names (01-03) - Prevent shell injection
 - **Query param alias**: Use 'type' alias for site_type in API (02-01) - Clean API interface
 - **Error handling**: 503 Service Unavailable for WordOpsError (02-01) - Indicates backend CLI issue
+- **Domain validation first**: Validate domain format before calling get_site_info() (02-02) - Fail fast pattern
+- **None for 404**: Return None from sites.py for not found, convert to 404 in routes (02-02) - Clean separation
 
 ### Deferred Issues
 
@@ -61,6 +63,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-18T01:55:39Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-01-18T02:11:00Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None
