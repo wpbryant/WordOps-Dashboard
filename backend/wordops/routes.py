@@ -6,7 +6,7 @@ from backend.auth.dependencies import get_current_user
 from backend.auth.models import User
 from backend.wordops.exceptions import WordOpsError
 from backend.wordops.models import Site, SiteType
-from backend.wordops.sites import list_sites
+from backend.wordops.sites import get_site_info, list_sites, validate_domain
 
 router = APIRouter(prefix="/api/v1/sites", tags=["sites"])
 
@@ -51,3 +51,51 @@ async def get_sites(
         sites = [s for s in sites if search.lower() in s.name.lower()]
 
     return sites
+
+
+@router.get("/{domain}", response_model=Site)
+async def get_site(
+    domain: str,
+    current_user: User = Depends(get_current_user),
+) -> Site:
+    """Get detailed information about a specific site.
+
+    Args:
+        domain: The domain name of the site
+
+    Returns:
+        Site object with full details
+
+    Raises:
+        400: Invalid domain format
+        404: Site not found
+        503: WordOps command failed
+    """
+    # Validate domain format
+    if not validate_domain(domain):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid domain format: {domain}",
+        )
+
+    try:
+        site = await get_site_info(domain)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except WordOpsError as e:
+        # WordOps command errors
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"WordOps error: {e.message}",
+        )
+
+    if site is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Site not found: {domain}",
+        )
+
+    return site
