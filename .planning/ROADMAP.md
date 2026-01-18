@@ -28,7 +28,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Depends on**: Nothing (first phase)
 **Research**: Likely (tech stack decision)
 **Research topics**: FastAPI vs Node.js for CLI wrapper patterns, JWT auth library choice
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
 - [x] 01-01: Project scaffolding and backend setup
@@ -36,16 +36,16 @@ Plans:
 - [x] 01-03: WordOps CLI wrapper module
 
 ### Phase 2: Site Management
-**Goal**: Full site CRUD through the dashboard UI
+**Goal**: Full site CRUD API for WordOps sites with filtering, search, and validation
 **Depends on**: Phase 1
 **Research**: Unlikely (internal patterns, CRUD operations)
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 02-01: Sites list view with filtering and search
-- [ ] 02-02: Site detail view with tabbed interface
-- [ ] 02-03: Create site wizard
-- [ ] 02-04: Site update and delete operations
+- [ ] 02-01-PLAN.md - Sites API router with list endpoint and filtering
+- [ ] 02-02-PLAN.md - Site detail endpoint for single site info
+- [ ] 02-03-PLAN.md - Create site CLI wrapper and POST endpoint
+- [ ] 02-04-PLAN.md - Update and delete site operations
 
 ### Phase 3: Server Dashboard
 **Goal**: Server monitoring with Netdata metrics and log viewing
@@ -72,11 +72,11 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-01-17 |
-| 2. Site Management | 0/4 | Not started | - |
+| 2. Site Management | 0/4 | Planned | - |
 | 3. Server Dashboard | 0/3 | Not started | - |
 | 4. Deployment | 0/2 | Not started | - |
