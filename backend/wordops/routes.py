@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from backend.auth.dependencies import get_current_user
 from backend.auth.models import User
 from backend.wordops.exceptions import WordOpsError
-from backend.wordops.models import Site, SiteType
-from backend.wordops.sites import get_site_info, list_sites, validate_domain
+from backend.wordops.models import CreateSiteRequest, Site, SiteType
+from backend.wordops.sites import create_site, get_site_info, list_sites, validate_domain
 
 router = APIRouter(prefix="/api/v1/sites", tags=["sites"])
 
@@ -99,3 +99,48 @@ async def get_site(
         )
 
     return site
+
+
+@router.post("/", response_model=Site, status_code=status.HTTP_201_CREATED)
+async def create_new_site(
+    request: CreateSiteRequest,
+    current_user: User = Depends(get_current_user),
+) -> Site:
+    """Create a new WordOps site.
+
+    Args:
+        request: Site creation parameters
+
+    Returns:
+        Created site details
+
+    Raises:
+        400: Invalid domain or parameters
+        503: WordOps command failed
+    """
+    # Validate domain format
+    if not validate_domain(request.domain):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid domain format: {request.domain}",
+        )
+
+    try:
+        site = await create_site(
+            domain=request.domain,
+            site_type=SiteType(request.type) if isinstance(request.type, str) else request.type,
+            ssl=request.ssl,
+            cache=request.cache,
+            php_version=request.php_version,
+        )
+        return site
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Site creation failed: {str(e)}",
+        )
