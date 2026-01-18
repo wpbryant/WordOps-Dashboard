@@ -5,8 +5,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from backend.auth.dependencies import get_current_user
 from backend.auth.models import User
 from backend.wordops.exceptions import WordOpsError
-from backend.wordops.models import CreateSiteRequest, Site, SiteType
-from backend.wordops.sites import create_site, get_site_info, list_sites, validate_domain
+from backend.wordops.models import CreateSiteRequest, Site, SiteType, UpdateSiteRequest
+from backend.wordops.sites import (
+    create_site,
+    delete_site,
+    get_site_info,
+    list_sites,
+    update_site,
+    validate_domain,
+)
 
 router = APIRouter(prefix="/api/v1/sites", tags=["sites"])
 
@@ -143,4 +150,105 @@ async def create_new_site(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Site creation failed: {str(e)}",
+        )
+
+
+@router.put("/{domain}", response_model=Site)
+async def update_existing_site(
+    domain: str,
+    request: UpdateSiteRequest,
+    current_user: User = Depends(get_current_user),
+) -> Site:
+    """Update an existing site's settings.
+
+    Args:
+        domain: The domain name of the site
+        request: Fields to update (only provided fields are changed)
+
+    Returns:
+        Updated site details
+
+    Raises:
+        400: Invalid domain or parameters
+        404: Site not found
+        503: WordOps command failed
+    """
+    if not validate_domain(domain):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid domain format: {domain}",
+        )
+
+    try:
+        site = await update_site(
+            domain=domain,
+            ssl=request.ssl,
+            cache=request.cache,
+            php_version=request.php_version,
+        )
+        return site
+    except ValueError as e:
+        error_msg = str(e).lower()
+        if "not found" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e),
+            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Site update failed: {str(e)}",
+        )
+
+
+@router.delete("/{domain}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_existing_site(
+    domain: str,
+    confirm: bool = Query(..., description="Must be true to confirm deletion"),
+    current_user: User = Depends(get_current_user),
+) -> None:
+    """Delete a site permanently.
+
+    Args:
+        domain: The domain name of the site to delete
+        confirm: Must be true to confirm deletion (safety check)
+
+    Raises:
+        400: Invalid domain, confirm not true, or other validation error
+        404: Site not found
+        503: WordOps command failed
+    """
+    if not confirm:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Deletion requires confirm=true query parameter",
+        )
+
+    if not validate_domain(domain):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid domain format: {domain}",
+        )
+
+    try:
+        await delete_site(domain=domain, force=True)
+    except ValueError as e:
+        error_msg = str(e).lower()
+        if "not found" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e),
+            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Site deletion failed: {str(e)}",
         )
