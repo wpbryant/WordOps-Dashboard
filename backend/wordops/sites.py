@@ -4,7 +4,7 @@ import re
 
 from .cli import run_command
 from .exceptions import ParseError
-from .models import Site, SiteType
+from .models import CacheType, Site, SiteType
 
 
 def validate_domain(domain: str) -> bool:
@@ -274,3 +274,83 @@ async def get_site_info(domain: str) -> Site | None:
         cache=cache,
         php_version=php_version,
     )
+
+
+async def create_site(
+    domain: str,
+    site_type: SiteType = SiteType.WORDPRESS,
+    ssl: bool = True,
+    cache: CacheType | None = None,
+    php_version: str | None = None,
+) -> Site:
+    """
+    Create a new WordOps site.
+
+    Args:
+        domain: The domain name for the site
+        site_type: Type of site (wordpress, php, html, proxy, mysql)
+        ssl: Whether to enable SSL (Let's Encrypt)
+        cache: Cache type (wpfc, wpsc, wpredis, redis, none)
+        php_version: PHP version (e.g., "8.1", "8.2")
+
+    Returns:
+        Site object for the newly created site
+
+    Raises:
+        ValueError: If domain validation fails
+        CommandFailedError: If site creation fails
+    """
+    if not validate_domain(domain):
+        raise ValueError(f"Invalid domain name: {domain}")
+
+    # Build wo site create command
+    args = ["site", "create", domain]
+
+    # Add site type flag
+    type_flags = {
+        SiteType.WORDPRESS: "--wp",
+        SiteType.PHP: "--php",
+        SiteType.HTML: "--html",
+        SiteType.PROXY: "--proxy",
+        SiteType.MYSQL: "--mysql",
+    }
+    args.append(type_flags.get(site_type, "--wp"))
+
+    # Add cache flag if specified
+    if cache and cache != CacheType.NONE:
+        cache_flags = {
+            CacheType.WPFC: "--wpfc",
+            CacheType.WPSC: "--wpsc",
+            CacheType.WPREDIS: "--wpredis",
+            CacheType.REDIS: "--wpredis",  # Redis uses wpredis flag
+        }
+        if cache in cache_flags:
+            args.append(cache_flags[cache])
+
+    # Add SSL flag
+    if ssl:
+        args.append("--letsencrypt")
+
+    # Add PHP version if specified
+    if php_version:
+        # Validate PHP version format
+        if not re.match(r"^\d+\.\d+$", php_version):
+            raise ValueError(f"Invalid PHP version format: {php_version}")
+        args.extend(["--php", php_version])
+
+    # Execute with longer timeout for site creation (can take a while)
+    await run_command(args, timeout=300)
+
+    # Fetch and return the created site info
+    site = await get_site_info(domain)
+    if site is None:
+        # Site was created but we couldn't fetch info - return basic info
+        return Site(
+            name=domain,
+            type=site_type,
+            ssl=ssl,
+            cache=cache.value if cache else None,
+            php_version=php_version,
+        )
+
+    return site
