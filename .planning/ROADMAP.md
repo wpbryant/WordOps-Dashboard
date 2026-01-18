@@ -50,14 +50,14 @@ Plans:
 ### Phase 3: Server Dashboard
 **Goal**: Server monitoring with Netdata metrics and log viewing
 **Depends on**: Phase 2
-**Research**: Likely (external API)
+**Research**: Complete (see 03-RESEARCH.md)
 **Research topics**: Netdata API endpoints, WebSocket log streaming patterns
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: Netdata metrics integration
-- [ ] 03-02: Service status display
-- [ ] 03-03: Real-time log viewer with WebSocket
+- [ ] 03-01-PLAN.md — Netdata metrics integration (CPU, RAM, disk, network via API proxy)
+- [ ] 03-02-PLAN.md — Service status display (systemctl wrapper with restart capability)
+- [ ] 03-03-PLAN.md — Real-time log viewer with WebSocket streaming
 
 ### Phase 4: Deployment
 **Goal**: Production-ready deployment with nginx and systemd
@@ -78,5 +78,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-01-17 |
 | 2. Site Management | 4/4 | Complete | 2026-01-18 |
-| 3. Server Dashboard | 0/3 | Not started | - |
+| 3. Server Dashboard | 0/3 | Planned | - |
 | 4. Deployment | 0/2 | Not started | - |
