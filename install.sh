@@ -504,6 +504,176 @@ print_summary() {
 }
 
 # =============================================================================
+# Uninstallation
+# =============================================================================
+
+# Read domain from existing configuration for uninstall
+get_installed_domain() {
+    if [[ -f "$CONFIG_DIR/config.env" ]]; then
+        read_existing_config "WO_DASHBOARD_CORS_ORIGINS" | grep -oP 'https://\K[^"]+' | head -1 || echo ""
+    fi
+}
+
+# Uninstall function - removes all dashboard components
+do_uninstall() {
+    print_header
+    check_root
+
+    print_warning "This will completely remove WordOps Dashboard"
+    echo ""
+    echo "The following will be removed:"
+    echo "  - Application directory: $APP_DIR"
+    echo "  - Configuration: $CONFIG_DIR"
+    echo "  - Log files: $LOG_DIR"
+    echo "  - Systemd service: wo-dashboard"
+    echo "  - Nginx configuration"
+    echo ""
+
+    # Get domain for WordOps site deletion
+    local domain
+    domain=$(get_installed_domain)
+
+    if [[ -n "$domain" ]]; then
+        echo "  - WordOps site: $domain"
+        echo ""
+    fi
+
+    read -p "Are you sure you want to continue? [y/N]: " confirm
+    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+        print_info "Uninstall cancelled"
+        exit 0
+    fi
+
+    echo ""
+
+    # Stop and disable service
+    if systemctl is-active wo-dashboard --quiet 2>/dev/null; then
+        print_info "Stopping service..."
+        systemctl stop wo-dashboard
+    fi
+
+    if systemctl is-enabled wo-dashboard --quiet 2>/dev/null; then
+        print_info "Disabling service..."
+        systemctl disable wo-dashboard --quiet
+    fi
+
+    # Remove systemd service file
+    if [[ -f "/etc/systemd/system/wo-dashboard.service" ]]; then
+        print_info "Removing systemd service..."
+        rm -f /etc/systemd/system/wo-dashboard.service
+        systemctl daemon-reload
+    fi
+
+    # Remove nginx configuration
+    if [[ -n "$domain" ]]; then
+        local nginx_conf="wo-dashboard-$domain.conf"
+        if [[ -f "/etc/nginx/sites-available/$nginx_conf" ]]; then
+            print_info "Removing nginx configuration..."
+            rm -f "/etc/nginx/sites-enabled/$nginx_conf"
+            rm -f "/etc/nginx/sites-available/$nginx_conf"
+            systemctl reload nginx 2>/dev/null || true
+        fi
+
+        # Optionally delete WordOps site
+        if wo site list 2>/dev/null | grep -q "^$domain$"; then
+            echo ""
+            read -p "Also delete WordOps site '$domain'? [y/N]: " delete_site
+            if [[ "$delete_site" == "y" || "$delete_site" == "Y" ]]; then
+                print_info "Deleting WordOps site..."
+                wo site delete "$domain" --force --no-prompt
+            else
+                print_info "Keeping WordOps site (you may want to reconfigure it)"
+            fi
+        fi
+    fi
+
+    # Remove application directories
+    if [[ -d "$APP_DIR" ]]; then
+        print_info "Removing application directory..."
+        rm -rf "$APP_DIR"
+    fi
+
+    if [[ -d "$CONFIG_DIR" ]]; then
+        print_info "Removing configuration..."
+        rm -rf "$CONFIG_DIR"
+    fi
+
+    if [[ -d "$LOG_DIR" ]]; then
+        print_info "Removing log files..."
+        rm -rf "$LOG_DIR"
+    fi
+
+    if [[ -d "$RUN_DIR" ]]; then
+        rm -rf "$RUN_DIR"
+    fi
+
+    echo ""
+    print_success "WordOps Dashboard has been uninstalled"
+    echo ""
+}
+
+# =============================================================================
+# Help and Usage
+# =============================================================================
+
+# Print usage information
+show_help() {
+    echo "WordOps Dashboard Installer v${VERSION}"
+    echo ""
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  --help, -h       Show this help message and exit"
+    echo "  --uninstall      Remove WordOps Dashboard completely"
+    echo "  --version, -v    Show version number and exit"
+    echo ""
+    echo "Without options, the script performs installation or upgrade."
+    echo ""
+    echo "Prerequisites:"
+    echo "  - Running as root (required for systemctl, wo, nginx)"
+    echo "  - WordOps installed and configured"
+    echo "  - Python 3.10 or higher"
+    echo "  - Ubuntu/Debian system"
+    echo ""
+    echo "Installation:"
+    echo "  The installer will prompt for:"
+    echo "  - Domain name for the dashboard"
+    echo "  - Admin username (default: admin)"
+    echo "  - Admin password"
+    echo ""
+    echo "  It will then:"
+    echo "  - Clone the repository to $APP_DIR"
+    echo "  - Create Python virtual environment"
+    echo "  - Install dependencies"
+    echo "  - Create WordOps site with Let's Encrypt SSL"
+    echo "  - Configure nginx reverse proxy"
+    echo "  - Set up systemd service"
+    echo ""
+    echo "Upgrade:"
+    echo "  Re-running the installer on an existing installation will:"
+    echo "  - Pull latest code from repository"
+    echo "  - Update Python dependencies"
+    echo "  - Optionally update configuration"
+    echo "  - Restart the service"
+    echo ""
+    echo "Examples:"
+    echo "  # Fresh install or upgrade"
+    echo "  sudo $0"
+    echo ""
+    echo "  # Install via curl"
+    echo "  curl -sSL https://raw.githubusercontent.com/WordOps/WordOps-Dashboard/master/install.sh | sudo bash"
+    echo ""
+    echo "  # Uninstall"
+    echo "  sudo $0 --uninstall"
+    echo ""
+}
+
+# Print version
+show_version() {
+    echo "WordOps Dashboard Installer v${VERSION}"
+}
+
+# =============================================================================
 # Main Installation Flow
 # =============================================================================
 
@@ -541,5 +711,36 @@ do_install() {
     print_summary
 }
 
-# Run installation
-do_install
+# =============================================================================
+# Entry Point - Parse command line arguments
+# =============================================================================
+
+# Parse arguments and dispatch to appropriate function
+main() {
+    case "${1:-}" in
+        --help|-h)
+            show_help
+            exit 0
+            ;;
+        --version|-v)
+            show_version
+            exit 0
+            ;;
+        --uninstall)
+            do_uninstall
+            exit 0
+            ;;
+        "")
+            # No arguments - run installation
+            do_install
+            ;;
+        *)
+            print_error "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+}
+
+# Run main function with all arguments
+main "$@"
