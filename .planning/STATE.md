@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 3 of 4 (Server Dashboard)
-Plan: 2 of 4 in current phase
-Status: In progress
-Last activity: 2026-01-19 — Completed 03-02-PLAN.md
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-01-19 — Completed 03-03-PLAN.md
 
-Progress: █████████░ 75%
+Progress: ██████████ 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: 2.4 min
-- Total execution time: 0.37 hours
+- Total plans completed: 10
+- Average duration: 2.5 min
+- Total execution time: 0.42 hours
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: █████████░ 75%
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 8 min | 2.7 min |
 | 02-site-management | 4 | 8 min | 2.0 min |
-| 03-server-dashboard | 2 | 6 min | 3.0 min |
+| 03-server-dashboard | 3 | 9 min | 3.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-03 (2 min), 02-04 (3 min), 03-01 (3 min), 03-02 (3 min)
+- Last 5 plans: 02-04 (3 min), 03-01 (3 min), 03-02 (3 min), 03-03 (3 min)
 - Trend: stable
 
 ## Accumulated Context
@@ -63,6 +63,9 @@ Recent decisions affecting current work:
 - **Service allowlist**: Frozenset of allowed service names (03-02) - Security against arbitrary service access
 - **Systemctl show**: Use --property flag for status queries (03-02) - Machine-parseable output
 - **Sudo restart**: Use sudo for service restart (03-02) - Requires root privileges
+- **Hardcoded LOG_PATHS**: Log file paths in fixed dict for security (03-03) - Prevents path traversal
+- **WebSocket auth via query param**: Token passed as query param (03-03) - Headers don't work well with WebSocket
+- **aiofiles for async I/O**: Added aiofiles dependency (03-03) - Async file reading for log tailing
 
 ### Deferred Issues
 
@@ -74,6 +77,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-19T02:09:06Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-01-19T02:09:21Z
+Stopped at: Completed 03-03-PLAN.md (Phase 3 complete)
 Resume file: None
