@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Site management through a web UI — create, configure, and delete sites without touching the command line.
-**Current focus:** Phase 4 — Deployment (Ready to plan)
+**Current focus:** Phase 4 — Deployment (In progress)
 
 ## Current Position
 
-Phase: 3 of 4 (Server Dashboard)
-Plan: 3 of 3 in current phase
-Status: Phase verified
-Last activity: 2026-01-18 — Phase 3 verified (19/19 must-haves)
+Phase: 4 of 4 (Deployment)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-01-19 — Completed 04-01-PLAN.md (deployment configs)
 
-Progress: ██████████ 83%
+Progress: ███████████░ 92%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
-- Average duration: 2.5 min
-- Total execution time: 0.42 hours
+- Total plans completed: 11
+- Average duration: 2.4 min
+- Total execution time: 0.45 hours
 
 **By Phase:**
 
@@ -30,9 +30,10 @@ Progress: ██████████ 83%
 | 01-foundation | 3 | 8 min | 2.7 min |
 | 02-site-management | 4 | 8 min | 2.0 min |
 | 03-server-dashboard | 3 | 9 min | 3.0 min |
+| 04-deployment | 1 | 2 min | 2.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-04 (3 min), 03-01 (3 min), 03-02 (3 min), 03-03 (3 min)
+- Last 5 plans: 03-01 (3 min), 03-02 (3 min), 03-03 (3 min), 04-01 (2 min)
 - Trend: stable
 
 ## Accumulated Context
@@ -66,6 +67,9 @@ Recent decisions affecting current work:
 - **Hardcoded LOG_PATHS**: Log file paths in fixed dict for security (03-03) - Prevents path traversal
 - **WebSocket auth via query param**: Token passed as query param (03-03) - Headers don't work well with WebSocket
 - **aiofiles for async I/O**: Added aiofiles dependency (03-03) - Async file reading for log tailing
+- **Unix socket communication**: uvicorn listens on /run/wo-dashboard/uvicorn.sock (04-01) - Better performance than TCP
+- **Nginx rate limiting**: 10r/m for login endpoint (04-01) - Brute force protection
+- **Systemd restart policy**: on-failure with 5s delay (04-01) - Automatic recovery
 
 ### Deferred Issues
 
@@ -77,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-18
-Stopped at: Phase 3 verified, ready for Phase 4
+Last session: 2026-01-19
+Stopped at: Completed 04-01-PLAN.md (deployment configs)
 Resume file: None
