@@ -1,4 +1,4 @@
-"""Pydantic models for server metrics data."""
+"""Pydantic models for server metrics and service status data."""
 
 from enum import Enum
 
@@ -37,3 +37,31 @@ class SystemMetrics(BaseModel):
     disk: MetricData
     network_in: MetricData
     network_out: MetricData
+
+
+class ServiceStatus(BaseModel):
+    """Status information for a system service."""
+
+    name: str
+    active: bool
+    sub_state: str
+    memory_bytes: int | None = None
+    uptime_seconds: int | None = None
+    main_pid: int | None = None
+
+
+class LogType(str, Enum):
+    """Supported log file types."""
+
+    NGINX_ACCESS = "nginx-access"
+    NGINX_ERROR = "nginx-error"
+    PHP_FPM = "php-fpm"
+    MYSQL = "mysql"
+
+
+class LogEntry(BaseModel):
+    """Log file content response."""
+
+    lines: list[str]
+    log_type: LogType
+    timestamp: int
