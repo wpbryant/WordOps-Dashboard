@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 3 of 4 (Server Dashboard)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-19 — Completed 03-01-PLAN.md
+Last activity: 2026-01-19 — Completed 03-02-PLAN.md
 
-Progress: ████████░░ 67%
+Progress: █████████░ 75%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
+- Total plans completed: 9
 - Average duration: 2.4 min
-- Total execution time: 0.32 hours
+- Total execution time: 0.37 hours
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: ████████░░ 67%
 |-------|-------|-------|----------|
 | 01-foundation | 3 | 8 min | 2.7 min |
 | 02-site-management | 4 | 8 min | 2.0 min |
-| 03-server-dashboard | 1 | 3 min | 3.0 min |
+| 03-server-dashboard | 2 | 6 min | 3.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (1 min), 02-03 (2 min), 02-04 (3 min), 03-01 (3 min)
+- Last 5 plans: 02-03 (2 min), 02-04 (3 min), 03-01 (3 min), 03-02 (3 min)
 - Trend: stable
 
 ## Accumulated Context
@@ -60,6 +60,9 @@ Recent decisions affecting current work:
 - **Update timeout 120s**: Reasonable timeout for SSL/cache/PHP changes (02-04)
 - **Netdata API v3**: Use /api/v3/data endpoint for metrics (03-01) - Current API version
 - **httpx production**: Move httpx to main dependencies (03-01) - Required at runtime for Netdata client
+- **Service allowlist**: Frozenset of allowed service names (03-02) - Security against arbitrary service access
+- **Systemctl show**: Use --property flag for status queries (03-02) - Machine-parseable output
+- **Sudo restart**: Use sudo for service restart (03-02) - Requires root privileges
 
 ### Deferred Issues
 
@@ -71,6 +74,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-19T02:05:13Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-01-19T02:09:06Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
