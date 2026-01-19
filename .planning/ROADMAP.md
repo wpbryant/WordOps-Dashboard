@@ -63,11 +63,11 @@ Plans:
 **Goal**: Production-ready deployment with nginx and systemd
 **Depends on**: Phase 3
 **Research**: Unlikely (standard nginx/systemd patterns)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: Nginx configuration for dashboard
-- [ ] 04-02: Systemd service and installation script
+- [ ] 04-01-PLAN.md — Deployment config files (nginx template, systemd unit, env config)
+- [ ] 04-02-PLAN.md — Installation script with WordOps integration
 
 ## Progress
 
