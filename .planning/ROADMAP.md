@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation** - Project setup, backend API skeleton, authentication system
 - [x] **Phase 2: Site Management** - Sites list, detail view, create/update/delete operations
 - [x] **Phase 3: Server Dashboard** - Netdata integration, service status, log viewer
-- [ ] **Phase 4: Deployment** - Nginx config, systemd service, production setup
+- [x] **Phase 4: Deployment** - Nginx config, systemd service, production setup
 
 ## Phase Details
 
@@ -66,8 +66,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Deployment config files (nginx template, systemd unit, env config)
-- [ ] 04-02-PLAN.md — Installation script with WordOps integration
+- [x] 04-01-PLAN.md — Deployment config files (nginx template, systemd unit, env config)
+- [x] 04-02-PLAN.md — Installation script with WordOps integration
 
 ## Progress
 
@@ -79,4 +79,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 1. Foundation | 3/3 | Complete | 2026-01-17 |
 | 2. Site Management | 4/4 | Complete | 2026-01-18 |
 | 3. Server Dashboard | 3/3 | Complete | 2026-01-18 |
-| 4. Deployment | 0/2 | Not started | - |
+| 4. Deployment | 2/2 | Complete | 2026-01-19 |
