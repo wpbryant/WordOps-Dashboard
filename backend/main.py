@@ -7,6 +7,7 @@ from backend.auth.dependencies import get_current_user
 from backend.auth.models import User
 from backend.auth.routes import router as auth_router
 from backend.config import settings
+from backend.server.routes import router as server_router
 from backend.wordops.routes import router as sites_router
 
 app = FastAPI(
@@ -42,6 +43,9 @@ app.include_router(auth_router)
 
 # Include sites routes
 app.include_router(sites_router)
+
+# Include server routes
+app.include_router(server_router)
 
 
 @app.get("/api/v1/protected")
