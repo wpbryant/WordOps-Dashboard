@@ -1,0 +1,51 @@
+# WordOps Dashboard - Systemd Service Unit
+#
+# Install to: /etc/systemd/system/wo-dashboard.service
+#
+# Commands:
+#   systemctl daemon-reload
+#   systemctl enable wo-dashboard
+#   systemctl start wo-dashboard
+#   systemctl status wo-dashboard
+
+[Unit]
+Description=WordOps Dashboard API
+Documentation=https://github.com/wordops/wordops-dashboard
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+
+# Working directory where the application is installed
+WorkingDirectory=/var/www/wo-dashboard
+
+# Load environment variables from config file
+EnvironmentFile=/etc/wo-dashboard/config.env
+
+# Start uvicorn with unix socket
+ExecStart=/var/www/wo-dashboard/.venv/bin/uvicorn backend.main:app --uds /run/wo-dashboard/uvicorn.sock
+
+# Create runtime directory for socket
+RuntimeDirectory=wo-dashboard
+RuntimeDirectoryMode=0755
+
+# Restart behavior
+Restart=on-failure
+RestartSec=5
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+# Logging
+StandardOutput=append:/var/log/wo-dashboard/access.log
+StandardError=append:/var/log/wo-dashboard/error.log
+
+# Security hardening (limited due to root requirement)
+NoNewPrivileges=false
+ProtectSystem=strict
+ReadWritePaths=/var/log/wo-dashboard /run/wo-dashboard /var/www
+
+[Install]
+WantedBy=multi-user.target
