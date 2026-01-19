@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Site management through a web UI — create, configure, and delete sites without touching the command line.
-**Current focus:** Phase 4 — Deployment (In progress)
+**Current focus:** Project complete
 
 ## Current Position
 
 Phase: 4 of 4 (Deployment)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-01-19 — Completed 04-01-PLAN.md (deployment configs)
+Plan: 2 of 2 in current phase
+Status: Complete
+Last activity: 2026-01-19 — Completed 04-02-PLAN.md (installation script)
 
-Progress: ███████████░ 92%
+Progress: ████████████ 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
+- Total plans completed: 12
 - Average duration: 2.4 min
-- Total execution time: 0.45 hours
+- Total execution time: 0.50 hours
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: ███████████░ 92%
 | 01-foundation | 3 | 8 min | 2.7 min |
 | 02-site-management | 4 | 8 min | 2.0 min |
 | 03-server-dashboard | 3 | 9 min | 3.0 min |
-| 04-deployment | 1 | 2 min | 2.0 min |
+| 04-deployment | 2 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-01 (3 min), 03-02 (3 min), 03-03 (3 min), 04-01 (2 min)
+- Last 5 plans: 03-02 (3 min), 03-03 (3 min), 04-01 (2 min), 04-02 (3 min)
 - Trend: stable
 
 ## Accumulated Context
@@ -70,17 +70,21 @@ Recent decisions affecting current work:
 - **Unix socket communication**: uvicorn listens on /run/wo-dashboard/uvicorn.sock (04-01) - Better performance than TCP
 - **Nginx rate limiting**: 10r/m for login endpoint (04-01) - Brute force protection
 - **Systemd restart policy**: on-failure with 5s delay (04-01) - Automatic recovery
+- **Idempotent upgrade detection**: Check APP_DIR and config.env for upgrade mode (04-02) - Reliable mode detection
+- **Password hashing via Python**: Use passlib for bcrypt hashing in installer (04-02) - Consistent with backend auth
+- **Secret key preservation**: Keep existing SECRET_KEY on upgrades (04-02) - Avoid invalidating JWTs
+- **Optional site deletion**: Prompt before removing WordOps site on uninstall (04-02) - Prevent accidental data loss
 
 ### Deferred Issues
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
-None yet.
+None.
 
 ## Session Continuity
 
 Last session: 2026-01-19
-Stopped at: Completed 04-01-PLAN.md (deployment configs)
+Stopped at: Project complete - all 12 plans executed
 Resume file: None
