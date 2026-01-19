@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     # JWT Authentication settings
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
+    # Netdata integration
+    NETDATA_URL: str = "http://127.0.0.1:19999"
+
     # Single admin user for v1 (no database)
     ADMIN_USERNAME: str = "admin"
     # Default hash is for password "changeme" - MUST be changed in production
