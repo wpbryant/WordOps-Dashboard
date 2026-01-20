@@ -6,7 +6,7 @@
 # Handles fresh installs and upgrades.
 #
 # Usage:
-#   curl -sSL https://raw.githubusercontent.com/WordOps/WordOps-Dashboard/master/install.sh | bash
+#   curl -sSL https://raw.githubusercontent.com/wpbryant/WordOps-Dashboard/master/install.sh | bash
 #   ./install.sh
 #   ./install.sh --uninstall
 #   ./install.sh --help
@@ -34,7 +34,7 @@ APP_DIR="/var/www/wo-dashboard"
 CONFIG_DIR="/etc/wo-dashboard"
 LOG_DIR="/var/log/wo-dashboard"
 RUN_DIR="/run/wo-dashboard"
-REPO_URL="https://github.com/WordOps/WordOps-Dashboard.git"
+REPO_URL="https://github.com/wpbryant/WordOps-Dashboard.git"
 
 # Colors for output
 RED='\033[0;31m'

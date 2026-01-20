@@ -21,7 +21,7 @@ A modern web-based API for managing WordOps servers. Create, configure, and dele
 ## Quick Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/WordOps/WordOps-Dashboard/master/install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/wpbryant/WordOps-Dashboard/master/install.sh | sudo bash
 ```
 
 The installer will:
@@ -36,7 +36,7 @@ The installer will:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/WordOps/WordOps-Dashboard.git /var/www/wo-dashboard
+git clone https://github.com/wpbryant/WordOps-Dashboard.git /var/www/wo-dashboard
 cd /var/www/wo-dashboard
 ```
 
@@ -151,7 +151,7 @@ systemctl restart wo-dashboard
 Or use the installer with `--upgrade` flag:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/WordOps/WordOps-Dashboard/master/install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/wpbryant/WordOps-Dashboard/master/install.sh | sudo bash
 ```
 
 The installer automatically detects existing installations and preserves your configuration.
@@ -159,7 +159,7 @@ The installer automatically detects existing installations and preserves your co
 ## Uninstalling
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/WordOps/WordOps-Dashboard/master/install.sh | sudo bash -s -- --uninstall
+curl -sSL https://raw.githubusercontent.com/wpbryant/WordOps-Dashboard/master/install.sh | sudo bash -s -- --uninstall
 ```
 
 Or manually:
@@ -177,7 +177,7 @@ wo site delete dashboard.yourdomain.com
 
 ```bash
 # Clone and setup
-git clone https://github.com/WordOps/WordOps-Dashboard.git
+git clone https://github.com/wpbryant/WordOps-Dashboard.git
 cd WordOps-Dashboard
 python3 -m venv .venv
 source .venv/bin/activate
