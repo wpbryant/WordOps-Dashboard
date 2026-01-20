@@ -425,13 +425,12 @@ async def update_site(
     return updated if updated else existing
 
 
-async def delete_site(domain: str, force: bool = False) -> bool:
+async def delete_site(domain: str) -> bool:
     """
     Delete a WordOps site.
 
     Args:
         domain: The domain name of the site to delete
-        force: If True, skip confirmation (required for API)
 
     Returns:
         True if deletion was successful
@@ -448,11 +447,8 @@ async def delete_site(domain: str, force: bool = False) -> bool:
     if existing is None:
         raise ValueError(f"Site not found: {domain}")
 
-    # Build delete command
-    # --no-prompt skips confirmation, --files removes site files
+    # Build delete command - --no-prompt skips confirmation
     args = ["site", "delete", domain, "--no-prompt"]
-    if force:
-        args.append("--files")  # Also remove site files
 
     await run_command(args, timeout=60)
 

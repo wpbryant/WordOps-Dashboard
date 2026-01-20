@@ -235,7 +235,7 @@ async def delete_existing_site(
         )
 
     try:
-        await delete_site(domain=domain, force=True)
+        await delete_site(domain=domain)
     except ValueError as e:
         error_msg = str(e).lower()
         if "not found" in error_msg:
