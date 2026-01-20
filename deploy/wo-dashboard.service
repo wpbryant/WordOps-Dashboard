@@ -42,10 +42,10 @@ RestartSec=5
 StandardOutput=append:/var/log/wo-dashboard/access.log
 StandardError=append:/var/log/wo-dashboard/error.log
 
-# Security hardening (limited due to root requirement)
-NoNewPrivileges=false
-ProtectSystem=strict
-ReadWritePaths=/var/log/wo-dashboard /var/log/wo /run/wo-dashboard /var/www
+# Security hardening disabled - WordOps needs full system access
+# to manage apt, nginx configs, SSL certs, etc.
+# NoNewPrivileges=false
+# ProtectSystem=strict
 
 [Install]
 WantedBy=multi-user.target
