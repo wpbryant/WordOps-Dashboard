@@ -1,9 +1,13 @@
 """WordOps CLI wrapper for safe command execution."""
 
 import asyncio
+import re
 import shutil
 
 from .exceptions import CommandFailedError, CommandNotFoundError
+
+# Regex to strip ANSI escape codes from output
+ANSI_ESCAPE_PATTERN = re.compile(r'\x1b\[[0-9;]*m')
 
 # Standard WordOps binary location
 WO_BINARY = "/usr/local/bin/wo"
@@ -46,6 +50,10 @@ async def run_command(args: list[str], timeout: int = 30) -> str:
 
         stdout_str = stdout.decode("utf-8", errors="replace").strip()
         stderr_str = stderr.decode("utf-8", errors="replace").strip()
+
+        # Strip ANSI color codes from output
+        stdout_str = ANSI_ESCAPE_PATTERN.sub('', stdout_str)
+        stderr_str = ANSI_ESCAPE_PATTERN.sub('', stderr_str)
 
         if process.returncode != 0:
             raise CommandFailedError(
