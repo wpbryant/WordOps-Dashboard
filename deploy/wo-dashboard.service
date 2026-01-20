@@ -13,6 +13,8 @@ Description=WordOps Dashboard API
 Documentation=https://github.com/wordops/wordops-dashboard
 After=network.target
 Wants=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=3
 
 [Service]
 Type=simple
@@ -25,18 +27,16 @@ WorkingDirectory=/var/www/wo-dashboard
 # Load environment variables from config file
 EnvironmentFile=/etc/wo-dashboard/config.env
 
-# Start uvicorn with unix socket
-ExecStart=/var/www/wo-dashboard/.venv/bin/uvicorn backend.main:app --uds /run/wo-dashboard/uvicorn.sock
+# Start uvicorn on TCP port (simpler than unix socket for WordOps proxy)
+ExecStart=/var/www/wo-dashboard/.venv/bin/uvicorn backend.main:app --host 127.0.0.1 --port 8000
 
-# Create runtime directory for socket
+# Create runtime directory
 RuntimeDirectory=wo-dashboard
 RuntimeDirectoryMode=0755
 
 # Restart behavior
 Restart=on-failure
 RestartSec=5
-StartLimitIntervalSec=60
-StartLimitBurst=3
 
 # Logging
 StandardOutput=append:/var/log/wo-dashboard/access.log
