@@ -235,17 +235,19 @@ generate_secret_key() {
     print_info "Generated new secret key"
 }
 
-# Generate password hash using Python
+# Generate password hash using Python (requires venv to be set up first)
 generate_password_hash() {
     if [[ "$KEEP_EXISTING_PASSWORD" == "true" ]]; then
         ADMIN_PASSWORD_HASH=$(read_existing_config "WO_DASHBOARD_ADMIN_PASSWORD_HASH")
         print_info "Using existing password hash"
     else
+        print_info "Generating password hash..."
         # Escape single quotes in password for Python
         local escaped_pass
         escaped_pass=$(printf '%s' "$ADMIN_PASS" | sed "s/'/\\\\'/g")
 
-        ADMIN_PASSWORD_HASH=$(python3 -c "
+        # Use the venv's Python which has passlib installed
+        ADMIN_PASSWORD_HASH=$("$APP_DIR/.venv/bin/python3" -c "
 from passlib.context import CryptContext
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 print(pwd_context.hash('$escaped_pass'))
@@ -693,14 +695,16 @@ do_install() {
     # Get configuration
     prompt_config
 
-    # Generate credentials
+    # Generate secret key (doesn't need Python dependencies)
     generate_secret_key
-    generate_password_hash
 
-    # Setup
+    # Setup application and Python environment first
     create_directories
     setup_application
     setup_python_env
+
+    # Now generate password hash (needs passlib from venv)
+    generate_password_hash
 
     # Deploy
     deploy_config
