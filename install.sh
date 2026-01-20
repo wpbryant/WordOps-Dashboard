@@ -132,17 +132,20 @@ read_existing_config() {
 # Interactive Prompts
 # =============================================================================
 
+# Note: When script is piped from curl, stdin is the script itself.
+# We need to read from /dev/tty for interactive prompts.
+
 # Prompt for domain name
 prompt_domain() {
     local existing_domain
     existing_domain=$(read_existing_config "WO_DASHBOARD_CORS_ORIGINS" | grep -oP 'https://\K[^"]+' | head -1 || echo "")
 
     if [[ "$INSTALL_MODE" == "upgrade" && -n "$existing_domain" ]]; then
-        read -p "Domain [$existing_domain]: " DOMAIN
+        read -p "Domain [$existing_domain]: " DOMAIN < /dev/tty
         DOMAIN=${DOMAIN:-$existing_domain}
     else
         while [[ -z "$DOMAIN" ]]; do
-            read -p "Enter domain for dashboard (e.g., dashboard.example.com): " DOMAIN
+            read -p "Enter domain for dashboard (e.g., dashboard.example.com): " DOMAIN < /dev/tty
             if [[ -z "$DOMAIN" ]]; then
                 print_error "Domain is required"
             fi
@@ -164,10 +167,10 @@ prompt_admin_user() {
     existing_user=$(read_existing_config "WO_DASHBOARD_ADMIN_USERNAME")
 
     if [[ "$INSTALL_MODE" == "upgrade" && -n "$existing_user" ]]; then
-        read -p "Admin username [$existing_user]: " ADMIN_USER
+        read -p "Admin username [$existing_user]: " ADMIN_USER < /dev/tty
         ADMIN_USER=${ADMIN_USER:-$existing_user}
     else
-        read -p "Admin username [admin]: " ADMIN_USER
+        read -p "Admin username [admin]: " ADMIN_USER < /dev/tty
         ADMIN_USER=${ADMIN_USER:-admin}
     fi
 
@@ -178,7 +181,7 @@ prompt_admin_user() {
 prompt_admin_pass() {
     echo ""
     if [[ "$INSTALL_MODE" == "upgrade" ]]; then
-        read -p "Update admin password? [y/N]: " update_pass
+        read -p "Update admin password? [y/N]: " update_pass < /dev/tty
         if [[ "$update_pass" != "y" && "$update_pass" != "Y" ]]; then
             KEEP_EXISTING_PASSWORD=true
             print_info "Keeping existing password"
@@ -187,7 +190,7 @@ prompt_admin_pass() {
     fi
 
     while [[ -z "$ADMIN_PASS" ]]; do
-        read -s -p "Admin password: " ADMIN_PASS
+        read -s -p "Admin password: " ADMIN_PASS < /dev/tty
         echo ""
         if [[ -z "$ADMIN_PASS" ]]; then
             print_error "Password is required"
@@ -197,7 +200,7 @@ prompt_admin_pass() {
         fi
     done
 
-    read -s -p "Confirm password: " ADMIN_PASS_CONFIRM
+    read -s -p "Confirm password: " ADMIN_PASS_CONFIRM < /dev/tty
     echo ""
 
     if [[ "$ADMIN_PASS" != "$ADMIN_PASS_CONFIRM" ]]; then
@@ -538,7 +541,7 @@ do_uninstall() {
         echo ""
     fi
 
-    read -p "Are you sure you want to continue? [y/N]: " confirm
+    read -p "Are you sure you want to continue? [y/N]: " confirm < /dev/tty
     if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
         print_info "Uninstall cancelled"
         exit 0
@@ -577,7 +580,7 @@ do_uninstall() {
         # Optionally delete WordOps site
         if wo site list 2>/dev/null | grep -q "^$domain$"; then
             echo ""
-            read -p "Also delete WordOps site '$domain'? [y/N]: " delete_site
+            read -p "Also delete WordOps site '$domain'? [y/N]: " delete_site < /dev/tty
             if [[ "$delete_site" == "y" || "$delete_site" == "Y" ]]; then
                 print_info "Deleting WordOps site..."
                 wo site delete "$domain" --force --no-prompt
