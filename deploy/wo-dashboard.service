@@ -45,7 +45,7 @@ StandardError=append:/var/log/wo-dashboard/error.log
 # Security hardening (limited due to root requirement)
 NoNewPrivileges=false
 ProtectSystem=strict
-ReadWritePaths=/var/log/wo-dashboard /run/wo-dashboard /var/www
+ReadWritePaths=/var/log/wo-dashboard /var/log/wo /run/wo-dashboard /var/www
 
 [Install]
 WantedBy=multi-user.target
