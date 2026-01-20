@@ -40,3 +40,6 @@ wheels/
 # OS
 .DS_Store
 Thumbs.db
+
+# Planning docs (internal use only)
+.planning/
