@@ -410,15 +410,23 @@ build_frontend() {
 
     # Install npm dependencies
     print_info "Installing npm dependencies..."
-    if ! cd "$frontend_dir" && npm ci --quiet; then
+    cd "$frontend_dir" || exit 1
+
+    # Remove --quiet to see any errors
+    if ! npm ci; then
         print_error "Failed to install npm dependencies"
-        exit 1
+        print_info "Trying with npm install instead..."
+        if ! npm install; then
+            print_error "Failed to install npm dependencies with npm install"
+            exit 1
+        fi
     fi
 
     # Build frontend
     print_info "Building frontend..."
     if ! npm run build; then
         print_error "Frontend build failed"
+        print_info "Check that package.json exists and is valid"
         exit 1
     fi
 
