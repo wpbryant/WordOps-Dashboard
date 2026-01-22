@@ -508,8 +508,8 @@ deploy_systemd() {
 setup_wordops_site() {
     print_info "Setting up WordOps site..."
 
-    # Check if site already exists
-    if wo site list 2>/dev/null | grep -q "^$DOMAIN$"; then
+    # Check if site already exists (wo site list outputs domain names, possibly with formatting)
+    if wo site list 2>/dev/null | grep -qwF "$DOMAIN"; then
         print_info "WordOps site already exists, skipping creation..."
     else
         # Try to create new site with Let's Encrypt SSL
