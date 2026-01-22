@@ -43,7 +43,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (username: string, password: string) => {
-    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/auth/login`, {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+    const loginUrl = `${apiUrl}/api/v1/auth/login`
+    console.log('[AUTH DEBUG] Attempting login to:', loginUrl)
+    console.log('[AUTH DEBUG] VITE_API_URL env var:', import.meta.env.VITE_API_URL)
+    console.log('[AUTH DEBUG] Current origin:', window.location.origin)
+
+    const response = await fetch(loginUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -54,8 +60,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }),
     })
 
+    console.log('[AUTH DEBUG] Response status:', response.status)
+    console.log('[AUTH DEBUG] Response ok:', response.ok)
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({ detail: 'Login failed' }))
+      console.error('[AUTH DEBUG] Error response:', error)
       throw new Error(error.detail || 'Invalid username or password')
     }
 
