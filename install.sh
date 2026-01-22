@@ -329,19 +329,76 @@ setup_python_env() {
     print_success "Python environment ready"
 }
 
+# Install Node.js 18+ if not present
+install_nodejs() {
+    # Check if Node.js is already installed
+    if command -v node &> /dev/null; then
+        local node_version
+        node_version=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
+        if [ "$node_version" -ge 18 ]; then
+            print_info "Node.js $(node -v) already installed"
+            return 0
+        fi
+    fi
+
+    print_warning "Node.js 18+ is required but not installed"
+    print_info "Installing Node.js 18 from NodeSource..."
+
+    # Detect OS distribution
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        OS=$ID
+    else
+        print_error "Cannot detect OS distribution"
+        exit 1
+    fi
+
+    # Install Node.js 18 LTS from NodeSource
+    case "$OS" in
+        ubuntu|debian)
+            # Download and run NodeSource setup script
+            if ! curl -fsSL https://deb.nodesource.com/setup_18.x | bash -; then
+                print_error "Failed to download NodeSource setup script"
+                exit 1
+            fi
+
+            # Install Node.js
+            apt-get install -y nodejs
+            ;;
+        centos|rhel|rocky|almalinux)
+            # Download and run NodeSource setup script for RHEL
+            if ! curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -; then
+                print_error "Failed to download NodeSource setup script"
+                exit 1
+            fi
+
+            # Install Node.js
+            yum install -y nodejs
+            ;;
+        *)
+            print_error "Unsupported OS: $OS"
+            print_error "Please install Node.js 18+ manually"
+            exit 1
+            ;;
+    esac
+
+    # Verify installation
+    if ! command -v node &> /dev/null; then
+        print_error "Node.js installation failed"
+        exit 1
+    fi
+
+    print_success "Node.js $(node -v) installed"
+}
+
 # Build frontend
 build_frontend() {
     print_info "Building frontend..."
 
     local frontend_dir="$APP_DIR/frontend"
 
-    # Check if Node.js is installed
-    if ! command -v node &> /dev/null; then
-        print_error "Node.js is not installed"
-        echo "  Install Node.js 18+ to build the frontend"
-        echo "  Visit: https://nodejs.org/ or use: curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && apt-get install -y nodejs"
-        exit 1
-    fi
+    # Install Node.js if needed
+    install_nodejs
 
     # Check Node.js version
     NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
