@@ -466,11 +466,19 @@ deploy_config() {
         fi
     fi
 
+    # Determine protocol based on SSL status (set by setup_wordops_site)
+    local protocol="https"
+    if [[ "$SSL_CONFIGURED" != "true" ]]; then
+        protocol="http"
+        print_info "SSL not configured, using HTTP for CORS"
+    fi
+
     # Create config file from template
     sed -e "s|{{SECRET_KEY}}|$SECRET_KEY|g" \
         -e "s|{{DOMAIN}}|$DOMAIN|g" \
         -e "s|{{ADMIN_USERNAME}}|$ADMIN_USER|g" \
         -e "s|{{ADMIN_PASSWORD_HASH}}|$ADMIN_PASSWORD_HASH|g" \
+        -e "s|https://{{DOMAIN}}|${protocol}://${DOMAIN}|g" \
         "$template" > "$config_file"
 
     # Secure the config file
@@ -478,6 +486,7 @@ deploy_config() {
 
     print_success "Configuration deployed to $config_file"
     print_info "Admin username: $ADMIN_USER"
+    print_info "CORS origin: ${protocol}://${DOMAIN}"
     if [[ "$KEEP_EXISTING_PASSWORD" == "true" ]]; then
         print_info "Using existing password hash"
     else
@@ -514,14 +523,22 @@ deploy_systemd() {
 setup_wordops_site() {
     print_info "Setting up WordOps site..."
 
+    # Track whether SSL is configured (for CORS setup)
+    SSL_CONFIGURED=false
+
     # Check if site already exists - try to list it
     if wo site info "$DOMAIN" >/dev/null 2>&1; then
         print_info "WordOps site already exists, skipping creation..."
+        # Check if existing site has SSL
+        if [[ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]]; then
+            SSL_CONFIGURED=true
+        fi
     else
         # Try to create new site with Let's Encrypt SSL
         print_info "Creating WordOps site with SSL..."
         if wo site create "$DOMAIN" --proxy=127.0.0.1:8000 --letsencrypt 2>&1; then
             print_success "WordOps site created with SSL"
+            SSL_CONFIGURED=true
         else
             # SSL failed, try without SSL
             print_warning "SSL certificate issuance failed (DNS not configured?)"
@@ -533,6 +550,9 @@ setup_wordops_site() {
             fi
         fi
     fi
+
+    # Export SSL status for config deployment
+    export SSL_CONFIGURED
 
     # Note: WordOps already sets up proper nginx proxy configuration with --proxy flag
     # We don't need to deploy custom nginx config as WordOps handles it correctly
@@ -839,9 +859,9 @@ do_install() {
     generate_password_hash
 
     # Deploy
-    deploy_config
     deploy_systemd
-    setup_wordops_site
+    setup_wordops_site  # Must run before deploy_config to set SSL_CONFIGURED
+    deploy_config       # Uses SSL_CONFIGURED from setup_wordops_site
 
     # Start
     start_service
