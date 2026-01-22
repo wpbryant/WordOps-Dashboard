@@ -32,8 +32,8 @@ wheels/
 *.swo
 *~
 
-# Environment variables
-.env
+# Environment variables (backend only - frontend/.env is tracked for build config)
+backend/.env
 .env.local
 .env.*.local
 
