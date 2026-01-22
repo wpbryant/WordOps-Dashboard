@@ -512,10 +512,20 @@ setup_wordops_site() {
     if wo site list 2>/dev/null | grep -q "^$DOMAIN$"; then
         print_info "WordOps site exists, updating configuration..."
     else
-        # Create new site with Let's Encrypt SSL
+        # Try to create new site with Let's Encrypt SSL
         print_info "Creating WordOps site with SSL..."
-        wo site create "$DOMAIN" --proxy=127.0.0.1:8000 --letsencrypt
-        print_success "WordOps site created"
+        if ! wo site create "$DOMAIN" --proxy=127.0.0.1:8000 --letsencrypt 2>&1; then
+            # SSL failed, create without SSL
+            print_warning "SSL certificate issuance failed (DNS not configured?)"
+            print_info "Creating site without SSL..."
+            if ! wo site create "$DOMAIN" --proxy=127.0.0.1:8000; then
+                print_error "Failed to create WordOps site"
+                exit 1
+            fi
+            print_warning "Site created without SSL - configure DNS and run: wo site update $DOMAIN --letsencrypt"
+        else
+            print_success "WordOps site created with SSL"
+        fi
     fi
 
     # Deploy custom nginx configuration
