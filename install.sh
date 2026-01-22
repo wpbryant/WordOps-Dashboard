@@ -534,8 +534,9 @@ setup_wordops_site() {
         fi
     fi
 
-    # Deploy custom nginx configuration
-    deploy_nginx_config
+    # Note: WordOps already sets up proper nginx proxy configuration with --proxy flag
+    # We don't need to deploy custom nginx config as WordOps handles it correctly
+    print_info "WordOps nginx configuration already in place"
 }
 
 # Deploy custom nginx configuration
