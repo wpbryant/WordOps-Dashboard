@@ -476,7 +476,13 @@ deploy_config() {
     # Secure the config file
     chmod 600 "$config_file"
 
-    print_success "Configuration deployed"
+    print_success "Configuration deployed to $config_file"
+    print_info "Admin username: $ADMIN_USER"
+    if [[ "$KEEP_EXISTING_PASSWORD" == "true" ]]; then
+        print_info "Using existing password hash"
+    else
+        print_info "Using new password hash"
+    fi
 }
 
 # Deploy systemd service
@@ -508,23 +514,23 @@ deploy_systemd() {
 setup_wordops_site() {
     print_info "Setting up WordOps site..."
 
-    # Check if site already exists (wo site list outputs domain names, possibly with formatting)
-    if wo site list 2>/dev/null | grep -qwF "$DOMAIN"; then
+    # Check if site already exists - try to list it
+    if wo site info "$DOMAIN" >/dev/null 2>&1; then
         print_info "WordOps site already exists, skipping creation..."
     else
         # Try to create new site with Let's Encrypt SSL
         print_info "Creating WordOps site with SSL..."
-        if ! wo site create "$DOMAIN" --proxy=127.0.0.1:8000 --letsencrypt 2>&1; then
-            # SSL failed, create without SSL
+        if wo site create "$DOMAIN" --proxy=127.0.0.1:8000 --letsencrypt 2>&1; then
+            print_success "WordOps site created with SSL"
+        else
+            # SSL failed, try without SSL
             print_warning "SSL certificate issuance failed (DNS not configured?)"
             print_info "Creating site without SSL..."
-            if ! wo site create "$DOMAIN" --proxy=127.0.0.1:8000; then
-                print_error "Failed to create WordOps site"
-                exit 1
+            if wo site create "$DOMAIN" --proxy=127.0.0.1:8000 2>&1; then
+                print_warning "Site created without SSL - configure DNS and run: wo site update $DOMAIN --letsencrypt"
+            else
+                print_warning "Could not create WordOps site (may already exist), continuing anyway..."
             fi
-            print_warning "Site created without SSL - configure DNS and run: wo site update $DOMAIN --letsencrypt"
-        else
-            print_success "WordOps site created with SSL"
         fi
     fi
 
