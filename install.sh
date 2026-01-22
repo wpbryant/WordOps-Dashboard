@@ -329,7 +329,7 @@ setup_python_env() {
     print_success "Python environment ready"
 }
 
-# Install Node.js 18+ if not present
+# Install Node.js 20+ if not present
 install_nodejs() {
     # Check if Node.js is already installed
     if command -v node &> /dev/null; then
@@ -342,7 +342,7 @@ install_nodejs() {
     fi
 
     print_warning "Node.js 18+ is required but not installed"
-    print_info "Installing Node.js 18 from NodeSource..."
+    print_info "Installing Node.js 20 LTS from NodeSource..."
 
     # Detect OS distribution
     if [ -f /etc/os-release ]; then
@@ -353,11 +353,11 @@ install_nodejs() {
         exit 1
     fi
 
-    # Install Node.js 18 LTS from NodeSource
+    # Install Node.js 20 LTS from NodeSource
     case "$OS" in
         ubuntu|debian)
             # Download and run NodeSource setup script
-            if ! curl -fsSL https://deb.nodesource.com/setup_18.x | bash -; then
+            if ! curl -fsSL https://deb.nodesource.com/setup_20.x | bash -; then
                 print_error "Failed to download NodeSource setup script"
                 exit 1
             fi
@@ -367,7 +367,7 @@ install_nodejs() {
             ;;
         centos|rhel|rocky|almalinux)
             # Download and run NodeSource setup script for RHEL
-            if ! curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -; then
+            if ! curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -; then
                 print_error "Failed to download NodeSource setup script"
                 exit 1
             fi
