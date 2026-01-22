@@ -510,7 +510,7 @@ setup_wordops_site() {
 
     # Check if site already exists
     if wo site list 2>/dev/null | grep -q "^$DOMAIN$"; then
-        print_info "WordOps site exists, updating configuration..."
+        print_info "WordOps site already exists, skipping creation..."
     else
         # Try to create new site with Let's Encrypt SSL
         print_info "Creating WordOps site with SSL..."

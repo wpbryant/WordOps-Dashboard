@@ -103,10 +103,7 @@ export function Login() {
           {/* Help Text */}
           <div className="mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-800">
             <p className="text-xs text-center text-zinc-500 dark:text-zinc-400">
-              Default credentials: <span className="font-mono">admin</span> / <span className="font-mono">changeme</span>
-            </p>
-            <p className="text-xs text-center text-zinc-400 dark:text-zinc-500 mt-1">
-              Please change your password after first login
+              Use the credentials you created during installation
             </p>
           </div>
         </div>
