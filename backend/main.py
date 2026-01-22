@@ -38,7 +38,22 @@ async def health_check() -> dict:
 @app.get("/api/v1/health")
 async def api_health_check() -> dict:
     """API versioned health check endpoint."""
-    return {"status": "healthy", "version": "0.1.0"}
+    return {"status": "healthy", "version": "0.1.0", "configured_username": settings.ADMIN_USERNAME}
+
+
+@app.get("/api/v1/config-check")
+async def config_check() -> dict:
+    """Debug endpoint to check configuration (no auth required for debugging).
+
+    Shows what username the backend is configured to use.
+    This helps diagnose environment variable loading issues.
+    """
+    return {
+        "admin_username": settings.ADMIN_USERNAME,
+        "password_hash_prefix": settings.ADMIN_PASSWORD_HASH[:20] + "...",  # First 20 chars for verification
+        "cors_origins": settings.CORS_ORIGINS,
+        "debug_mode": settings.DEBUG,
+    }
 
 
 # Include authentication routes
