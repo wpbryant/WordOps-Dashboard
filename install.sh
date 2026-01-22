@@ -329,6 +329,51 @@ setup_python_env() {
     print_success "Python environment ready"
 }
 
+# Build frontend
+build_frontend() {
+    print_info "Building frontend..."
+
+    local frontend_dir="$APP_DIR/frontend"
+
+    # Check if Node.js is installed
+    if ! command -v node &> /dev/null; then
+        print_error "Node.js is not installed"
+        echo "  Install Node.js 18+ to build the frontend"
+        echo "  Visit: https://nodejs.org/ or use: curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && apt-get install -y nodejs"
+        exit 1
+    fi
+
+    # Check Node.js version
+    NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
+    if [ "$NODE_VERSION" -lt 18 ]; then
+        print_error "Node.js 18 or higher required (found $(node -v))"
+        exit 1
+    fi
+    print_info "Node.js $(node -v) found"
+
+    # Install npm dependencies
+    print_info "Installing npm dependencies..."
+    if ! cd "$frontend_dir" && npm ci --quiet; then
+        print_error "Failed to install npm dependencies"
+        exit 1
+    fi
+
+    # Build frontend
+    print_info "Building frontend..."
+    if ! npm run build; then
+        print_error "Frontend build failed"
+        exit 1
+    fi
+
+    # Verify build output
+    if [[ ! -d "$frontend_dir/dist" ]]; then
+        print_error "Frontend build directory not found"
+        exit 1
+    fi
+
+    print_success "Frontend built successfully"
+}
+
 # =============================================================================
 # Configuration Deployment
 # =============================================================================
@@ -702,6 +747,9 @@ do_install() {
     create_directories
     setup_application
     setup_python_env
+
+    # Build frontend
+    build_frontend
 
     # Now generate password hash (needs passlib from venv)
     generate_password_hash
