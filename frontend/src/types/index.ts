@@ -80,6 +80,9 @@ export interface Site {
   auditLog: AuditLogEntry[]
   targetSite?: string  // For alias sites
   database?: DatabaseInfo  // For sites with databases
+  wpAdminUrl?: string  // WordPress admin URL
+  wpAdminUser?: string  // WordPress admin username
+  wpAdminPassword?: string  // WordPress admin password
 }
 
 // Sites component props

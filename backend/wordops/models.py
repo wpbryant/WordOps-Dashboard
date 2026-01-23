@@ -25,6 +25,14 @@ class CacheType(str, Enum):
     REDIS = "redis"  # Redis full page cache
 
 
+class DatabaseInfo(BaseModel):
+    """Database information for a site."""
+
+    name: str | None = None
+    user: str | None = None
+    host: str = "localhost"
+
+
 class Site(BaseModel):
     """Represents a WordOps managed site."""
 
@@ -33,6 +41,10 @@ class Site(BaseModel):
     ssl: bool = False
     cache: str | None = None
     php_version: str | None = None
+    database: DatabaseInfo | None = None
+    wp_admin_url: str | None = None
+    wp_admin_user: str | None = None
+    wp_admin_password: str | None = None
 
     class Config:
         """Pydantic model configuration."""

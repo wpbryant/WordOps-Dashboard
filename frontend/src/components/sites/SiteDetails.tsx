@@ -240,8 +240,8 @@ export function SiteDetails({
       </div>
 
       {/* Tabs */}
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl mb-4 overflow-x-auto">
-        <nav className="flex gap-1 px-2 min-w-max">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl mb-4">
+        <nav className="flex gap-1 px-2 overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon
             return (
@@ -249,14 +249,14 @@ export function SiteDetails({
                 key={tab.key}
                 onClick={() => handleTabChange(tab.key)}
                 className={cn(
-                  'inline-flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap',
+                  'inline-flex items-center gap-2 px-3 sm:px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap flex-shrink-0',
                   currentTab === tab.key
                     ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                     : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700'
                 )}
               >
                 <Icon className="w-4 h-4" />
-                {tab.label}
+                <span className="hidden sm:inline">{tab.label}</span>
               </button>
             )
           })}

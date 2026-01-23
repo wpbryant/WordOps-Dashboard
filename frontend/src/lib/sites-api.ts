@@ -8,6 +8,14 @@ interface BackendSite {
   ssl: boolean
   cache: string | null
   php_version: string | null
+  database?: {
+    name: string | null
+    user: string | null
+    host: string
+  } | null
+  wp_admin_url?: string | null
+  wp_admin_user?: string | null
+  wp_admin_password?: string | null
 }
 
 // Site creation input
@@ -56,6 +64,24 @@ function transformSite(backendSite: BackendSite): Site {
   // Create empty plugins list for WordPress sites
   const plugins = backendSite.type === 'wordpress' ? [] : []
 
+  // Handle database info from backend
+  const database = backendSite.database?.name
+    ? {
+        name: backendSite.database.name,
+        user: backendSite.database.user || '••••••••••••',
+        password: '••••••••••••',  // Password not returned by backend for security
+        host: backendSite.database.host || 'localhost',
+      }
+    : (backendSite.type === 'wordpress' || backendSite.type === 'php')
+      ? {
+          // Fallback to generated database info if backend doesn't provide it
+          name: `${backendSite.name.replace(/[^a-z0-9]/gi, '_')}_db`,
+          user: backendSite.name.replace(/[^a-z0-9]/gi, '_'),
+          password: '••••••••••••',
+          host: 'localhost',
+        }
+      : undefined
+
   return {
     id: backendSite.name, // Use domain as ID since backend uses domain
     domain: backendSite.name,
@@ -79,13 +105,11 @@ function transformSite(backendSite: BackendSite): Site {
     lastBackup: null,
     monitoring,
     auditLog: [],
-    // Include database info for WordPress and PHP sites
-    database: (backendSite.type === 'wordpress' || backendSite.type === 'php') ? {
-      name: `${backendSite.name.replace(/[^a-z0-9]/gi, '_')}_db`,
-      user: backendSite.name.replace(/[^a-z0-9]/gi, '_'),
-      password: '••••••••••••',
-      host: 'localhost',
-    } : undefined,
+    database,
+    // WordPress admin credentials if available
+    wpAdminUrl: backendSite.wp_admin_url || undefined,
+    wpAdminUser: backendSite.wp_admin_user || undefined,
+    wpAdminPassword: backendSite.wp_admin_password || undefined,
   }
 }
 

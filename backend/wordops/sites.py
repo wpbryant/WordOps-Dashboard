@@ -181,6 +181,14 @@ async def list_sites() -> list[Site]:
             if any(c in part_lower for c in ["redis", "wpsc", "wpfc", "cache"]):
                 cache = _parse_cache_type(part)
 
+        # Generate database info for sites that would have one
+        from .models import DatabaseInfo
+        database = None
+        if site_type in (SiteType.WORDPRESS, SiteType.PHP, SiteType.MYSQL):
+            db_name = f"{domain.replace('.', '_').replace('-', '_')}_db"
+            db_user = domain.replace('.', '_').replace('-', '_')
+            database = DatabaseInfo(name=db_name, user=db_user, host="localhost")
+
         sites.append(
             Site(
                 name=domain,
@@ -188,6 +196,7 @@ async def list_sites() -> list[Site]:
                 ssl=ssl,
                 cache=cache,
                 php_version=None,  # Not available in list output
+                database=database,
             )
         )
 
@@ -233,11 +242,16 @@ async def get_site_info(domain: str) -> Site | None:
     # Cache: wpfc
     # SSL: enabled
     # PHP: 8.1
+    # Database: example_db
+
+    from .models import DatabaseInfo
 
     site_type = SiteType.WORDPRESS
     ssl = False
     cache = None
     php_version = None
+    db_name = None
+    db_user = None
 
     lines = output.strip().split("\n")
 
@@ -250,12 +264,12 @@ async def get_site_info(domain: str) -> Site | None:
             site_type = _parse_site_type(value)
 
         # Parse SSL status
-        if "ssl" in line_lower and ":" in line:
+        if "ssl" in line_lower and ":" in line and "letsencrypt" not in line_lower:
             value = line.split(":", 1)[1].strip().lower()
             ssl = value in ("enabled", "true", "yes", "on", "le", "letsencrypt")
 
         # Parse cache
-        if "cache" in line_lower and ":" in line:
+        if "cache" in line_lower and ":" in line and "cache enabled" not in line_lower:
             value = line.split(":", 1)[1].strip()
             cache = _parse_cache_type(value)
 
@@ -267,12 +281,40 @@ async def get_site_info(domain: str) -> Site | None:
             if php_match:
                 php_version = php_match.group(1)
 
+        # Parse database name
+        if "database" in line_lower and "db" not in line_lower and ":" in line:
+            value = line.split(":", 1)[1].strip()
+            if value and value.lower() not in ("none", "n/a", "-"):
+                db_name = value
+
+        # Parse database user
+        if ("db user" in line_lower or "database user" in line_lower) and ":" in line:
+            value = line.split(":", 1)[1].strip()
+            if value and value.lower() not in ("none", "n/a", "-"):
+                db_user = value
+
+    # If no database info found from wo site info, generate from domain
+    if not db_name and site_type in (SiteType.WORDPRESS, SiteType.PHP, SiteType.MYSQL):
+        db_name = f"{domain.replace('.', '_').replace('-', '_')}_db"
+
+    if not db_user and site_type in (SiteType.WORDPRESS, SiteType.PHP, SiteType.MYSQL):
+        db_user = domain.replace('.', '_').replace('-', '_')
+
+    database = None
+    if db_name or db_user:
+        database = DatabaseInfo(
+            name=db_name,
+            user=db_user,
+            host="localhost"
+        )
+
     return Site(
         name=domain,
         type=site_type,
         ssl=ssl,
         cache=cache,
         php_version=php_version,
+        database=database,
     )
 
 
