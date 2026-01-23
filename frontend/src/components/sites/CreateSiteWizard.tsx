@@ -155,10 +155,15 @@ export function CreateSiteWizard({ onCreateSite, onCancel }: CreateSiteWizardPro
   }
 
   const handleNext = () => {
-    if (currentStep < 6) {
-      setCurrentStep((prev) => (prev + 1) as Step)
-    } else {
-      // Submit
+    // If on the review step, submit the form
+    if (logicalStep === 'review') {
+      console.log('Submitting site creation with data:', {
+        domain: wizardState.domain,
+        siteType: wizardState.siteType,
+        phpVersion: wizardState.phpVersion,
+        enableSsl: wizardState.enableSsl,
+        createDatabase: wizardState.createDatabase,
+      })
       onCreateSite?.({
         domain: wizardState.domain,
         siteType: wizardState.siteType!,
@@ -171,6 +176,9 @@ export function CreateSiteWizard({ onCreateSite, onCancel }: CreateSiteWizardPro
         dnsProvider: wizardState.dnsProvider ?? undefined,
         hstsEnabled: wizardState.hstsEnabled
       })
+    } else {
+      // Move to next step
+      setCurrentStep((prev) => (prev + 1) as Step)
     }
   }
 

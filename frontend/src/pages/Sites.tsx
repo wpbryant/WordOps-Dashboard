@@ -19,12 +19,16 @@ export function Sites() {
     queryFn: fetchSites,
   })
 
-  // Create site mutation
+  // Create site mutation with error handling
   const createSiteMutation = useMutation({
     mutationFn: createSite,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sites'] })
       setShowWizard(false)
+    },
+    onError: (error) => {
+      console.error('Failed to create site:', error)
+      alert(`Failed to create site: ${error.message}`)
     },
   })
 
@@ -62,7 +66,15 @@ export function Sites() {
     dnsProvider?: 'cloudflare' | 'digitalocean' | 'linode' | 'aws' | 'google' | 'vultr' | 'hetzner'
     hstsEnabled?: boolean
   }) => {
-    await createSiteMutation.mutateAsync(data)
+    console.log('Creating site with data:', data)
+
+    try {
+      await createSiteMutation.mutateAsync(data)
+      console.log('Site created successfully')
+    } catch (error) {
+      console.error('Error creating site:', error)
+      throw error
+    }
   }
 
   if (isLoading) {
