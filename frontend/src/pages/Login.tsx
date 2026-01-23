@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Shield } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
@@ -9,23 +9,6 @@ export function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [debugInfo, setDebugInfo] = useState('')
-
-  // Check API connectivity on mount
-  useEffect(() => {
-    const checkApi = async () => {
-      const apiUrl = import.meta.env.VITE_API_URL ?? ''
-      const healthUrl = apiUrl ? `${apiUrl}/api/v1/config-check` : '/api/v1/config-check'
-      try {
-        const response = await fetch(healthUrl)
-        const data = await response.json()
-        setDebugInfo(`API URL: ${apiUrl || '(relative)'} | CORS: ${data.cors_origins?.[0] || 'unknown'} | Username: ${data.admin_username || 'unknown'}`)
-      } catch (e) {
-        setDebugInfo(`API URL: ${apiUrl || '(relative)'} | Cannot reach API: ${e instanceof Error ? e.message : 'unknown'}`)
-      }
-    }
-    checkApi()
-  }, [])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -35,9 +18,7 @@ export function Login() {
     try {
       await login(username, password)
     } catch (err) {
-      console.error('[LOGIN ERROR]', err)
       if (err instanceof Error) {
-        // Show the actual error message from the API
         setError(err.message)
       } else {
         setError('Login failed')
@@ -129,13 +110,6 @@ export function Login() {
               Use the credentials you created during installation
             </p>
           </div>
-
-          {/* Debug Info */}
-          {debugInfo && (
-            <div className="mt-4 p-2 bg-zinc-100 dark:bg-zinc-800 rounded text-xs text-zinc-600 dark:text-zinc-400 font-mono">
-              {debugInfo}
-            </div>
-          )}
         </div>
 
         {/* Footer */}
