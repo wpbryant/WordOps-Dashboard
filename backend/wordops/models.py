@@ -50,6 +50,8 @@ class Site(BaseModel):
     wp_admin_password: str | None = None
     is_disabled: bool = False  # Whether the site is disabled
     nginx_config: str | None = None  # Nginx configuration content (not included by default)
+    alias_target: str | None = None  # For alias sites: the target domain
+    proxy_destination: str | None = None  # For proxy sites: the destination URL
 
     class Config:
         """Pydantic model configuration."""

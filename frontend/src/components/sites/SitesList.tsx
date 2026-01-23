@@ -151,20 +151,31 @@ export function SitesList({
                   className="sm:grid sm:grid-cols-12 gap-4 px-6 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-950/50 cursor-pointer transition-colors group"
                 >
                   {/* Domain */}
-                  <div className="col-span-4 flex items-center gap-2">
-                    <span className="font-medium text-zinc-900 dark:text-zinc-100 truncate">
-                      {site.domain}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onVisitSite?.(site.id)
-                      }}
-                      className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors opacity-0 group-hover:opacity-100"
-                      title="Visit site"
-                    >
-                      <ExternalLink className="w-4 h-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
-                    </button>
+                  <div className="col-span-4">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-zinc-900 dark:text-zinc-100 truncate">
+                        {site.domain}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onVisitSite?.(site.id)
+                        }}
+                        className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors opacity-0 group-hover:opacity-100"
+                        title="Visit site"
+                      >
+                        <ExternalLink className="w-4 h-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+                      </button>
+                    </div>
+                    {/* Alias/Proxy target */}
+                    {(site.aliasTarget || site.proxyDestination) && (
+                      <div className="flex items-center gap-1 mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                        <Link2 className="w-3 h-3" />
+                        <span className="truncate">
+                          {site.aliasTarget ? `→ ${site.aliasTarget}` : `→ ${site.proxyDestination}`}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Status - Desktop */}

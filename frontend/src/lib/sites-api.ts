@@ -21,6 +21,8 @@ interface BackendSite {
   wp_admin_url?: string | null
   wp_admin_user?: string | null
   wp_admin_password?: string | null
+  alias_target?: string | null
+  proxy_destination?: string | null
 }
 
 // Site creation input
@@ -133,6 +135,11 @@ function transformSite(backendSite: BackendSite): Site {
     wpAdminPassword: backendSite.wp_admin_password || undefined,
     // Disabled state
     isDisabled: backendSite.is_disabled || false,
+    // Alias and proxy targets
+    aliasTarget: backendSite.alias_target || undefined,
+    proxyDestination: backendSite.proxy_destination || undefined,
+    // For backward compatibility, also set targetSite for alias sites
+    targetSite: backendSite.alias_target || undefined,
   }
 }
 

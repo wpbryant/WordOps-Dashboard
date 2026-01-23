@@ -328,6 +328,11 @@ function OverviewTab({
               <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Site Type</dt>
               <dd className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                 {site.siteType === 'phpmysql' ? 'PHP+MySQL' : site.siteType.charAt(0).toUpperCase() + site.siteType.slice(1)}
+                {(site.aliasTarget || site.proxyDestination) && (
+                  <span className="ml-2 text-zinc-500 dark:text-zinc-400">
+                    → {site.aliasTarget || site.proxyDestination}
+                  </span>
+                )}
               </dd>
             </div>
             <div>

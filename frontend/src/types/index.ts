@@ -78,7 +78,9 @@ export interface Site {
   lastBackup: string | null
   monitoring: MonitoringStats
   auditLog: AuditLogEntry[]
-  targetSite?: string  // For alias sites
+  targetSite?: string  // For alias sites (deprecated, use aliasTarget)
+  aliasTarget?: string  // For alias sites: the target domain
+  proxyDestination?: string  // For proxy sites: the destination URL
   database?: DatabaseInfo  // For sites with databases
   wpAdminUrl?: string  // WordPress admin URL
   wpAdminUser?: string  // WordPress admin username

@@ -226,6 +226,8 @@ async def get_site_info(domain: str) -> Site | None:
     db_user = None
     db_pass = None
     is_disabled = False  # Track if site is disabled
+    alias_target = None  # For alias sites
+    proxy_destination = None  # For proxy sites
 
     lines = output.strip().split("\n")
 
@@ -268,6 +270,8 @@ async def get_site_info(domain: str) -> Site | None:
                         site_type = SiteType.HTML
                     elif "proxy" in config_value:
                         site_type = SiteType.PROXY
+                    elif "alias" in config_value:
+                        site_type = SiteType.ALIAS
                     break
 
         # Parse SSL status
@@ -325,6 +329,32 @@ async def get_site_info(domain: str) -> Site | None:
             host="localhost"
         )
 
+    # For alias sites, parse the nginx config to get the target domain
+    # For proxy sites, parse the nginx config to get the proxy destination
+    if site_type == SiteType.ALIAS or site_type == SiteType.PROXY:
+        try:
+            config_output = await run_command(["site", "info", domain, "--nginx"])
+            if config_output:
+                for line in config_output.strip().split("\n"):
+                    line_stripped = line.strip()
+                    # Look for alias target in nginx config
+                    if site_type == SiteType.ALIAS and "return" in line_stripped and "http" in line_stripped:
+                        # Parse redirect target from: return 301 http://targetdomain.com$request_uri;
+                        import re
+                        match = re.search(r'return\s+301\s+https?://([^/\s]+)', line_stripped)
+                        if match:
+                            alias_target = match.group(1)
+                    # Look for proxy destination in nginx config
+                    elif site_type == SiteType.PROXY and "proxy_pass" in line_stripped:
+                        # Parse proxy_pass from: proxy_pass http://localhost:3000;
+                        import re
+                        match = re.search(r'proxy_pass\s+([^;]+)', line_stripped)
+                        if match:
+                            proxy_destination = match.group(1).strip()
+        except Exception as e:
+            import logging
+            logging.warning(f"Failed to parse nginx config for {domain}: {e}")
+
     return Site(
         name=domain,
         type=site_type,
@@ -333,6 +363,8 @@ async def get_site_info(domain: str) -> Site | None:
         php_version=php_version,
         database=database,
         is_disabled=is_disabled,
+        alias_target=alias_target,
+        proxy_destination=proxy_destination,
     )
 
 
@@ -471,6 +503,8 @@ async def create_site(
         wp_admin_url=wp_admin_url,
         wp_admin_user=wp_admin_user,
         wp_admin_password=wp_admin_password,
+        alias_target=alias_target,
+        proxy_destination=proxy_destination,
     )
 
 

@@ -664,7 +664,7 @@ export function CreateSiteWizard({ onCreateSite, onCancel, isSubmitting = false 
                   className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-zinc-900 dark:text-zinc-100"
                 />
                 <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-                  The target domain must already exist on this server. The alias will redirect all traffic to the target domain.
+                  The alias will use nginx to redirect all traffic to the target domain.
                 </p>
               </div>
             </div>
