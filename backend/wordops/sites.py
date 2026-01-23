@@ -564,7 +564,7 @@ async def get_site_monitoring_info(domain: str) -> dict:
     import asyncio
 
     # Get disk usage for the site directory
-    disk_usage = "Unknown"
+    disk_usage = "N/A"
     try:
         process = await asyncio.create_subprocess_exec(
             "du",
@@ -581,123 +581,117 @@ async def get_site_monitoring_info(domain: str) -> dict:
             if parts:
                 disk_usage = parts[0]
     except (asyncio.TimeoutError, FileNotFoundError, Exception):
-        pass
+        disk_usage = "N/A"
 
     # Get inodes usage for the site directory
-    inodes_used = "Unknown"
+    inodes_used = "N/A"
     try:
+        # Use find to count files/directories (each uses an inode)
+        # This is more portable than -printf
         process = await asyncio.create_subprocess_exec(
             "find",
             site_path,
             "-xdev",
-            "-printf",
-            ".",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.DEVNULL,
-        )
-        # Pipe to wc -c to count characters (each inode = 1 character)
-        wc_process = await asyncio.create_subprocess_exec(
-            "wc",
-            "-c",
-            stdin=process.stdout,
+            "-type",
+            "f",
+            "-o",
+            "-type",
+            "d",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        # Close process.stdout to avoid blocking
-        if process.stdout:
-            process.stdout.close()
-        stdout, _ = await asyncio.wait_for(wc_process.communicate(), timeout=30.0)
-        inodes_count = stdout.decode("utf-8").strip()
+        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=30.0)
 
-        # Get filesystem inodes limit
-        process2 = await asyncio.create_subprocess_exec(
-            "df",
-            "-i",
-            site_path,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout2, _ = await asyncio.wait_for(process2.communicate(), timeout=5.0)
-        output2 = stdout2.decode("utf-8").strip()
-        # Parse df -i output to get total inodes
-        # Format: "Filesystem      Inodes IUsed   IUse IUsed% Mounted on"
-        for line in output2.split("\n"):
-            if site_path in line or "/dev" in line:
-                parts = line.split()
-                if len(parts) >= 3:
-                    inodes_total = parts[1]
-                    inodes_used = f"{inodes_count} / {inodes_total}"
-                break
-    except (asyncio.TimeoutError, FileNotFoundError, Exception):
-        pass
+        # Count the number of lines (files + directories)
+        inodes_count = len([line for line in stdout.decode("utf-8").split("\n") if line.strip()])
+
+        if inodes_count > 0:
+            # Get filesystem inodes info
+            process2 = await asyncio.create_subprocess_exec(
+                "df",
+                "-i",
+                site_path,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout2, _ = await asyncio.wait_for(process2.communicate(), timeout=5.0)
+            output2 = stdout2.decode("utf-8").strip()
+
+            # Parse df -i output
+            # Format: "Filesystem      Inodes IUsed   IUse IUsed% Mounted on"
+            lines2 = output2.split("\n")
+            for line in lines2:
+                if "/dev" in line or ("sd" in line.lower() or "nvme" in line.lower() or "xvda" in line.lower()):
+                    parts = line.split()
+                    if len(parts) >= 4:
+                        inodes_total = int(parts[1])
+                        inodes_used_pct = parts[3].rstrip('%')
+                        inodes_used = f"{inodes_count:,} / {inodes_total:,} ({inodes_used_pct}% used)"
+                        break
+    except (asyncio.TimeoutError, FileNotFoundError, ValueError, Exception):
+        inodes_used = "N/A"
 
     # Get bandwidth from nginx access logs
-    bandwidth_month = "Unknown"
+    bandwidth_month = "N/A"
     try:
         # Nginx access log path for the site
         access_log = f"/var/log/nginx/{domain}-access.log"
 
-        # Check if log file exists
-        try:
-            process = await asyncio.create_subprocess_exec(
-                "test",
-                "-f",
-                access_log,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            await process.communicate()
-            if process.returncode != 0:
-                # Log file doesn't exist
+        # Check if log file exists and is readable
+        process = await asyncio.create_subprocess_exec(
+            "test",
+            "-f",
+            access_log,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        await process.communicate()
+
+        if process.returncode == 0:
+            # Log file exists - try to parse it
+            # Use a simple approach: grep for current month in logs and extract bytes
+            # This is more reliable than complex awk scripts
+            current_month = ""
+            try:
+                date_process = await asyncio.create_subprocess_exec(
+                    "date",
+                    "+%b/%Y",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                stdout, _ = await asyncio.wait_for(date_process.communicate(), timeout=5.0)
+                current_month = stdout.decode("utf-8").strip()
+            except Exception:
                 pass
-            else:
-                # Parse current month's bandwidth from logs
-                # Use awk to sum the bytes sent from logs in current month
-                current_month = ""
-                try:
-                    date_process = await asyncio.create_subprocess_exec(
-                        "date",
-                        "+%Y/%m",
-                        stdout=asyncio.subprocess.PIPE,
-                        stderr=asyncio.subprocess.PIPE,
-                    )
-                    stdout, _ = await asyncio.wait_for(date_process.communicate(), timeout=5.0)
-                    current_month = stdout.decode("utf-8").strip()
-                except Exception:
-                    pass
 
-                if current_month:
-                    # Use awk to filter by current month and sum bytes
-                    # Nginx log format: ... $body_bytes_sent ...
-                    awk_cmd = f"""$4 ~ "{current_month}" {{sum+=$10}} END {{print sum}}"""
-                    process = await asyncio.create_subprocess_exec(
-                        "awk",
-                        awk_cmd,
-                        access_log,
-                        stdout=asyncio.subprocess.PIPE,
-                        stderr=asyncio.subprocess.PIPE,
-                    )
-                    stdout, _ = await asyncio.wait_for(process.communicate(), timeout=30.0)
-                    bytes_sent = stdout.decode("utf-8").strip()
+            if current_month:
+                # Try to extract body_bytes_sent from nginx logs
+                # Standard nginx combined log format has bytes sent as the last field
+                # Or use $body_bytes_sent in custom format
+                process = await asyncio.create_subprocess_shell(
+                    f"grep '{current_month}' {access_log} 2>/dev/null | awk '{{sum+=$NF}} END {{print sum}}'",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                stdout, _ = await asyncio.wait_for(process.communicate(), timeout=30.0)
+                bytes_sent = stdout.decode("utf-8").strip()
 
-                    if bytes_sent and bytes_sent != "0":
-                        try:
-                            bytes_val = int(float(bytes_sent))
-                            # Convert to human readable
-                            if bytes_val < 1024:
-                                bandwidth_month = f"{bytes_val} B"
-                            elif bytes_val < 1024 * 1024:
-                                bandwidth_month = f"{bytes_val / 1024:.1f} KB"
-                            elif bytes_val < 1024 * 1024 * 1024:
-                                bandwidth_month = f"{bytes_val / (1024 * 1024):.1f} MB"
-                            else:
-                                bandwidth_month = f"{bytes_val / (1024 * 1024 * 1024):.2f} GB"
-                        except ValueError:
-                            pass
-        except FileNotFoundError:
-            pass
-    except Exception:
-        pass
+                if bytes_sent and bytes_sent != "0" and bytes_sent != "":
+                    try:
+                        bytes_val = int(float(bytes_sent))
+                        # Convert to human readable
+                        if bytes_val < 1024:
+                            bandwidth_month = f"{bytes_val} B"
+                        elif bytes_val < 1024 * 1024:
+                            bandwidth_month = f"{bytes_val / 1024:.1f} KB"
+                        elif bytes_val < 1024 * 1024 * 1024:
+                            bandwidth_month = f"{bytes_val / (1024 * 1024):.1f} MB"
+                        else:
+                            bandwidth_month = f"{bytes_val / (1024 * 1024 * 1024):.2f} GB"
+                    except ValueError:
+                        bandwidth_month = "N/A"
+    except (asyncio.TimeoutError, FileNotFoundError, Exception):
+        bandwidth_month = "N/A"
 
     return {
         "disk_usage": disk_usage,
