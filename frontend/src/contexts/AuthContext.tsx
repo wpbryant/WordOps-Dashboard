@@ -73,8 +73,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData)
 
     // Redirect to the page they were trying to access, or dashboard
-    const from = (location.state as any)?.from?.pathname || '/dashboard'
-    navigate(from, { replace: true })
+    // Skip root path "/" as it's not a valid route
+    const from = (location.state as any)?.from?.pathname
+    const targetPath = (from && from !== '/') ? from : '/dashboard'
+    navigate(targetPath, { replace: true })
   }
 
   const logout = () => {
@@ -108,12 +110,28 @@ export function useAuth() {
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate('/login', { replace: true, state: { from: { pathname: window.location.pathname } } })
+      // Don't save state for root path - users should go to dashboard after login
+      const shouldSaveState = location.pathname !== '/'
+      navigate('/login', {
+        replace: true,
+        ...(shouldSaveState && { state: { from: { pathname: location.pathname } } })
+      })
     }
-  }, [isAuthenticated, isLoading, navigate])
+  }, [isAuthenticated, isLoading, navigate, location.pathname])
+
+  // Redirect to dashboard if authenticated user visits root or login page
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      if (location.pathname === '/' || location.pathname === '/login') {
+        navigate('/dashboard', { replace: true })
+      }
+    }
+  }, [isAuthenticated, isLoading, navigate, location.pathname])
 
   if (isLoading) {
     return (
