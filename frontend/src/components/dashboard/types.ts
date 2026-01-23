@@ -13,6 +13,9 @@ export interface Server {
   memoryUsage: number
   diskUsage: number
   loadAverage: number[]
+  inodesUsed?: number | null
+  inodesTotal?: number | null
+  inodesPercent?: number | null
 }
 
 export interface SiteCounts {

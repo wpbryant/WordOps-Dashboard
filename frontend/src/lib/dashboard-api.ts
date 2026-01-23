@@ -42,6 +42,9 @@ export interface SystemInfoResponse {
   other_updates: number
   disk_usage_percent: number
   public_ip: string
+  inodes_used?: number | null
+  inodes_total?: number | null
+  inodes_percent?: number | null
 }
 
 export interface Site {
@@ -155,6 +158,9 @@ export function transformServerMetrics(
     memoryUsage: Math.round(metrics.ram.current),
     diskUsage,
     loadAverage: [0, 0, 0], // Would need additional endpoint
+    inodesUsed: systemInfo?.inodes_used,
+    inodesTotal: systemInfo?.inodes_total,
+    inodesPercent: systemInfo?.inodes_percent,
   }
 }
 

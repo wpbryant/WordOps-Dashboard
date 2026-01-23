@@ -137,18 +137,52 @@ async def get_public_ip() -> str:
     return "unknown"
 
 
+async def get_inodes_info() -> tuple[int | None, int | None, int | None]:
+    """Get inodes usage information for the root filesystem.
+
+    Returns:
+        Tuple of (inodes_used, inodes_total, inodes_percent) or (None, None, None) if unavailable
+    """
+    try:
+        process = await asyncio.create_subprocess_exec(
+            "df",
+            "-i",
+            "/",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=5.0)
+        output = stdout.decode("utf-8").strip()
+
+        # Parse df -i output
+        # Format: "Filesystem      Inodes IUsed   IUse IUsed% Mounted on"
+        lines = output.split("\n")
+        for line in lines:
+            if "/dev" in line or ("sd" in line.lower() or "nvme" in line.lower() or "xvda" in line.lower()):
+                parts = line.split()
+                if len(parts) >= 5:
+                    inodes_total = int(parts[1])
+                    inodes_used = int(parts[2])
+                    inodes_percent = int(parts[3].rstrip("%"))
+                    return inodes_used, inodes_total, inodes_percent
+        return None, None, None
+    except (asyncio.TimeoutError, FileNotFoundError, ValueError, IndexError):
+        return None, None, None
+
+
 async def get_system_info() -> SystemInfo:
     """Get complete system information.
 
     Returns:
         SystemInfo with hostname, uptime, boot time, and updates
     """
-    hostname, boot_time_result, updates_result, disk_usage, public_ip = await asyncio.gather(
+    hostname, boot_time_result, updates_result, disk_usage, public_ip, inodes_info = await asyncio.gather(
         get_hostname(),
         get_boot_time(),
         get_apt_updates(),
         get_disk_usage(),
         get_public_ip(),
+        get_inodes_info(),
         return_exceptions=True,
     )
 
@@ -170,6 +204,12 @@ async def get_system_info() -> SystemInfo:
     if isinstance(public_ip, BaseException):
         public_ip = "unknown"
 
+    # Handle inodes info
+    if isinstance(inodes_info, BaseException):
+        inodes_used, inodes_total, inodes_percent = None, None, None
+    else:
+        inodes_used, inodes_total, inodes_percent = inodes_info
+
     return SystemInfo(
         hostname=hostname,
         uptime_seconds=uptime,
@@ -178,4 +218,7 @@ async def get_system_info() -> SystemInfo:
         other_updates=other_updates,
         disk_usage_percent=disk_usage_percent,
         public_ip=public_ip,
+        inodes_used=inodes_used,
+        inodes_total=inodes_total,
+        inodes_percent=inodes_percent,
     )

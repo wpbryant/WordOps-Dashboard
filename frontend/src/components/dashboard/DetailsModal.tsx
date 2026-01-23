@@ -188,6 +188,29 @@ function ServerDetails({ server }: { server: Server }) {
           </span>
         </div>
       </div>
+
+      {/* Inodes */}
+      {server.inodesTotal !== null && server.inodesTotal !== undefined && (
+        <div>
+          <h3 className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">Inodes Usage</h3>
+          <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                {server.inodesUsed?.toLocaleString()} / {server.inodesTotal.toLocaleString()}
+              </span>
+              <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                {server.inodesPercent}%
+              </span>
+            </div>
+            <div className="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-2">
+              <div
+                className="bg-amber-500 h-2 rounded-full transition-all"
+                style={{ width: `${server.inodesPercent}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

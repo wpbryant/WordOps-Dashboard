@@ -61,6 +61,9 @@ class SystemInfo(BaseModel):
     other_updates: int
     disk_usage_percent: int
     public_ip: str  # Server's public IP address
+    inodes_used: int | None = None  # Number of inodes used
+    inodes_total: int | None = None  # Total inodes available
+    inodes_percent: int | None = None  # Percentage of inodes used
 
 
 class LogType(str, Enum):

@@ -583,11 +583,10 @@ async def get_site_monitoring_info(domain: str) -> dict:
     except (asyncio.TimeoutError, FileNotFoundError, Exception):
         disk_usage = "N/A"
 
-    # Get inodes usage for the site directory
+    # Get inodes count for the site directory (just the count, not percentage)
     inodes_used = "N/A"
     try:
         # Use find to count files/directories (each uses an inode)
-        # This is more portable than -printf
         process = await asyncio.create_subprocess_exec(
             "find",
             site_path,
@@ -606,30 +605,8 @@ async def get_site_monitoring_info(domain: str) -> dict:
         inodes_count = len([line for line in stdout.decode("utf-8").split("\n") if line.strip()])
 
         if inodes_count > 0:
-            # Get filesystem inodes info
-            process2 = await asyncio.create_subprocess_exec(
-                "df",
-                "-i",
-                site_path,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
-            stdout2, _ = await asyncio.wait_for(process2.communicate(), timeout=5.0)
-            output2 = stdout2.decode("utf-8").strip()
-
-            # Parse df -i output
-            # Format: "Filesystem      Inodes IUsed   IUse IUsed% Mounted on"
-            lines2 = output2.split("\n")
-            for line in lines2:
-                if "/dev" in line or ("sd" in line.lower() or "nvme" in line.lower() or "xvda" in line.lower()):
-                    parts = line.split()
-                    if len(parts) >= 2:
-                        inodes_total = int(parts[1])
-                        # Calculate actual percentage for this site
-                        inodes_pct = (inodes_count / inodes_total) * 100
-                        inodes_used = f"{inodes_count:,} / {inodes_total:,} ({inodes_pct:.2f}%)"
-                        break
-    except (asyncio.TimeoutError, FileNotFoundError, ValueError, Exception):
+            inodes_used = f"{inodes_count:,}"
+    except (asyncio.TimeoutError, FileNotFoundError, Exception):
         inodes_used = "N/A"
 
     # Get bandwidth from nginx access logs
