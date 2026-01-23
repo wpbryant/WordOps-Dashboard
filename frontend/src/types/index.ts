@@ -82,6 +82,49 @@ export interface Site {
   database?: DatabaseInfo  // For sites with databases
 }
 
+// Sites component props
+export interface SitesListProps {
+  sites: Site[]
+  siteTypeFilter?: SiteType | 'all'
+  statusFilter?: SiteStatus | 'all'
+  searchQuery?: string
+  onSiteClick?: (siteId: string) => void
+  onVisitSite?: (siteId: string) => void
+  onWpAdminLogin?: (siteId: string) => void
+  onSiteTypeFilterChange?: (type: SiteType | 'all') => void
+  onStatusFilterChange?: (status: SiteStatus | 'all') => void
+  onSearchChange?: (query: string) => void
+  onCreateSite?: () => void
+}
+
+export interface SiteDetailsProps {
+  site: Site
+  activeTab: 'overview' | 'configuration' | 'monitoring' | 'audit'
+  onTabChange?: (tab: 'overview' | 'configuration' | 'monitoring' | 'audit') => void
+  onVisitSite?: () => void
+  onOpenPhpMyAdmin?: () => void
+  onWpAdminLogin?: () => void
+  onEditConfig?: (config: Record<string, unknown>) => void
+  onClearCache?: () => void
+  onRestartServices?: () => void
+}
+
+export interface CreateSiteWizardProps {
+  onCreateSite?: (siteData: {
+    domain: string
+    siteType: SiteType
+    phpVersion: string
+    enableSsl: boolean
+    createDatabase: boolean
+    wpCacheType?: 'default' | 'wpfc' | 'redis' | 'wpsc' | 'wprocket' | 'cache-enabler'
+    wpMultisite?: boolean
+    sslType?: 'single' | 'wildcard'
+    dnsProvider?: 'cloudflare' | 'digitalocean' | 'linode' | 'aws' | 'google' | 'vultr' | 'hetzner'
+    hstsEnabled?: boolean
+  }) => void
+  onCancel?: () => void
+}
+
 // -----------------------------------------------------------------------------
 // Server Config
 // -----------------------------------------------------------------------------
