@@ -193,22 +193,6 @@ async def get_site_info(domain: str) -> Site | None:
     if not validate_domain(domain):
         raise ValueError(f"Invalid domain name: {domain}")
 
-    # Check if site is disabled by checking if the nginx config has .bak suffix
-    # or if the symlink doesn't exist in sites-enabled
-    is_disabled = False
-    try:
-        import os
-        # WordOps renames to .bak when disabling
-        config_path = f"/etc/nginx/sites-available/{domain}.conf"
-        bak_path = f"{config_path}.bak"
-        enabled_path = f"/etc/nginx/sites-enabled/{domain}.conf"
-
-        # Site is disabled if the .bak file exists or if the symlink is missing
-        if os.path.exists(bak_path) or not os.path.exists(enabled_path):
-            is_disabled = True
-    except Exception:
-        pass
-
     try:
         output = await run_command(["site", "info", domain])
     except Exception as e:
@@ -241,6 +225,7 @@ async def get_site_info(domain: str) -> Site | None:
     db_name = None
     db_user = None
     db_pass = None
+    is_disabled = False  # Track if site is disabled
 
     lines = output.strip().split("\n")
 
@@ -248,30 +233,32 @@ async def get_site_info(domain: str) -> Site | None:
         line_stripped = line.strip()
         line_lower = line.lower().strip()
 
-        # Parse site type from "Nginx configuration" line
+        # Parse site type and enabled/disabled status from "Nginx configuration" line
         if "nginx configuration" in line_lower:
-            # Extract the part between "configuration" and "(enabled)"
-            if "enabled" in line_lower:
-                parts = line_stripped.split()
-                for i, part in enumerate(parts):
-                    if part.lower() == "configuration" and i + 1 < len(parts):
-                        config_value = parts[i + 1].lower()
-                        # Parse site type from config value
-                        if "wp" in config_value and "basic" in config_value:
-                            site_type = SiteType.WORDPRESS
-                        elif "wp" in config_value and "fc" in config_value:
-                            site_type = SiteType.WORDPRESS
-                            cache = "wpfc"
-                        elif "wp" in config_value and "redis" in config_value:
-                            site_type = SiteType.WORDPRESS
-                            cache = "redis"
-                        elif "php" in config_value:
-                            site_type = SiteType.PHP
-                        elif "html" in config_value or "static" in config_value:
-                            site_type = SiteType.HTML
-                        elif "proxy" in config_value:
-                            site_type = SiteType.PROXY
-                        break
+            # Check if disabled
+            if "(disabled)" in line_lower:
+                is_disabled = True
+            # Parse site type regardless of enabled/disabled status
+            parts = line_stripped.split()
+            for i, part in enumerate(parts):
+                if part.lower() == "configuration" and i + 1 < len(parts):
+                    config_value = parts[i + 1].lower()
+                    # Parse site type from config value
+                    if "wp" in config_value and "basic" in config_value:
+                        site_type = SiteType.WORDPRESS
+                    elif "wp" in config_value and "fc" in config_value:
+                        site_type = SiteType.WORDPRESS
+                        cache = "wpfc"
+                    elif "wp" in config_value and "redis" in config_value:
+                        site_type = SiteType.WORDPRESS
+                        cache = "redis"
+                    elif "php" in config_value:
+                        site_type = SiteType.PHP
+                    elif "html" in config_value or "static" in config_value:
+                        site_type = SiteType.HTML
+                    elif "proxy" in config_value:
+                        site_type = SiteType.PROXY
+                    break
 
         # Parse SSL status
         if "ssl" in line_lower:

@@ -150,7 +150,7 @@ export function SitesList({
                       {site.domain}
                     </p>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 sm:hidden">
-                      {site.status === 'online' ? 'Online' : 'Offline'}
+                      {site.isDisabled ? 'Disabled' : site.status === 'online' ? 'Online' : 'Offline'}
                       {' • '}
                       {site.phpVersion || 'N/A'}
                       {' • '}
@@ -176,20 +176,24 @@ export function SitesList({
                   <span
                     className={cn(
                       'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium',
-                      site.status === 'online'
-                        ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400'
-                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                      site.isDisabled
+                        ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400'
+                        : site.status === 'online'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400'
+                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
                     )}
                   >
                     <span
                       className={cn(
                         'w-1.5 h-1.5 rounded-full',
-                        site.status === 'online'
-                          ? 'bg-emerald-500 dark:bg-emerald-400'
-                          : 'bg-zinc-400 dark:bg-zinc-500'
+                        site.isDisabled
+                          ? 'bg-amber-500 dark:bg-amber-400'
+                          : site.status === 'online'
+                            ? 'bg-emerald-500 dark:bg-emerald-400'
+                            : 'bg-zinc-400 dark:bg-zinc-500'
                       )}
                     />
-                    {site.status === 'online' ? 'Online' : 'Offline'}
+                    {site.isDisabled ? 'Disabled' : site.status === 'online' ? 'Online' : 'Offline'}
                   </span>
                 </div>
 
