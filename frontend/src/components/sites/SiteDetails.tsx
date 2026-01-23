@@ -78,7 +78,6 @@ export function SiteDetails({
   onVisitSite,
   onOpenPhpMyAdmin,
   onWpAdminLogin,
-  onClearCache,
   onRestartServices,
   onDelete,
   onEnable,
