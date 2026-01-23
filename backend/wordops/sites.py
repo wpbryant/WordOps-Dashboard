@@ -367,8 +367,8 @@ async def create_site(
     }
     args.append(type_flags.get(site_type, "--wp"))
 
-    # Add cache flag if specified
-    if cache and cache != CacheType.NONE:
+    # Add cache flag if specified (only for WordPress sites)
+    if cache and cache != CacheType.NONE and site_type == SiteType.WORDPRESS:
         cache_flags = {
             CacheType.WPFC: "--wpfc",
             CacheType.WPSC: "--wpsc",
@@ -382,8 +382,9 @@ async def create_site(
     if ssl:
         args.append("--letsencrypt")
 
-    # Add PHP version if specified
-    if php_version:
+    # Add PHP version if specified (only for WordPress sites)
+    # Standalone PHP sites use the system default PHP version
+    if php_version and site_type == SiteType.WORDPRESS:
         # Validate PHP version format (e.g., "8.3", "8.2")
         if not re.match(r"^\d+\.\d+$", php_version):
             raise ValueError(f"Invalid PHP version format: {php_version}")
