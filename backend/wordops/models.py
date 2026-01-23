@@ -51,6 +51,14 @@ class Site(BaseModel):
 
         use_enum_values = True
 
+    def model_dump(self, **kwargs):
+        """Custom dump to ensure nested models are serialized properly."""
+        data = super().model_dump(**kwargs)
+        # Ensure database is included even if it's a nested model
+        if self.database is not None:
+            data['database'] = self.database.model_dump(**kwargs)
+        return data
+
 
 class CreateSiteRequest(BaseModel):
     """Request body for creating a new site."""
