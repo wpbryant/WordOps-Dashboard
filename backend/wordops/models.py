@@ -90,3 +90,11 @@ class UpdateSiteRequest(BaseModel):
         """Pydantic model configuration."""
 
         use_enum_values = True
+
+
+class SiteMonitoringInfo(BaseModel):
+    """Monitoring information for a specific site."""
+
+    disk_usage: str  # Human-readable disk usage (e.g., "2.5 GB")
+    bandwidth_month: str  # Monthly bandwidth (e.g., "15.3 GB")
+    inodes_used: str  # Inodes usage (e.g., "25,432 / 100,000")

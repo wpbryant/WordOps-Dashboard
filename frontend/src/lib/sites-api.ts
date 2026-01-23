@@ -230,3 +230,24 @@ export function getWpAdminUrl(site: Site): string {
 export function getPhpMyAdminUrl(): string {
   return '/phpmyadmin' // Relative path or your phpMyAdmin route
 }
+
+/**
+ * Fetch monitoring information for a site
+ */
+export async function fetchSiteMonitoring(domain: string): Promise<{
+  diskUsage: string
+  bandwidthMonth: string
+  inodesUsed: string
+}> {
+  const response = await apiClient.get<{
+    disk_usage: string
+    bandwidth_month: string
+    inodes_used: string
+  }>(`/api/v1/sites/${domain}/monitoring`)
+
+  return {
+    diskUsage: response.disk_usage,
+    bandwidthMonth: response.bandwidth_month,
+    inodesUsed: response.inodes_used,
+  }
+}

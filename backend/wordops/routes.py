@@ -10,6 +10,7 @@ from backend.wordops.sites import (
     create_site,
     delete_site,
     get_site_info,
+    get_site_monitoring_info,
     list_sites,
     update_site,
     validate_domain,
@@ -272,4 +273,43 @@ async def delete_existing_site(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Site deletion failed: {str(e)}",
+        )
+
+
+@router.get("/{domain}/monitoring")
+async def get_site_monitoring(
+    domain: str,
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Get monitoring information for a specific site.
+
+    Args:
+        domain: The domain name of the site
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Dictionary with disk_usage, bandwidth_month, and inodes_used
+
+    Raises:
+        400: Invalid domain format
+        503: Failed to fetch monitoring data
+    """
+    if not validate_domain(domain):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid domain format: {domain}",
+        )
+
+    try:
+        monitoring_info = await get_site_monitoring_info(domain)
+        return monitoring_info
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch monitoring data: {str(e)}",
         )

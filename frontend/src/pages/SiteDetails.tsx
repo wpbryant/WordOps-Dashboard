@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { SiteDetails as SiteDetailsComponent } from '../components/sites'
-import { fetchSite, getSiteUrl, getWpAdminUrl, getPhpMyAdminUrl, clearSiteCache, restartSiteServices, updateSiteConfig } from '../lib/sites-api'
+import { fetchSite, getSiteUrl, getWpAdminUrl, getPhpMyAdminUrl, clearSiteCache, restartSiteServices, updateSiteConfig, fetchSiteMonitoring } from '../lib/sites-api'
+import type { Site } from '../types'
 
 export function SiteDetails() {
   const navigate = useNavigate()
@@ -27,6 +28,15 @@ export function SiteDetails() {
     enabled: !!domain,
     retry: 1,
     staleTime: 0, // Always fetch fresh data, don't use stale cache
+  })
+
+  // Fetch monitoring data
+  const { data: monitoringData } = useQuery({
+    queryKey: ['site-monitoring', domain],
+    queryFn: () => fetchSiteMonitoring(domain),
+    enabled: !!domain,
+    retry: 1,
+    staleTime: 60000, // Cache for 1 minute
   })
 
   // Debug: log query state
@@ -111,9 +121,23 @@ export function SiteDetails() {
     )
   }
 
+  // Merge monitoring data with site data
+  const siteWithMonitoring: Site = monitoringData
+    ? {
+        ...site,
+        monitoring: {
+          uptimePercent: site.monitoring.uptimePercent,
+          avgResponseTime: site.monitoring.avgResponseTime,
+          diskUsage: monitoringData.diskUsage,
+          bandwidthMonth: monitoringData.bandwidthMonth,
+          inodesUsed: monitoringData.inodesUsed,
+        },
+      }
+    : site
+
   return (
     <SiteDetailsComponent
-      site={site}
+      site={siteWithMonitoring}
       activeTab={activeTab}
       onTabChange={(tab) => setActiveTab(tab)}
       onVisitSite={handleVisitSite}
