@@ -677,3 +677,66 @@ async def get_site_monitoring_info(domain: str) -> dict:
         "bandwidth_month": bandwidth_month,
         "inodes_used": inodes_used,
     }
+
+
+async def get_nginx_config(domain: str) -> str:
+    """
+    Get the nginx configuration for a site.
+
+    Args:
+        domain: The domain name of the site
+
+    Returns:
+        The nginx configuration content
+
+    Raises:
+        ValueError: If domain validation fails
+        CommandFailedError: If command fails
+    """
+    if not validate_domain(domain):
+        raise ValueError(f"Invalid domain name: {domain}")
+
+    output = await run_command(["site", "show", domain], timeout=30)
+    return output
+
+
+async def enable_site(domain: str) -> bool:
+    """
+    Enable a WordOps site.
+
+    Args:
+        domain: The domain name of the site
+
+    Returns:
+        True if successful
+
+    Raises:
+        ValueError: If domain validation fails
+        CommandFailedError: If command fails
+    """
+    if not validate_domain(domain):
+        raise ValueError(f"Invalid domain name: {domain}")
+
+    await run_command(["site", "enable", domain], timeout=60)
+    return True
+
+
+async def disable_site(domain: str) -> bool:
+    """
+    Disable a WordOps site.
+
+    Args:
+        domain: The domain name of the site
+
+    Returns:
+        True if successful
+
+    Raises:
+        ValueError: If domain validation fails
+        CommandFailedError: If command fails
+    """
+    if not validate_domain(domain):
+        raise ValueError(f"Invalid domain name: {domain}")
+
+    await run_command(["site", "disable", domain], timeout=60)
+    return True

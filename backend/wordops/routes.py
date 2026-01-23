@@ -9,6 +9,9 @@ from backend.wordops.models import CreateSiteRequest, Site, SiteType, UpdateSite
 from backend.wordops.sites import (
     create_site,
     delete_site,
+    disable_site,
+    enable_site,
+    get_nginx_config,
     get_site_info,
     get_site_monitoring_info,
     list_sites,
@@ -312,4 +315,121 @@ async def get_site_monitoring(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Failed to fetch monitoring data: {str(e)}",
+        )
+
+
+@router.get("/{domain}/nginx-config")
+async def get_nginx_configuration(
+    domain: str,
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Get the nginx configuration for a site.
+
+    Args:
+        domain: The domain name of the site
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Dictionary with the nginx configuration content
+
+    Raises:
+        400: Invalid domain format
+        503: Failed to fetch nginx configuration
+    """
+    if not validate_domain(domain):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid domain format: {domain}",
+        )
+
+    try:
+        config = await get_nginx_config(domain)
+        return {"config": config}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch nginx configuration: {str(e)}",
+        )
+
+
+@router.post("/{domain}/enable")
+async def enable_site_endpoint(
+    domain: str,
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Enable a disabled site.
+
+    Args:
+        domain: The domain name of the site
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Success message
+
+    Raises:
+        400: Invalid domain format
+        503: Failed to enable site
+    """
+    if not validate_domain(domain):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid domain format: {domain}",
+        )
+
+    try:
+        await enable_site(domain)
+        return {"success": True, "message": f"Site {domain} enabled successfully"}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to enable site: {str(e)}",
+        )
+
+
+@router.post("/{domain}/disable")
+async def disable_site_endpoint(
+    domain: str,
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Disable a site.
+
+    Args:
+        domain: The domain name of the site
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Success message
+
+    Raises:
+        400: Invalid domain format
+        503: Failed to disable site
+    """
+    if not validate_domain(domain):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid domain format: {domain}",
+        )
+
+    try:
+        await disable_site(domain)
+        return {"success": True, "message": f"Site {domain} disabled successfully"}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to disable site: {str(e)}",
         )

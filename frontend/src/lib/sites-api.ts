@@ -251,3 +251,32 @@ export async function fetchSiteMonitoring(domain: string): Promise<{
     inodesUsed: response.inodes_used,
   }
 }
+
+/**
+ * Delete a site
+ */
+export async function deleteSite(domain: string): Promise<void> {
+  await apiClient.delete(`/api/v1/sites/${domain}?confirm=true`)
+}
+
+/**
+ * Enable a site
+ */
+export async function enableSite(domain: string): Promise<void> {
+  await apiClient.post(`/api/v1/sites/${domain}/enable`, {})
+}
+
+/**
+ * Disable a site
+ */
+export async function disableSite(domain: string): Promise<void> {
+  await apiClient.post(`/api/v1/sites/${domain}/disable`, {})
+}
+
+/**
+ * Fetch nginx configuration for a site
+ */
+export async function fetchNginxConfig(domain: string): Promise<string> {
+  const response = await apiClient.get<{ config: string }>(`/api/v1/sites/${domain}/nginx-config`)
+  return response.config
+}

@@ -46,6 +46,8 @@ class Site(BaseModel):
     wp_admin_url: str | None = None
     wp_admin_user: str | None = None
     wp_admin_password: str | None = None
+    is_disabled: bool = False  # Whether the site is disabled
+    nginx_config: str | None = None  # Nginx configuration content (not included by default)
 
     class Config:
         """Pydantic model configuration."""

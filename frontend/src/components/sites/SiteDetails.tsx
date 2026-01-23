@@ -22,6 +22,8 @@ import {
   Copy,
   Bell,
   Folder,
+  Trash2,
+  Ban,
 } from 'lucide-react'
 import { FaWordpress, FaHtml5, FaPhp } from 'react-icons/fa'
 import type { SiteDetailsProps, Site } from '../../types'
@@ -79,6 +81,9 @@ export function SiteDetails({
   onEditConfig,
   onClearCache,
   onRestartServices,
+  onDelete,
+  onEnable,
+  onDisable,
 }: SiteDetailsProps) {
   const [currentTab, setCurrentTab] = useState<TabKey>(activeTab)
 
@@ -270,7 +275,7 @@ export function SiteDetails({
             <OverviewTab site={site} onClearCache={onClearCache} onRestartServices={onRestartServices} />
           )}
           {currentTab === 'configuration' && (
-            <ConfigurationTab site={site} onEditConfig={onEditConfig} />
+            <ConfigurationTab site={site} domain={site.domain} />
           )}
           {currentTab === 'monitoring' && <MonitoringTab site={site} />}
           {currentTab === 'audit' && <AuditTab site={site} />}
@@ -283,12 +288,16 @@ export function SiteDetails({
 // Overview Tab
 function OverviewTab({
   site,
-  onClearCache,
   onRestartServices,
+  onDelete,
+  onEnable,
+  onDisable,
 }: {
   site: Site
-  onClearCache?: () => void
   onRestartServices?: () => void
+  onDelete?: () => void
+  onEnable?: () => void
+  onDisable?: () => void
 }) {
   const hasPluginUpdates = site.siteType === 'wordpress' && site.plugins.some((p) => p.updateAvailable)
   const [showDbPassword, setShowDbPassword] = useState(false)
@@ -453,7 +462,7 @@ function OverviewTab({
       )}
 
       {/* WordPress Admin Credentials */}
-      {site.siteType === 'wordpress' && (site.wpAdminUser || site.wpAdminPassword) && (
+      {site.siteType === 'wordpress' && (
         <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
           <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
@@ -461,47 +470,57 @@ function OverviewTab({
             </h2>
           </div>
           <div className="p-6">
-            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
-              <p className="text-sm text-blue-800 dark:text-blue-200">
-                These credentials were shown when the site was created. Make sure to save them securely.
-              </p>
-            </div>
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Admin URL</dt>
-                <dd className="text-sm font-mono text-zinc-900 dark:text-zinc-100 break-all">
-                  {site.wpAdminUrl || `${site.sslEnabled ? 'https' : 'http'}://${site.domain}/wp-admin`}
-                </dd>
+            {site.wpAdminUser || site.wpAdminPassword ? (
+              <>
+                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    These credentials were shown when the site was created. Make sure to save them securely.
+                  </p>
+                </div>
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Admin URL</dt>
+                    <dd className="text-sm font-mono text-zinc-900 dark:text-zinc-100 break-all">
+                      {site.wpAdminUrl || `${site.sslEnabled ? 'https' : 'http'}://${site.domain}/wp-admin`}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Username</dt>
+                    <dd className="text-sm font-mono text-zinc-900 dark:text-zinc-100">
+                      {site.wpAdminUser || 'admin'}
+                    </dd>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Password</dt>
+                    <dd className="flex items-center gap-2">
+                      <span className="text-sm font-mono text-zinc-900 dark:text-zinc-100">
+                        {site.wpAdminPassword || '•••••••••••••'}
+                      </span>
+                      {site.wpAdminPassword && (
+                        <>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(site.wpAdminPassword!)
+                              alert('Password copied to clipboard')
+                            }}
+                            className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                            title="Copy password"
+                          >
+                            <Copy className="w-4 h-4 text-zinc-500" />
+                          </button>
+                        </>
+                      )}
+                    </dd>
+                  </div>
+                </dl>
+              </>
+            ) : (
+              <div className="bg-zinc-50 dark:bg-zinc-950/30 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                  WordPress admin credentials are not available for this site. They may have been provided during site creation but are not stored in the system for security reasons.
+                </p>
               </div>
-              <div>
-                <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Username</dt>
-                <dd className="text-sm font-mono text-zinc-900 dark:text-zinc-100">
-                  {site.wpAdminUser || 'admin'}
-                </dd>
-              </div>
-              <div className="sm:col-span-2">
-                <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Password</dt>
-                <dd className="flex items-center gap-2">
-                  <span className="text-sm font-mono text-zinc-900 dark:text-zinc-100">
-                    {site.wpAdminPassword || '••••••••••••'}
-                  </span>
-                  {site.wpAdminPassword && (
-                    <>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(site.wpAdminPassword!)
-                          console.log('Password copied to clipboard')
-                        }}
-                        className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                        title="Copy password"
-                      >
-                        <Copy className="w-4 h-4 text-zinc-500" />
-                      </button>
-                    </>
-                  )}
-                </dd>
-              </div>
-            </dl>
+            )}
           </div>
         </div>
       )}
@@ -644,18 +663,35 @@ function OverviewTab({
         <div className="p-6">
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={onClearCache}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-medium transition-colors"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Clear Cache
-            </button>
-            <button
               onClick={onRestartServices}
               className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-medium transition-colors"
             >
               <Power className="w-4 h-4" />
               Restart Services
+            </button>
+            {site.isDisabled ? (
+              <button
+                onClick={onEnable}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 rounded-lg text-sm font-medium transition-colors"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Enable Site
+              </button>
+            ) : (
+              <button
+                onClick={onDisable}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 rounded-lg text-sm font-medium transition-colors"
+              >
+                <Ban className="w-4 h-4" />
+                Disable Site
+              </button>
+            )}
+            <button
+              onClick={onDelete}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Site
             </button>
           </div>
         </div>
@@ -667,32 +703,43 @@ function OverviewTab({
 // Configuration Tab
 function ConfigurationTab({
   site,
-  onEditConfig,
+  domain,
 }: {
   site: Site
-  onEditConfig?: (config: Record<string, unknown>) => void
+  domain: string
 }) {
+  const [nginxConfig, setNginxConfig] = useState<string | null>(null)
+  const [isLoadingConfig, setIsLoadingConfig] = useState(false)
+  const [showConfig, setShowShowConfig] = useState(false)
+
+  const fetchConfig = async () => {
+    if (showConfig && !nginxConfig) {
+      setIsLoadingConfig(true)
+      try {
+        // Import here to avoid circular dependency
+        const { fetchNginxConfig } = await import('../../lib/sites-api')
+        const config = await fetchNginxConfig(domain)
+        setNginxConfig(config)
+      } catch (error) {
+        console.error('Failed to fetch nginx config:', error)
+      } finally {
+        setIsLoadingConfig(false)
+      }
+    }
+    setShowShowConfig(!showConfig)
+  }
+
+  // Fetch config when showConfig becomes true
+  if (showConfig && !nginxConfig && !isLoadingConfig) {
+    fetchConfig()
+  }
   return (
     <div className="space-y-6">
       <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-        <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
             Configuration Settings
           </h2>
-          <button
-            onClick={() =>
-              onEditConfig?.({
-                phpVersion: site.phpVersion,
-                nginxTemplate: site.nginxTemplate,
-                cacheEnabled: site.cacheEnabled,
-                sslEnabled: site.sslEnabled,
-              })
-            }
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm shadow-blue-600/20"
-          >
-            <Settings className="w-4 h-4" />
-            Edit Configuration
-          </button>
         </div>
         <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
           <div className="px-6 py-4 flex items-center justify-between">
@@ -824,7 +871,43 @@ function ConfigurationTab({
         </div>
       )}
 
-      <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-xl p-4">
+      {/* Nginx Configuration */}
+      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+        <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+            Nginx Configuration
+          </h2>
+          <button
+            onClick={() => setShowShowConfig(!showConfig)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-medium transition-colors"
+          >
+            {showConfig ? (
+              <>
+                <EyeOff className="w-4 h-4" />
+                Hide Config
+              </>
+            ) : (
+              <>
+                <Eye className="w-4 h-4" />
+                Show Config
+              </>
+            )}
+          </button>
+        </div>
+        {showConfig && (
+          <div className="p-6">
+            {isLoadingConfig ? (
+              <div className="text-sm text-zinc-500 dark:text-zinc-400">Loading configuration...</div>
+            ) : nginxConfig ? (
+              <pre className="bg-zinc-50 dark:bg-zinc-950 rounded-lg p-4 text-xs font-mono text-zinc-800 dark:text-zinc-200 overflow-x-auto max-h-96 overflow-y-auto">
+                {nginxConfig}
+              </pre>
+            ) : (
+              <div className="text-sm text-zinc-500 dark:text-zinc-400">Failed to load nginx configuration</div>
+            )}
+          </div>
+        )}
+      </div>
         <div className="flex gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
           <div>

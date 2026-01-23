@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { SiteDetails as SiteDetailsComponent } from '../components/sites'
-import { fetchSite, getSiteUrl, getWpAdminUrl, getPhpMyAdminUrl, clearSiteCache, restartSiteServices, updateSiteConfig, fetchSiteMonitoring } from '../lib/sites-api'
+import { fetchSite, getSiteUrl, getWpAdminUrl, getPhpMyAdminUrl, clearSiteCache, restartSiteServices, updateSiteConfig, fetchSiteMonitoring, deleteSite, enableSite, disableSite, fetchNginxConfig } from '../lib/sites-api'
 import type { Site } from '../types'
 
 export function SiteDetails() {
@@ -66,6 +66,30 @@ export function SiteDetails() {
     },
   })
 
+  // Delete site mutation
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteSite(domain),
+    onSuccess: () => {
+      navigate('/sites')
+    },
+  })
+
+  // Enable site mutation
+  const enableMutation = useMutation({
+    mutationFn: () => enableSite(domain),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['site-detail', domain] })
+    },
+  })
+
+  // Disable site mutation
+  const disableMutation = useMutation({
+    mutationFn: () => disableSite(domain),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['site-detail', domain] })
+    },
+  })
+
   const handleVisitSite = () => {
     if (site) {
       window.open(getSiteUrl(site), '_blank')
@@ -92,6 +116,22 @@ export function SiteDetails() {
 
   const handleRestartServices = () => {
     restartServicesMutation.mutate()
+  }
+
+  const handleDelete = () => {
+    if (window.confirm('Are you sure you want to delete this site? This action cannot be undone.')) {
+      deleteMutation.mutate()
+    }
+  }
+
+  const handleEnable = () => {
+    enableMutation.mutate()
+  }
+
+  const handleDisable = () => {
+    if (window.confirm('Are you sure you want to disable this site?')) {
+      disableMutation.mutate()
+    }
   }
 
   if (isLoading) {
@@ -146,6 +186,9 @@ export function SiteDetails() {
       onEditConfig={handleEditConfig}
       onClearCache={handleClearCache}
       onRestartServices={handleRestartServices}
+      onDelete={handleDelete}
+      onEnable={handleEnable}
+      onDisable={handleDisable}
     />
   )
 }

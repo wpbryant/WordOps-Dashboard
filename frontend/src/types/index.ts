@@ -83,6 +83,8 @@ export interface Site {
   wpAdminUrl?: string  // WordPress admin URL
   wpAdminUser?: string  // WordPress admin username
   wpAdminPassword?: string  // WordPress admin password
+  isDisabled?: boolean  // Whether the site is disabled
+  nginxConfig?: string | null  // Nginx configuration content
 }
 
 // Sites component props
@@ -110,6 +112,10 @@ export interface SiteDetailsProps {
   onEditConfig?: (config: Record<string, unknown>) => void
   onClearCache?: () => void
   onRestartServices?: () => void
+  onDelete?: () => void
+  onEnable?: () => void
+  onDisable?: () => void
+  onRefreshNginxConfig?: () => void
 }
 
 export interface CreateSiteWizardProps {
