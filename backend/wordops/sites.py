@@ -193,12 +193,18 @@ async def get_site_info(domain: str) -> Site | None:
     if not validate_domain(domain):
         raise ValueError(f"Invalid domain name: {domain}")
 
-    # Check if site is disabled by checking if the nginx config file has .disabled suffix
+    # Check if site is disabled by checking if the nginx config has .bak suffix
+    # or if the symlink doesn't exist in sites-enabled
     is_disabled = False
     try:
         import os
-        disabled_config_path = f"/etc/nginx/sites-available/{domain}.conf.disabled"
-        if os.path.exists(disabled_config_path):
+        # WordOps renames to .bak when disabling
+        config_path = f"/etc/nginx/sites-available/{domain}.conf"
+        bak_path = f"{config_path}.bak"
+        enabled_path = f"/etc/nginx/sites-enabled/{domain}.conf"
+
+        # Site is disabled if the .bak file exists or if the symlink is missing
+        if os.path.exists(bak_path) or not os.path.exists(enabled_path):
             is_disabled = True
     except Exception:
         pass

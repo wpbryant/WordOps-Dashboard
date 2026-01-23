@@ -8,6 +8,7 @@ interface BackendSite {
   ssl: boolean
   cache: string | null
   php_version: string | null
+  is_disabled?: boolean
   database?: {
     name: string | null
     user: string | null
@@ -111,6 +112,8 @@ function transformSite(backendSite: BackendSite): Site {
     wpAdminUrl: backendSite.wp_admin_url || undefined,
     wpAdminUser: backendSite.wp_admin_user || undefined,
     wpAdminPassword: backendSite.wp_admin_password || undefined,
+    // Disabled state
+    isDisabled: backendSite.is_disabled || false,
   }
 }
 
