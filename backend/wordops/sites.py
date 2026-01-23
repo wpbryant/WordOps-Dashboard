@@ -333,10 +333,12 @@ async def create_site(
 
     # Add PHP version if specified
     if php_version:
-        # Validate PHP version format
+        # Validate PHP version format (e.g., "8.3", "8.2")
         if not re.match(r"^\d+\.\d+$", php_version):
             raise ValueError(f"Invalid PHP version format: {php_version}")
-        args.extend(["--php", php_version])
+        # WordOps uses format like --php83, --php82 (no dot)
+        php_flag = f"--php{php_version.replace('.', '')}"
+        args.append(php_flag)
 
     # Execute with longer timeout for site creation (can take a while)
     await run_command(args, timeout=300)
@@ -414,7 +416,9 @@ async def update_site(
     if php_version is not None:
         if not re.match(r"^\d+\.\d+$", php_version):
             raise ValueError(f"Invalid PHP version format: {php_version}")
-        commands_to_run.append(["site", "update", domain, f"--php={php_version}"])
+        # WordOps uses format like --php83, --php82 (no dot, no equals)
+        php_flag = f"--php{php_version.replace('.', '')}"
+        commands_to_run.append(["site", "update", domain, php_flag])
 
     # Execute all update commands
     for args in commands_to_run:
