@@ -242,7 +242,15 @@ async def get_site_info(domain: str) -> Site | None:
             parts = line_stripped.split()
             for i, part in enumerate(parts):
                 if part.lower() == "configuration" and i + 1 < len(parts):
-                    config_value = parts[i + 1].lower()
+                    # Combine parts after "configuration" until we hit (enabled)/(disabled) or end
+                    config_parts = []
+                    for j in range(i + 1, len(parts)):
+                        next_part = parts[j].lower()
+                        # Stop at (enabled) or (disabled)
+                        if next_part.startswith("(enabled") or next_part.startswith("(disabled"):
+                            break
+                        config_parts.append(next_part)
+                    config_value = " ".join(config_parts)
                     # Parse site type from config value
                     if "wp" in config_value and "basic" in config_value:
                         site_type = SiteType.WORDPRESS
