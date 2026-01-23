@@ -154,16 +154,34 @@ async def get_inodes_info() -> tuple[int | None, int | None, int | None]:
         stdout, _ = await asyncio.wait_for(process.communicate(), timeout=5.0)
         output = stdout.decode("utf-8").strip()
 
+        import logging
+        logging.info(f"df -i output: {output}")
+
         # Parse df -i output
         # Format: "Filesystem      Inodes IUsed   IUse IUsed% Mounted on"
+        # Data line: "/dev/sda1      6553600 3765   1%    /"
         lines = output.split("\n")
         for line in lines:
             if "/dev" in line or ("sd" in line.lower() or "nvme" in line.lower() or "xvda" in line.lower()):
                 parts = line.split()
+                logging.info(f"Parsing inodes line: parts={parts}")
+
                 if len(parts) >= 5:
                     inodes_total = int(parts[1])
                     inodes_used = int(parts[2])
-                    inodes_percent = int(parts[3].rstrip("%"))
+                    # The percentage might be in different positions depending on the system
+                    # Try to find the column with % sign
+                    inodes_percent = None
+                    for i, part in enumerate(parts[3:], start=3):
+                        if "%" in part:
+                            inodes_percent = int(part.rstrip("%"))
+                            break
+
+                    if inodes_percent is None and len(parts) >= 4:
+                        # Fallback: calculate percentage from used/total
+                        inodes_percent = int((inodes_used / inodes_total) * 100)
+
+                    logging.info(f"Inodes: used={inodes_used}, total={inodes_total}, percent={inodes_percent}")
                     return inodes_used, inodes_total, inodes_percent
         return None, None, None
     except (asyncio.TimeoutError, FileNotFoundError, ValueError, IndexError):
