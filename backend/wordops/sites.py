@@ -391,6 +391,10 @@ async def create_site(
         php_flag = f"--php{php_version.replace('.', '')}"
         args.append(php_flag)
 
+    # Log the command for debugging
+    import logging
+    logging.info(f"Creating site with command: wo {' '.join(args)}")
+
     # Execute with longer timeout for site creation (can take a while)
     # Capture output to parse WordPress admin credentials
     output = await run_command(args, timeout=300)
