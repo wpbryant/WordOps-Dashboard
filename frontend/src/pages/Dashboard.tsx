@@ -134,12 +134,6 @@ export function Dashboard() {
   // Error state
   const hasError = metricsError || servicesError || sitesError || systemInfoError
 
-  // Loading state
-  const isLoading = metricsLoading || servicesLoading || sitesLoading
-
-  // Error state
-  const hasError = metricsError || servicesError || sitesError
-
   // Empty state - no sites
   const isEmpty = siteCounts && siteCounts.total === 0
 
