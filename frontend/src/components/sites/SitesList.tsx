@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Globe, ExternalLink, Plus, Search, Shield, RefreshCw } from 'lucide-react'
-import { FaWordpress } from 'react-icons/fa'
-import type { SitesListProps, Site, Plugin, SiteType, SiteStatus } from '../../types'
+import { ExternalLink, Plus, Search, Link2, Globe } from 'lucide-react'
+import { FaWordpress, FaHtml5, FaPhp } from 'react-icons/fa'
+import type { SitesListProps, SiteType, SiteStatus } from '../../types'
 import { cn } from '../../lib/utils'
 
 export function SitesList({
@@ -28,9 +28,6 @@ export function SitesList({
       site.domain.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesType && matchesStatus && matchesSearch
   })
-
-  const hasPluginUpdates = (site: Site): boolean =>
-    site.siteType === 'wordpress' && site.plugins.some((p: Plugin) => p.updateAvailable)
 
   return (
     <div className="flex flex-col h-full">
@@ -120,71 +117,168 @@ export function SitesList({
           <div className="hidden sm:grid grid-cols-12 gap-4 px-6 py-3 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
             <div className="col-span-4">Domain</div>
             <div className="col-span-2">Status</div>
-            <div className="col-span-2">PHP</div>
-            <div className="col-span-2">Type</div>
-            <div className="col-span-2 text-right">Actions</div>
+            <div className="col-span-1">PHP</div>
+            <div className="col-span-1">Type</div>
+            <div className="col-span-2">SSL</div>
+            <div className="col-span-2">WP Admin</div>
           </div>
 
           {/* Table Rows */}
           <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
-            {filteredSites.map((site) => (
-              <div
-                key={site.id}
-                onClick={() => onSiteClick?.(site.id)}
-                className="sm:grid sm:grid-cols-12 gap-4 px-6 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-950/50 cursor-pointer transition-colors group"
-              >
-                {/* Domain */}
-                <div className="col-span-4 flex items-center gap-3">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onVisitSite?.(site.id)
-                    }}
-                    className="p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors group-hover:bg-zinc-200 dark:group-hover:bg-zinc-700"
-                    title="Visit site"
-                  >
-                    <Globe className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
-                  </button>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-zinc-900 dark:text-zinc-100 truncate">
+            {filteredSites.map((site) => {
+              // Helper function to get site type icon
+              const getSiteTypeIcon = () => {
+                switch (site.siteType) {
+                  case 'wordpress':
+                    return FaWordpress
+                  case 'html':
+                    return FaHtml5
+                  case 'phpmysql':
+                  case 'php':
+                    return FaPhp
+                  case 'alias':
+                    return Link2
+                  default:
+                    return null
+                }
+              }
+              const SiteTypeIcon = getSiteTypeIcon()
+
+              return (
+                <div
+                  key={site.id}
+                  onClick={() => onSiteClick?.(site.id)}
+                  className="sm:grid sm:grid-cols-12 gap-4 px-6 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-950/50 cursor-pointer transition-colors group"
+                >
+                  {/* Domain */}
+                  <div className="col-span-4 flex items-center gap-2">
+                    <span className="font-medium text-zinc-900 dark:text-zinc-100 truncate">
                       {site.domain}
-                    </p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 sm:hidden">
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onVisitSite?.(site.id)
+                      }}
+                      className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors opacity-0 group-hover:opacity-100"
+                      title="Visit site"
+                    >
+                      <ExternalLink className="w-4 h-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300" />
+                    </button>
+                  </div>
+
+                  {/* Status - Desktop */}
+                  <div className="hidden sm:flex sm:col-span-2 items-center">
+                    <span
+                      className={cn(
+                        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium',
+                        site.isDisabled
+                          ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400'
+                          : site.status === 'online'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400'
+                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'w-1.5 h-1.5 rounded-full',
+                          site.isDisabled
+                            ? 'bg-amber-500 dark:bg-amber-400'
+                            : site.status === 'online'
+                              ? 'bg-emerald-500 dark:bg-emerald-400'
+                              : 'bg-zinc-400 dark:bg-zinc-500'
+                        )}
+                      />
                       {site.isDisabled ? 'Disabled' : site.status === 'online' ? 'Online' : 'Offline'}
-                      {' • '}
-                      {site.phpVersion || 'N/A'}
-                      {' • '}
-                      {site.siteType}
-                    </p>
-                    {hasPluginUpdates(site) && (
-                      <div className="flex items-center gap-1 mt-1">
-                        <RefreshCw className="w-3 h-3 text-teal-600 dark:text-teal-400" />
-                        <span className="text-xs text-teal-600 dark:text-teal-400">
-                          {site.plugins.filter((p) => p.updateAvailable).length} update
-                          {site.plugins.filter((p) => p.updateAvailable).length > 1
-                            ? 's'
-                            : ''}{' '}
-                          available
-                        </span>
+                    </span>
+                  </div>
+
+                  {/* PHP Version - Desktop */}
+                  <div className="hidden sm:flex sm:col-span-1 items-center">
+                    <span className="text-sm text-zinc-600 dark:text-zinc-400 font-mono">
+                      {site.phpVersion || '—'}
+                    </span>
+                  </div>
+
+                  {/* Type - Desktop (Icon only) */}
+                  <div className="hidden sm:flex sm:col-span-1 items-center justify-center">
+                    {SiteTypeIcon && (
+                      <div
+                        className={cn(
+                          'p-2 rounded-lg',
+                          site.siteType === 'wordpress' &&
+                            'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400',
+                          site.siteType === 'alias' &&
+                            'bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400',
+                          site.siteType === 'html' &&
+                            'bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400',
+                          (site.siteType === 'php' || site.siteType === 'phpmysql') &&
+                            'bg-teal-50 dark:bg-teal-950/30 text-teal-600 dark:text-teal-400'
+                        )}
+                      >
+                        <SiteTypeIcon className="w-4 h-4" />
                       </div>
                     )}
                   </div>
-                </div>
 
-                {/* Status - Desktop */}
-                <div className="hidden sm:flex sm:col-span-2 items-center">
-                  <span
-                    className={cn(
-                      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium',
-                      site.isDisabled
-                        ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400'
-                        : site.status === 'online'
-                          ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400'
-                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
-                    )}
-                  >
+                  {/* SSL Status - Desktop */}
+                  <div className="hidden sm:flex sm:col-span-2 items-center">
                     <span
                       className={cn(
+                        'inline-flex items-center gap-1.5 text-xs font-medium',
+                        site.sslEnabled && site.sslCertificate
+                          ? site.sslCertificate.status === 'active'
+                            ? 'text-emerald-700 dark:text-emerald-400'
+                            : site.sslCertificate.status === 'expiring'
+                              ? 'text-amber-700 dark:text-amber-400'
+                              : 'text-red-700 dark:text-red-400'
+                          : 'text-zinc-400 dark:text-zinc-500'
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          'w-4 h-4 rounded-full border-2',
+                          site.sslEnabled && site.sslCertificate
+                            ? site.sslCertificate.status === 'active'
+                              ? 'border-emerald-500 bg-emerald-500 dark:border-emerald-400 dark:bg-emerald-400'
+                              : site.sslCertificate.status === 'expiring'
+                                ? 'border-amber-500 bg-amber-500 dark:border-amber-400 dark:bg-amber-400'
+                                : 'border-red-500 bg-red-500 dark:border-red-400 dark:bg-red-400'
+                            : 'border-zinc-300 dark:border-zinc-600'
+                        )}
+                      />
+                      {site.sslEnabled && site.sslCertificate
+                        ? site.sslCertificate.status === 'active'
+                          ? 'Active'
+                          : site.sslCertificate.status === 'expiring'
+                            ? 'Expiring'
+                            : 'Expired'
+                        : 'Not Active'}
+                    </span>
+                  </div>
+
+                  {/* WP Admin - Desktop */}
+                  <div className="hidden sm:flex sm:col-span-2 items-center">
+                    {site.siteType === 'wordpress' ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onWpAdminLogin?.(site.id)
+                        }}
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
+                      >
+                        <FaWordpress className="w-3 h-3" />
+                        WP Admin
+                      </button>
+                    ) : (
+                      <span className="text-zinc-400 dark:text-zinc-600">—</span>
+                    )}
+                  </div>
+
+                  {/* Mobile Info */}
+                  <div className="flex sm:hidden col-span-full flex-col gap-2 mt-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                    <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                      <span className={cn(
                         'w-1.5 h-1.5 rounded-full',
                         site.isDisabled
                           ? 'bg-amber-500 dark:bg-amber-400'
@@ -192,101 +286,49 @@ export function SitesList({
                             ? 'bg-emerald-500 dark:bg-emerald-400'
                             : 'bg-zinc-400 dark:bg-zinc-500'
                       )}
-                    />
-                    {site.isDisabled ? 'Disabled' : site.status === 'online' ? 'Online' : 'Offline'}
-                  </span>
-                </div>
-
-                {/* PHP Version - Desktop */}
-                <div className="hidden sm:flex sm:col-span-2 items-center">
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400 font-mono">
-                    {site.phpVersion || '—'}
-                  </span>
-                </div>
-
-                {/* Type - Desktop */}
-                <div className="hidden sm:flex sm:col-span-2 items-center">
-                  <span
-                    className={cn(
-                      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium',
-                      site.siteType === 'wordpress' &&
-                        'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400',
-                      site.siteType === 'alias' &&
-                        'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-400',
-                      site.siteType === 'html' &&
-                        'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400',
-                      (site.siteType === 'php' || site.siteType === 'phpmysql') &&
-                        'bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400'
-                    )}
-                  >
-                    {site.siteType === 'wordpress' && (
-                      <FaWordpress className="w-3 h-3" />
-                    )}
-                    {site.siteType === 'phpmysql' ? 'PHP+MySQL' : site.siteType.charAt(0).toUpperCase() + site.siteType.slice(1)}
-                  </span>
-                </div>
-
-                {/* Actions - Desktop */}
-                <div className="hidden sm:flex sm:col-span-2 items-center justify-end gap-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onVisitSite?.(site.id)
-                    }}
-                    className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                    title="Visit site"
-                  >
-                    <ExternalLink className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
-                  </button>
-                  {site.siteType === 'wordpress' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onWpAdminLogin?.(site.id)
-                      }}
-                      className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                      title="WP Admin"
-                    >
-                      <FaWordpress className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
-                    </button>
-                  )}
-                  {!site.sslEnabled && (
-                    <div
-                      className="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30"
-                      title="SSL not enabled"
-                    >
-                      <Shield className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                      />
+                      {site.isDisabled ? 'Disabled' : site.status === 'online' ? 'Online' : 'Offline'}
+                      {' • '}
+                      {site.phpVersion || 'N/A'}
+                      {' • '}
+                      {site.siteType === 'phpmysql' ? 'PHP+MySQL' : site.siteType.charAt(0).toUpperCase() + site.siteType.slice(1)}
+                      {' • '}
+                      {site.sslEnabled && site.sslCertificate
+                        ? site.sslCertificate.status === 'active'
+                          ? 'SSL Active'
+                          : site.sslCertificate.status === 'expiring'
+                            ? 'SSL Expiring'
+                            : 'SSL Expired'
+                        : 'SSL Not Active'}
                     </div>
-                  )}
+                    <div className="flex items-center gap-2">
+                      {site.siteType === 'wordpress' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onWpAdminLogin?.(site.id)
+                          }}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                        >
+                          <FaWordpress className="w-3 h-3" />
+                          WP Admin
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onVisitSite?.(site.id)
+                        }}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Visit
+                      </button>
+                    </div>
+                  </div>
                 </div>
-
-                {/* Mobile Actions */}
-                <div className="flex sm:hidden col-span-full items-center justify-end gap-2 mt-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onVisitSite?.(site.id)
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Visit
-                  </button>
-                  {site.siteType === 'wordpress' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onWpAdminLogin?.(site.id)
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-                    >
-                      <FaWordpress className="w-4 h-4" />
-                      Admin
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
