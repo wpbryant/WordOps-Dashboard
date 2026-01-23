@@ -193,6 +193,16 @@ async def get_site_info(domain: str) -> Site | None:
     if not validate_domain(domain):
         raise ValueError(f"Invalid domain name: {domain}")
 
+    # Check if site is disabled by checking if the nginx config file has .disabled suffix
+    is_disabled = False
+    try:
+        import os
+        disabled_config_path = f"/etc/nginx/sites-available/{domain}.conf.disabled"
+        if os.path.exists(disabled_config_path):
+            is_disabled = True
+    except Exception:
+        pass
+
     try:
         output = await run_command(["site", "info", domain])
     except Exception as e:
@@ -319,6 +329,7 @@ async def get_site_info(domain: str) -> Site | None:
         cache=cache,
         php_version=php_version,
         database=database,
+        is_disabled=is_disabled,
     )
 
 
