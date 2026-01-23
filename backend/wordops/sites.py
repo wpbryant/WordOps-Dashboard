@@ -383,21 +383,57 @@ async def create_site(
         args.append(php_flag)
 
     # Execute with longer timeout for site creation (can take a while)
-    await run_command(args, timeout=300)
+    # Capture output to parse WordPress admin credentials
+    output = await run_command(args, timeout=300)
+
+    # Parse WordPress admin credentials from output if this is a WordPress site
+    wp_admin_url = None
+    wp_admin_user = None
+    wp_admin_password = None
+
+    if site_type == SiteType.WORDPRESS and output:
+        lines = output.strip().split("\n")
+        for line in lines:
+            line_lower = line.lower()
+            # Look for WordPress admin URL
+            if "wordpress admin" in line_lower and "http" in line_lower:
+                parts = line.split("http")
+                if len(parts) > 1:
+                    wp_admin_url = "http" + parts[1].strip()
+
+            # Look for WordPress username
+            if "wordpress username" in line_lower or "admin user" in line_lower:
+                parts = line.split(":")
+                if len(parts) > 1:
+                    wp_admin_user = parts[1].strip()
+
+            # Look for WordPress password
+            if "wordpress password" in line_lower or "admin password" in line_lower:
+                parts = line.split(":")
+                if len(parts) > 1:
+                    wp_admin_password = parts[1].strip()
 
     # Fetch and return the created site info
     site = await get_site_info(domain)
-    if site is None:
-        # Site was created but we couldn't fetch info - return basic info
-        return Site(
-            name=domain,
-            type=site_type,
-            ssl=ssl,
-            cache=cache.value if cache else None,
-            php_version=php_version,
-        )
 
-    return site
+    # Add WordPress admin credentials to site info
+    if site:
+        site.wp_admin_url = wp_admin_url
+        site.wp_admin_user = wp_admin_user
+        site.wp_admin_password = wp_admin_password
+        return site
+
+    # Site was created but we couldn't fetch info - return basic info
+    return Site(
+        name=domain,
+        type=site_type,
+        ssl=ssl,
+        cache=cache.value if cache else None,
+        php_version=php_version,
+        wp_admin_url=wp_admin_url,
+        wp_admin_user=wp_admin_user,
+        wp_admin_password=wp_admin_password,
+    )
 
 
 async def update_site(

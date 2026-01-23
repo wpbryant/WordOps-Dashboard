@@ -442,6 +442,60 @@ function OverviewTab({
         </div>
       )}
 
+      {/* WordPress Admin Credentials */}
+      {site.siteType === 'wordpress' && (site.wpAdminUser || site.wpAdminPassword) && (
+        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+          <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              WordPress Admin Credentials
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                These credentials were shown when the site was created. Make sure to save them securely.
+              </p>
+            </div>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Admin URL</dt>
+                <dd className="text-sm font-mono text-zinc-900 dark:text-zinc-100 break-all">
+                  {site.wpAdminUrl || `${site.sslEnabled ? 'https' : 'http'}://${site.domain}/wp-admin`}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Username</dt>
+                <dd className="text-sm font-mono text-zinc-900 dark:text-zinc-100">
+                  {site.wpAdminUser || 'admin'}
+                </dd>
+              </div>
+              <div className="sm:col-span-2">
+                <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Password</dt>
+                <dd className="flex items-center gap-2">
+                  <span className="text-sm font-mono text-zinc-900 dark:text-zinc-100">
+                    {site.wpAdminPassword || '••••••••••••'}
+                  </span>
+                  {site.wpAdminPassword && (
+                    <>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(site.wpAdminPassword!)
+                          console.log('Password copied to clipboard')
+                        }}
+                        className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                        title="Copy password"
+                      >
+                        <Copy className="w-4 h-4 text-zinc-500" />
+                      </button>
+                    </>
+                  )}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      )}
+
       {/* SSL Certificate */}
       <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
         <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
