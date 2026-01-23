@@ -13,8 +13,12 @@ export function SiteDetails() {
   // Fetch site details - id is actually the domain
   const { data: site, isLoading, error } = useQuery({
     queryKey: ['sites', id],
-    queryFn: () => fetchSite(id!), // id is the domain
+    queryFn: () => {
+      console.log('Fetching site details for domain:', id)
+      return fetchSite(id!) // id is the domain
+    },
     enabled: !!id,
+    retry: 1,
   })
 
   // Clear cache mutation
@@ -80,7 +84,14 @@ export function SiteDetails() {
   if (error || !site) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4">
-        <div className="text-red-600 dark:text-red-400">Error loading site details</div>
+        <div className="text-red-600 dark:text-red-400">
+          {error ? `Error: ${error.message}` : 'Site not found'}
+        </div>
+        {error && (
+          <div className="text-sm text-zinc-500 dark:text-zinc-400">
+            Domain: {id}
+          </div>
+        )}
         <button
           onClick={() => navigate('/sites')}
           className="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"

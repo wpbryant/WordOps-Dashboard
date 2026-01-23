@@ -101,7 +101,9 @@ export async function fetchSites(): Promise<Site[]> {
  * Fetch a single site by domain (used as ID)
  */
 export async function fetchSite(domain: string): Promise<Site> {
+  console.log('fetchSite called with domain:', domain)
   const response = await apiClient.get<BackendSite>(`/api/v1/sites/${domain}`)
+  console.log('API response:', response)
   return transformSite(response)
 }
 
