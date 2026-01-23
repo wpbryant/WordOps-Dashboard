@@ -1,47 +1,56 @@
 import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { SiteDetails as SiteDetailsComponent } from '../components/sites'
 import { fetchSite, getSiteUrl, getWpAdminUrl, getPhpMyAdminUrl, clearSiteCache, restartSiteServices, updateSiteConfig } from '../lib/sites-api'
 
 export function SiteDetails() {
-  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<'overview' | 'configuration' | 'monitoring' | 'audit'>('overview')
 
-  // Fetch site details - id is actually the domain
+  // Extract domain from pathname manually since we're not using React Router's Routes
+  // The URL format is /sites/{domain}
+  const domain = window.location.pathname.split('/sites/')[1]
+
+  // Debug: log the domain from URL
+  console.log('SiteDetails page loaded, domain from URL:', domain, 'type:', typeof domain, 'truthy:', !!domain)
+
+  // Fetch site details - domain is extracted from pathname
   const { data: site, isLoading, error } = useQuery({
-    queryKey: ['sites', id],
+    queryKey: ['sites', domain],
     queryFn: () => {
-      console.log('Fetching site details for domain:', id)
-      return fetchSite(id!) // id is the domain
+      console.log('Fetching site details for domain:', domain)
+      return fetchSite(domain) // domain is extracted from pathname
     },
-    enabled: !!id,
+    enabled: !!domain,
     retry: 1,
   })
 
+  // Debug: log query state
+  console.log('Query state:', { isLoading, error, site })
+
   // Clear cache mutation
   const clearCacheMutation = useMutation({
-    mutationFn: () => clearSiteCache(id!),
+    mutationFn: () => clearSiteCache(domain),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sites', id] })
+      queryClient.invalidateQueries({ queryKey: ['sites', domain] })
     },
   })
 
   // Restart services mutation
   const restartServicesMutation = useMutation({
-    mutationFn: () => restartSiteServices(id!),
+    mutationFn: () => restartSiteServices(domain),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sites', id] })
+      queryClient.invalidateQueries({ queryKey: ['sites', domain] })
     },
   })
 
   // Update config mutation
   const updateConfigMutation = useMutation({
-    mutationFn: (config: Record<string, unknown>) => updateSiteConfig(id!, config),
+    mutationFn: (config: Record<string, unknown>) => updateSiteConfig(domain, config),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sites', id] })
+      queryClient.invalidateQueries({ queryKey: ['sites', domain] })
     },
   })
 
@@ -87,11 +96,9 @@ export function SiteDetails() {
         <div className="text-red-600 dark:text-red-400">
           {error ? `Error: ${error.message}` : 'Site not found'}
         </div>
-        {error && (
-          <div className="text-sm text-zinc-500 dark:text-zinc-400">
-            Domain: {id}
-          </div>
-        )}
+        <div className="text-sm text-zinc-500 dark:text-zinc-400">
+          Domain: {domain}
+        </div>
         <button
           onClick={() => navigate('/sites')}
           className="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
