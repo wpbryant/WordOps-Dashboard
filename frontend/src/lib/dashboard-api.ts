@@ -34,6 +34,15 @@ export interface ServiceStatus {
   version?: string
 }
 
+export interface SystemInfoResponse {
+  hostname: string
+  uptime_seconds: number
+  boot_time: number
+  security_updates: number
+  other_updates: number
+  disk_usage_percent: number
+}
+
 export interface Site {
   name: string
   type: 'wordpress' | 'php' | 'html' | 'proxy' | 'mysql'
@@ -53,6 +62,15 @@ export function useServerMetrics(range: '5m' | '1h' | '24h' = '1h') {
     queryFn: () => apiClient.get<SystemMetricsResponse>(`/api/v1/server/metrics?range=${range}`),
     refetchInterval: 30000, // Refetch every 30 seconds
     staleTime: 10000, // Consider data fresh for 10 seconds
+  })
+}
+
+export function useServerInfo() {
+  return useQuery({
+    queryKey: ['server', 'info'],
+    queryFn: () => apiClient.get<SystemInfoResponse>('/api/v1/server/info'),
+    refetchInterval: 60000, // Refetch every minute
+    staleTime: 30000,
   })
 }
 
@@ -97,26 +115,45 @@ import type { Server, SiteCounts, UfwIntrusions, Updates } from '../components/d
 
 export function transformServerMetrics(
   metrics: SystemMetricsResponse,
-  services: ServiceStatus[]
+  services: ServiceStatus[],
+  systemInfo?: SystemInfoResponse
 ): Server {
   // Check if server is online by checking critical services
+  // php-fpm services are named like php8.1-fpm, php8.2-fpm, etc.
   const isOnline = services.some(
-    s => (s.name === 'nginx' || s.name === 'php-fpm') && s.status === 'running'
+    s => (s.name === 'nginx' || s.name.startsWith('php') && s.name.includes('fpm')) && s.status === 'running'
   )
 
-  // Calculate uptime (placeholder - would need additional endpoint)
-  const uptime = 'Unknown'
-  const lastBootTime = new Date().toISOString()
+  // Format uptime from seconds to human readable
+  const formatUptime = (seconds: number): string => {
+    if (seconds < 60) return `${seconds}s`
+    const minutes = Math.floor(seconds / 60)
+    if (minutes < 60) return `${minutes}m`
+    const hours = Math.floor(minutes / 60)
+    const remainingMinutes = minutes % 60
+    if (hours < 24) return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`
+    const days = Math.floor(hours / 24)
+    const remainingHours = hours % 24
+    return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`
+  }
+
+  // Use system info if available, otherwise use defaults
+  const hostname = systemInfo?.hostname || 'unknown'
+  const uptime = systemInfo ? formatUptime(systemInfo.uptime_seconds) : 'Unknown'
+  const lastBootTime = systemInfo
+    ? new Date(systemInfo.boot_time * 1000).toISOString()
+    : new Date().toISOString()
+  const diskUsage = systemInfo?.disk_usage_percent ?? 0
 
   return {
-    hostname: 'webserver-01', // Would need additional endpoint
+    hostname,
     status: isOnline ? 'online' : 'offline',
     uptime,
     lastBootTime,
     cpuUsage: Math.round(metrics.cpu.current),
     memoryUsage: Math.round(metrics.ram.current),
-    diskUsage: Math.round(metrics.disk.current),
-    loadAverage: [0.45, 0.62, 0.71], // Placeholder - would need additional endpoint
+    diskUsage,
+    loadAverage: [0, 0, 0], // Would need additional endpoint
   }
 }
 
@@ -157,10 +194,10 @@ export function getPlaceholderUfwIntrusions(): UfwIntrusions {
   }
 }
 
-// Placeholder - would need actual updates endpoint
-export function getPlaceholderUpdates(): Updates {
+// Get updates from system info
+export function getUpdatesFromSystemInfo(systemInfo?: SystemInfoResponse): Updates {
   return {
-    systemPackages: 0,
+    systemPackages: (systemInfo?.security_updates ?? 0) + (systemInfo?.other_updates ?? 0),
     siteUpdates: {
       wordpressCore: 0,
       plugins: 0,

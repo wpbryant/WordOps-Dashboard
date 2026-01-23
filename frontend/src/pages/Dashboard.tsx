@@ -5,11 +5,12 @@ import type { Server, SiteCounts, UfwIntrusions, Updates } from '../components/d
 import {
   useServerMetrics,
   useServerServices,
+  useServerInfo,
   useSites,
   transformServerMetrics,
   transformSiteCounts,
   getPlaceholderUfwIntrusions,
-  getPlaceholderUpdates,
+  getUpdatesFromSystemInfo,
 } from '../lib/dashboard-api'
 import { Activity } from 'lucide-react'
 
@@ -110,21 +111,28 @@ export function Dashboard() {
   // Fetch data from API
   const { data: metrics, isLoading: metricsLoading, error: metricsError, refetch: refetchMetrics } = useServerMetrics()
   const { data: services, isLoading: servicesLoading, error: servicesError, refetch: refetchServices } = useServerServices()
+  const { data: systemInfo, isLoading: systemInfoLoading, error: systemInfoError, refetch: refetchSystemInfo } = useServerInfo()
   const { data: sites, isLoading: sitesLoading, error: sitesError, refetch: refetchSites } = useSites()
 
   // Transform data to UI types
   let server: Server | undefined
   let siteCounts: SiteCounts | undefined
   let ufwIntrusions: UfwIntrusions = getPlaceholderUfwIntrusions()
-  let updates: Updates = getPlaceholderUpdates()
+  let updates: Updates = getUpdatesFromSystemInfo(systemInfo)
 
   if (metrics && services) {
-    server = transformServerMetrics(metrics, services)
+    server = transformServerMetrics(metrics, services, systemInfo)
   }
 
   if (sites) {
     siteCounts = transformSiteCounts(sites)
   }
+
+  // Loading state
+  const isLoading = metricsLoading || servicesLoading || sitesLoading || systemInfoLoading
+
+  // Error state
+  const hasError = metricsError || servicesError || sitesError || systemInfoError
 
   // Loading state
   const isLoading = metricsLoading || servicesLoading || sitesLoading
@@ -139,6 +147,7 @@ export function Dashboard() {
     refetchMetrics()
     refetchServices()
     refetchSites()
+    refetchSystemInfo()
   }
 
   const handleServerClick = () => {
@@ -181,6 +190,7 @@ export function Dashboard() {
     refetchMetrics()
     refetchServices()
     refetchSites()
+    refetchSystemInfo()
   }
 
   if (isLoading) {

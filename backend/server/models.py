@@ -50,6 +50,17 @@ class ServiceStatus(BaseModel):
     main_pid: int | None = None
 
 
+class SystemInfo(BaseModel):
+    """System information including hostname, uptime, and updates."""
+
+    hostname: str
+    uptime_seconds: int
+    boot_time: int  # Unix timestamp
+    security_updates: int
+    other_updates: int
+    disk_usage_percent: int
+
+
 class LogType(str, Enum):
     """Supported log file types."""
 

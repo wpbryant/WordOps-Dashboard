@@ -10,9 +10,10 @@ from backend.auth.dependencies import get_current_user
 from backend.auth.models import User
 from backend.auth.utils import decode_token
 from backend.server.logs import tail_log, validate_log_type
-from backend.server.models import LogEntry, LogType, ServiceStatus, SystemMetrics, TimeRange
+from backend.server.models import LogEntry, LogType, ServiceStatus, SystemInfo, SystemMetrics, TimeRange
 from backend.server.netdata import get_system_metrics
 from backend.server.services import get_all_services, get_service_status, restart_service
+from backend.server.system import get_system_info
 from backend.server.websocket import log_manager
 
 router = APIRouter(prefix="/api/v1/server", tags=["server"])
@@ -53,6 +54,21 @@ async def get_metrics(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Failed to fetch metrics: {str(e)}",
         )
+
+
+@router.get("/info", response_model=SystemInfo)
+async def get_info(
+    current_user: User = Depends(get_current_user),
+) -> SystemInfo:
+    """Get system information including hostname, uptime, and updates.
+
+    Args:
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        SystemInfo with hostname, boot time, and update counts
+    """
+    return await get_system_info()
 
 
 @router.get("/services", response_model=list[ServiceStatus])
