@@ -908,18 +908,6 @@ function ConfigurationTab({
           </div>
         )}
       </div>
-        <div className="flex gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
-              Configuration changes require service restart
-            </p>
-            <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-              Some configuration changes may require restarting nginx or PHP-FPM services to take effect.
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
