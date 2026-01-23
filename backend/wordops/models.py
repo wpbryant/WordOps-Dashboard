@@ -10,9 +10,11 @@ class SiteType(str, Enum):
 
     WORDPRESS = "wordpress"
     PHP = "php"
+    PHPMYSQL = "phpmysql"
     HTML = "html"
     PROXY = "proxy"
     MYSQL = "mysql"
+    ALIAS = "alias"
 
 
 class CacheType(str, Enum):

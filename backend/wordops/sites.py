@@ -360,6 +360,7 @@ async def create_site(
     type_flags = {
         SiteType.WORDPRESS: "--wp",
         SiteType.PHP: "--php",
+        SiteType.PHPMYSQL: "--mysql",
         SiteType.HTML: "--html",
         SiteType.PROXY: "--proxy",
         SiteType.MYSQL: "--mysql",

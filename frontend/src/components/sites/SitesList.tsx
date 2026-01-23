@@ -215,14 +215,14 @@ export function SitesList({
                         'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-400',
                       site.siteType === 'html' &&
                         'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400',
-                      site.siteType === 'php' &&
+                      (site.siteType === 'php' || site.siteType === 'phpmysql') &&
                         'bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400'
                     )}
                   >
                     {site.siteType === 'wordpress' && (
                       <FaWordpress className="w-3 h-3" />
                     )}
-                    {site.siteType.charAt(0).toUpperCase() + site.siteType.slice(1)}
+                    {site.siteType === 'phpmysql' ? 'PHP+MySQL' : site.siteType.charAt(0).toUpperCase() + site.siteType.slice(1)}
                   </span>
                 </div>
 

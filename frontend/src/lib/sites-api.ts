@@ -1,10 +1,13 @@
 import { apiClient } from './api-client'
 import type { Site, SiteType } from '../types'
 
+// Backend site types (may differ from frontend types)
+type BackendSiteType = 'wordpress' | 'php' | 'phpmysql' | 'html' | 'proxy' | 'mysql' | 'alias'
+
 // Backend site model (simpler than frontend model)
 interface BackendSite {
   name: string
-  type: SiteType
+  type: BackendSiteType
   ssl: boolean
   cache: string | null
   php_version: string | null
@@ -51,6 +54,20 @@ function transformSite(backendSite: BackendSite): Site {
   // In a real implementation, you might check if the site is actually online
   const status: 'online' | 'offline' = 'online'
 
+  // Map backend site type to frontend site type
+  // Backend returns "mysql" for PHP+MySQL sites, frontend uses "phpmysql"
+  const siteTypeMap: Record<BackendSiteType, SiteType> = {
+    'wordpress': 'wordpress',
+    'php': 'php',
+    'phpmysql': 'phpmysql',
+    'html': 'html',
+    'proxy': 'proxy',
+    'mysql': 'phpmysql',  // Map backend "mysql" to frontend "phpmysql"
+    'alias': 'alias',
+  }
+
+  const siteType = siteTypeMap[backendSite.type] || backendSite.type as SiteType
+
   // Map cache type to nginx template
   const nginxTemplate = backendSite.cache || 'default'
 
@@ -64,7 +81,7 @@ function transformSite(backendSite: BackendSite): Site {
   }
 
   // Create empty plugins list for WordPress sites
-  const plugins = backendSite.type === 'wordpress' ? [] : []
+  const plugins = siteType === 'wordpress' ? [] : []
 
   // Handle database info from backend
   const database = backendSite.database?.name
@@ -74,7 +91,7 @@ function transformSite(backendSite: BackendSite): Site {
         password: backendSite.database.password || '••••••••••••',
         host: backendSite.database.host || 'localhost',
       }
-    : (backendSite.type === 'wordpress' || backendSite.type === 'php')
+    : (siteType === 'wordpress' || siteType === 'php' || siteType === 'phpmysql')
       ? {
           // Fallback to generated database info if backend doesn't provide it
           name: `${backendSite.name.replace(/[^a-z0-9]/gi, '_')}_db`,
@@ -87,7 +104,7 @@ function transformSite(backendSite: BackendSite): Site {
   return {
     id: backendSite.name, // Use domain as ID since backend uses domain
     domain: backendSite.name,
-    siteType: backendSite.type,
+    siteType: siteType,
     status,
     phpVersion: backendSite.php_version,
     installPath: `/var/www/${backendSite.name}`,

@@ -94,10 +94,11 @@ export function SiteDetails({
     switch (siteType) {
       case 'wordpress':
         return FaWordpress
-      case 'html':
-        return FaHtml5
+      case 'phpmysql':
       case 'php':
         return FaPhp
+      case 'html':
+        return FaHtml5
       default:
         return null
     }
@@ -122,7 +123,7 @@ export function SiteDetails({
                     'bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400',
                   site.siteType === 'html' &&
                     'bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400',
-                  site.siteType === 'php' &&
+                  (site.siteType === 'php' || site.siteType === 'phpmysql') &&
                     'bg-teal-50 dark:bg-teal-950/30 text-teal-600 dark:text-teal-400'
                 )}
               >
@@ -165,7 +166,7 @@ export function SiteDetails({
                     {site.isDisabled ? 'Disabled' : site.status === 'online' ? 'Online' : 'Offline'}
                   </span>
                   <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                    {site.siteType.charAt(0).toUpperCase() + site.siteType.slice(1)}
+                    {site.siteType === 'phpmysql' ? 'PHP+MySQL' : site.siteType.charAt(0).toUpperCase() + site.siteType.slice(1)}
                   </span>
                   {site.phpVersion && (
                     <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
@@ -326,7 +327,7 @@ function OverviewTab({
             <div>
               <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Site Type</dt>
               <dd className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                {site.siteType.charAt(0).toUpperCase() + site.siteType.slice(1)}
+                {site.siteType === 'phpmysql' ? 'PHP+MySQL' : site.siteType.charAt(0).toUpperCase() + site.siteType.slice(1)}
               </dd>
             </div>
             <div>
