@@ -18,6 +18,24 @@ from backend.wordops.sites import (
 router = APIRouter(prefix="/api/v1/sites", tags=["sites"])
 
 
+@router.get("/health-check")
+async def wordops_health_check(
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Check if WordOps CLI is available and working.
+
+    Returns:
+        Health status with WordOps version and availability
+    """
+    from backend.wordops.cli import check_wordops_available
+
+    is_available = await check_wordops_available()
+    return {
+        "wordops_available": is_available,
+        "status": "healthy" if is_available else "unavailable",
+    }
+
+
 @router.get("/", response_model=list[Site])
 async def get_sites(
     current_user: User = Depends(get_current_user),
@@ -147,6 +165,9 @@ async def create_new_site(
             detail=str(e),
         )
     except Exception as e:
+        # Log the full error for debugging
+        import logging
+        logging.error(f"Site creation error: {type(e).__name__}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Site creation failed: {str(e)}",

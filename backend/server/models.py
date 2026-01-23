@@ -60,6 +60,7 @@ class SystemInfo(BaseModel):
     security_updates: int
     other_updates: int
     disk_usage_percent: int
+    public_ip: str  # Server's public IP address
 
 
 class LogType(str, Enum):

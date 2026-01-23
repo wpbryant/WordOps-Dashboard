@@ -41,6 +41,7 @@ export interface SystemInfoResponse {
   security_updates: number
   other_updates: number
   disk_usage_percent: number
+  public_ip: string
 }
 
 export interface Site {

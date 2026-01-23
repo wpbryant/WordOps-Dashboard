@@ -16,6 +16,7 @@ import {
 import { FaWordpress } from 'react-icons/fa'
 import type { CreateSiteWizardProps, SiteType } from '../../types'
 import { cn } from '../../lib/utils'
+import { useServerInfo } from '../../lib/dashboard-api'
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6
 
@@ -98,6 +99,9 @@ const dnsProviders: { value: DnsProvider; label: string }[] = [
 ]
 
 export function CreateSiteWizard({ onCreateSite, onCancel }: CreateSiteWizardProps) {
+  // Fetch server info to get public IP
+  const { data: serverInfo } = useServerInfo()
+
   const [currentStep, setCurrentStep] = useState<Step>(1)
   const [wizardState, setWizardState] = useState<WizardState>({
     domain: '',
@@ -350,7 +354,7 @@ export function CreateSiteWizard({ onCreateSite, onCancel }: CreateSiteWizardPro
               <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
                 <p className="text-sm text-blue-800 dark:text-blue-200">
                   <strong>Tip:</strong> Make sure your domain's DNS A record points to this server
-                  IP address <span className="font-mono font-semibold">(192.168.1.100)</span> before proceeding.
+                  IP address <span className="font-mono font-semibold">({serverInfo?.public_ip || 'loading...'})</span> before proceeding.
                 </p>
               </div>
             </div>

@@ -3,6 +3,7 @@
 import asyncio
 import time
 
+import httpx
 from backend.server.models import SystemInfo
 
 
@@ -106,17 +107,48 @@ async def get_apt_updates() -> tuple[int, int]:
         return 0, 0
 
 
+async def get_public_ip() -> str:
+    """Get the server's public IP address.
+
+    Uses multiple external services with fallback.
+
+    Returns:
+        The public IP address or "unknown" if unable to fetch
+    """
+    # List of services to try, in order
+    services = [
+        "https://api.ipify.org",
+        "https://icanhazip.com",
+        "https://ifconfig.me",
+    ]
+
+    async with httpx.AsyncClient(timeout=5.0) as client:
+        for service in services:
+            try:
+                response = await client.get(service)
+                if response.status_code == 200:
+                    ip = response.text.strip()
+                    # Basic validation that it looks like an IP address
+                    if ip and not ip.startswith("<"):
+                        return ip
+            except Exception:
+                continue
+
+    return "unknown"
+
+
 async def get_system_info() -> SystemInfo:
     """Get complete system information.
 
     Returns:
         SystemInfo with hostname, uptime, boot time, and updates
     """
-    hostname, boot_time_result, updates_result, disk_usage = await asyncio.gather(
+    hostname, boot_time_result, updates_result, disk_usage, public_ip = await asyncio.gather(
         get_hostname(),
         get_boot_time(),
         get_apt_updates(),
         get_disk_usage(),
+        get_public_ip(),
         return_exceptions=True,
     )
 
@@ -135,6 +167,8 @@ async def get_system_info() -> SystemInfo:
         disk_usage_percent = 0
     else:
         disk_usage_percent = disk_usage
+    if isinstance(public_ip, BaseException):
+        public_ip = "unknown"
 
     return SystemInfo(
         hostname=hostname,
@@ -143,4 +177,5 @@ async def get_system_info() -> SystemInfo:
         security_updates=security_updates,
         other_updates=other_updates,
         disk_usage_percent=disk_usage_percent,
+        public_ip=public_ip,
     )

@@ -10,7 +10,7 @@
 
 [Unit]
 Description=WordOps Dashboard API
-Documentation=https://github.com/wordops/wordops-dashboard
+Documentation=https://github.com/wpbryant/WordOps-Dashboard
 After=network.target
 Wants=network.target
 StartLimitIntervalSec=60
