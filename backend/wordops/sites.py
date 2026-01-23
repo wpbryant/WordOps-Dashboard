@@ -623,10 +623,11 @@ async def get_site_monitoring_info(domain: str) -> dict:
             for line in lines2:
                 if "/dev" in line or ("sd" in line.lower() or "nvme" in line.lower() or "xvda" in line.lower()):
                     parts = line.split()
-                    if len(parts) >= 4:
+                    if len(parts) >= 2:
                         inodes_total = int(parts[1])
-                        inodes_used_pct = parts[3].rstrip('%')
-                        inodes_used = f"{inodes_count:,} / {inodes_total:,} ({inodes_used_pct}% used)"
+                        # Calculate actual percentage for this site
+                        inodes_pct = (inodes_count / inodes_total) * 100
+                        inodes_used = f"{inodes_count:,} / {inodes_total:,} ({inodes_pct:.2f}%)"
                         break
     except (asyncio.TimeoutError, FileNotFoundError, ValueError, Exception):
         inodes_used = "N/A"
@@ -635,7 +636,8 @@ async def get_site_monitoring_info(domain: str) -> dict:
     bandwidth_month = "N/A"
     try:
         # Nginx access log path for the site
-        access_log = f"/var/log/nginx/{domain}-access.log"
+        # WordOps uses format: {domain}.access.log
+        access_log = f"/var/log/nginx/{domain}.access.log"
 
         # Check if log file exists and is readable
         process = await asyncio.create_subprocess_exec(
