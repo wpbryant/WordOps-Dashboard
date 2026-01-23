@@ -99,6 +99,7 @@ export function Sites() {
       <CreateSiteWizard
         onCreateSite={handleWizardSubmit}
         onCancel={() => setShowWizard(false)}
+        isSubmitting={createSiteMutation.isPending}
       />
     )
   }

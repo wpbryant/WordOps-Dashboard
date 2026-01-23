@@ -123,6 +123,7 @@ export interface CreateSiteWizardProps {
     hstsEnabled?: boolean
   }) => void
   onCancel?: () => void
+  isSubmitting?: boolean
 }
 
 // -----------------------------------------------------------------------------

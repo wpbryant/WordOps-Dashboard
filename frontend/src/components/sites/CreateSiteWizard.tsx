@@ -11,7 +11,8 @@ import {
   AlertCircle,
   Shield,
   Zap,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from 'lucide-react'
 import { FaWordpress } from 'react-icons/fa'
 import type { CreateSiteWizardProps, SiteType } from '../../types'
@@ -98,7 +99,7 @@ const dnsProviders: { value: DnsProvider; label: string }[] = [
   { value: 'hetzner', label: 'Hetzner' }
 ]
 
-export function CreateSiteWizard({ onCreateSite, onCancel }: CreateSiteWizardProps) {
+export function CreateSiteWizard({ onCreateSite, onCancel, isSubmitting = false }: CreateSiteWizardProps) {
   // Fetch server info to get public IP
   const { data: serverInfo } = useServerInfo()
 
@@ -1184,16 +1185,28 @@ export function CreateSiteWizard({ onCreateSite, onCancel }: CreateSiteWizardPro
               </div>
 
               {/* Ready Message */}
-              <div className="bg-gradient-to-r from-blue-50 to-teal-50 dark:from-blue-950/30 dark:to-teal-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-6 text-center">
-                <Check className="w-12 h-12 text-blue-600 dark:text-blue-400 mx-auto mb-3" />
-                <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
-                  Ready to create your site
-                </h3>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                  Your site will be created with the configuration above. Click "Create Site" to
-                  proceed.
-                </p>
-              </div>
+              {isSubmitting ? (
+                <div className="bg-gradient-to-r from-blue-50 to-teal-50 dark:from-blue-950/30 dark:to-teal-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-6 text-center">
+                  <Loader2 className="w-12 h-12 text-blue-600 dark:text-blue-400 mx-auto mb-3 animate-spin" />
+                  <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+                    Creating your site...
+                  </h3>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                    This may take a minute or two. Please wait while WordOps sets up your site.
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-gradient-to-r from-blue-50 to-teal-50 dark:from-blue-950/30 dark:to-teal-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-6 text-center">
+                  <Check className="w-12 h-12 text-blue-600 dark:text-blue-400 mx-auto mb-3" />
+                  <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+                    Ready to create your site
+                  </h3>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                    Your site will be created with the configuration above. Click "Create Site" to
+                    proceed.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1204,11 +1217,13 @@ export function CreateSiteWizard({ onCreateSite, onCancel }: CreateSiteWizardPro
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <button
             onClick={currentStep === 1 ? onCancel : handleBack}
+            disabled={isSubmitting}
             className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors',
               currentStep === 1
                 ? 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-                : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800',
+              isSubmitting && 'opacity-50 cursor-not-allowed'
             )}
           >
             <ChevronLeft className="w-4 h-4" />
@@ -1217,17 +1232,26 @@ export function CreateSiteWizard({ onCreateSite, onCancel }: CreateSiteWizardPro
 
           <button
             onClick={handleNext}
-            disabled={!canProceed()}
+            disabled={!canProceed() || isSubmitting}
             className={cn(
               'flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-all shadow-lg',
-              canProceed()
+              canProceed() && !isSubmitting
                 ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20'
                 : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-not-allowed'
             )}
           >
-            {logicalStep === 'review' ? 'Create Site' : 'Continue'}
-            {logicalStep !== 'review' && (
-              <ChevronRight className="w-4 h-4" />
+            {isSubmitting && logicalStep === 'review' ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Creating Site...
+              </>
+            ) : logicalStep === 'review' ? (
+              'Create Site'
+            ) : (
+              <>
+                Continue
+                <ChevronRight className="w-4 h-4" />
+              </>
             )}
           </button>
         </div>
