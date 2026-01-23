@@ -115,6 +115,41 @@ def _parse_metric_response(
 
         if points:
             current = points[-1].value
+    elif name == "ram":
+        # Special handling for RAM: calculate percentage as used / total * 100
+        # Find indices for 'used' and total (sum of all dimensions)
+        used_idx = None
+        for i, label in enumerate(labels):
+            if i == 0:
+                continue  # Skip timestamp label
+            if isinstance(label, str) and label.lower() == "used":
+                used_idx = i
+                break
+
+        for row in data_rows:
+            if len(row) >= 2:
+                timestamp = int(row[0])
+                used_value = 0.0
+                total_value = 0.0
+
+                # Sum all dimensions to get total, find used specifically
+                for i, v in enumerate(row[1:]):
+                    if v is not None:
+                        value = float(v)
+                        total_value += value
+                        if used_idx is not None and i + 1 == used_idx:
+                            used_value = value
+
+                # Calculate percentage
+                if total_value > 0:
+                    value = (used_value / total_value) * 100
+                else:
+                    value = 0.0
+                value = max(0, min(100, value))  # Clamp to 0-100
+                points.append(MetricPoint(timestamp=timestamp, value=value))
+
+        if points:
+            current = points[-1].value
     else:
         # Default parsing: sum all dimensions
         for row in data_rows:
