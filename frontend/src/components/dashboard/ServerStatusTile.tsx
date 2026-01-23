@@ -1,5 +1,5 @@
 import type { Server } from './types'
-import { Activity, Clock, HardDrive, Cpu, MemoryStick } from 'lucide-react'
+import { Activity, Clock, HardDrive, Cpu, MemoryStick, Files } from 'lucide-react'
 
 interface ServerStatusTileProps {
   server: Server
@@ -46,7 +46,7 @@ export function ServerStatusTile({ server, onClick, onViewDetails }: ServerStatu
       </div>
 
       {/* Resource Metrics */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-4 gap-2 mb-4">
         <div className="text-center p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
           <Cpu className="w-4 h-4 mx-auto mb-1 text-blue-500" />
           <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
@@ -65,6 +65,21 @@ export function ServerStatusTile({ server, onClick, onViewDetails }: ServerStatu
             {server.diskUsage}%
           </span>
         </div>
+        {server.inodesPercent !== null && server.inodesPercent !== undefined ? (
+          <div className="text-center p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+            <Files className="w-4 h-4 mx-auto mb-1 text-purple-500" />
+            <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+              {server.inodesPercent}%
+            </span>
+          </div>
+        ) : (
+          <div className="text-center p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
+            <Files className="w-4 h-4 mx-auto mb-1 text-zinc-400" />
+            <span className="text-xs font-medium text-zinc-400">
+              N/A
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Boot Time */}
