@@ -1,10 +1,11 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? ''
 
 class ApiClient {
   private baseUrl: string
   private token: string | null = null
 
   constructor(baseUrl: string = API_BASE_URL) {
+    // Use baseUrl directly (empty string means relative URLs)
     this.baseUrl = baseUrl
     // Load token from localStorage
     this.token = localStorage.getItem('auth_token')
@@ -24,7 +25,8 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${this.baseUrl}${endpoint}`
+    // Build URL: if baseUrl is empty, use relative path; otherwise concatenate
+    const url = this.baseUrl ? `${this.baseUrl}${endpoint}` : endpoint
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     }
