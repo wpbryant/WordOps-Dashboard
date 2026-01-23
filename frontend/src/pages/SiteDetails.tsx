@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { SiteDetails as SiteDetailsComponent } from '../components/sites'
-import { fetchSite, getSiteUrl, getWpAdminUrl, getPhpMyAdminUrl, clearSiteCache, restartSiteServices, updateSiteConfig, fetchSiteMonitoring, deleteSite, enableSite, disableSite, fetchNginxConfig } from '../lib/sites-api'
+import { fetchSite, getSiteUrl, getWpAdminUrl, getPhpMyAdminUrl, restartSiteServices, fetchSiteMonitoring, deleteSite, enableSite, disableSite } from '../lib/sites-api'
 import type { Site } from '../types'
 
 export function SiteDetails() {
@@ -42,25 +42,9 @@ export function SiteDetails() {
   // Debug: log query state
   console.log('Query state:', { isLoading, error, site })
 
-  // Clear cache mutation
-  const clearCacheMutation = useMutation({
-    mutationFn: () => clearSiteCache(domain),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['site-detail', domain] })
-    },
-  })
-
   // Restart services mutation
   const restartServicesMutation = useMutation({
     mutationFn: () => restartSiteServices(domain),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['site-detail', domain] })
-    },
-  })
-
-  // Update config mutation
-  const updateConfigMutation = useMutation({
-    mutationFn: (config: Record<string, unknown>) => updateSiteConfig(domain, config),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['site-detail', domain] })
     },
@@ -104,14 +88,6 @@ export function SiteDetails() {
     if (site) {
       window.open(getWpAdminUrl(site), '_blank')
     }
-  }
-
-  const handleEditConfig = (config: Record<string, unknown>) => {
-    updateConfigMutation.mutate(config)
-  }
-
-  const handleClearCache = () => {
-    clearCacheMutation.mutate()
   }
 
   const handleRestartServices = () => {
@@ -183,8 +159,6 @@ export function SiteDetails() {
       onVisitSite={handleVisitSite}
       onOpenPhpMyAdmin={handleOpenPhpMyAdmin}
       onWpAdminLogin={handleWpAdminLogin}
-      onEditConfig={handleEditConfig}
-      onClearCache={handleClearCache}
       onRestartServices={handleRestartServices}
       onDelete={handleDelete}
       onEnable={handleEnable}

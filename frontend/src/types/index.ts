@@ -109,13 +109,10 @@ export interface SiteDetailsProps {
   onVisitSite?: () => void
   onOpenPhpMyAdmin?: () => void
   onWpAdminLogin?: () => void
-  onEditConfig?: (config: Record<string, unknown>) => void
-  onClearCache?: () => void
   onRestartServices?: () => void
   onDelete?: () => void
   onEnable?: () => void
   onDisable?: () => void
-  onRefreshNginxConfig?: () => void
 }
 
 export interface CreateSiteWizardProps {

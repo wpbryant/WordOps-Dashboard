@@ -78,7 +78,6 @@ export function SiteDetails({
   onVisitSite,
   onOpenPhpMyAdmin,
   onWpAdminLogin,
-  onEditConfig,
   onClearCache,
   onRestartServices,
   onDelete,
@@ -272,7 +271,7 @@ export function SiteDetails({
       <div className="flex-1 overflow-auto px-6">
         <div className="max-w-6xl mx-auto py-6">
           {currentTab === 'overview' && (
-            <OverviewTab site={site} onClearCache={onClearCache} onRestartServices={onRestartServices} />
+            <OverviewTab site={site} onRestartServices={onRestartServices} onDelete={onDelete} onEnable={onEnable} onDisable={onDisable} />
           )}
           {currentTab === 'configuration' && (
             <ConfigurationTab site={site} domain={site.domain} />
@@ -823,7 +822,6 @@ function ConfigurationTab({
               </div>
               <select
                 className="text-sm bg-zinc-100 dark:bg-zinc-800 border-0 rounded-lg px-3 py-1.5 text-zinc-700 dark:text-zinc-300 focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                onChange={(e) => onEditConfig?.({ ...site, phpMemoryLimit: e.target.value })}
               >
                 <option value="128M">128 MB</option>
                 <option value="256M" selected>256 MB</option>
@@ -841,7 +839,6 @@ function ConfigurationTab({
               </div>
               <select
                 className="text-sm bg-zinc-100 dark:bg-zinc-800 border-0 rounded-lg px-3 py-1.5 text-zinc-700 dark:text-zinc-300 focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                onChange={(e) => onEditConfig?.({ ...site, maxUploadSize: e.target.value })}
               >
                 <option value="32M">32 MB</option>
                 <option value="64M" selected>64 MB</option>
@@ -859,7 +856,6 @@ function ConfigurationTab({
               </div>
               <select
                 className="text-sm bg-zinc-100 dark:bg-zinc-800 border-0 rounded-lg px-3 py-1.5 text-zinc-700 dark:text-zinc-300 focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                onChange={(e) => onEditConfig?.({ ...site, maxExecutionTime: e.target.value })}
               >
                 <option value="30">30 seconds</option>
                 <option value="60" selected>60 seconds</option>
