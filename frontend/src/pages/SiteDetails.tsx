@@ -17,14 +17,16 @@ export function SiteDetails() {
   console.log('SiteDetails page loaded, domain from URL:', domain, 'type:', typeof domain, 'truthy:', !!domain)
 
   // Fetch site details - domain is extracted from pathname
+  // Use a more specific query key to avoid conflicts with list cache
   const { data: site, isLoading, error } = useQuery({
-    queryKey: ['sites', domain],
+    queryKey: ['site-detail', domain], // Changed from ['sites', domain]
     queryFn: () => {
       console.log('Fetching site details for domain:', domain)
       return fetchSite(domain) // domain is extracted from pathname
     },
     enabled: !!domain,
     retry: 1,
+    staleTime: 0, // Always fetch fresh data, don't use stale cache
   })
 
   // Debug: log query state
@@ -34,7 +36,7 @@ export function SiteDetails() {
   const clearCacheMutation = useMutation({
     mutationFn: () => clearSiteCache(domain),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sites', domain] })
+      queryClient.invalidateQueries({ queryKey: ['site-detail', domain] })
     },
   })
 
@@ -42,7 +44,7 @@ export function SiteDetails() {
   const restartServicesMutation = useMutation({
     mutationFn: () => restartSiteServices(domain),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sites', domain] })
+      queryClient.invalidateQueries({ queryKey: ['site-detail', domain] })
     },
   })
 
@@ -50,7 +52,7 @@ export function SiteDetails() {
   const updateConfigMutation = useMutation({
     mutationFn: (config: Record<string, unknown>) => updateSiteConfig(domain, config),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sites', domain] })
+      queryClient.invalidateQueries({ queryKey: ['site-detail', domain] })
     },
   })
 
