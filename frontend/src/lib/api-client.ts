@@ -47,8 +47,10 @@ class ApiClient {
     })
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'An error occurred' }))
-      throw new Error(error.message || `HTTP ${response.status}`)
+      const error = await response.json().catch(() => ({ detail: 'An error occurred' }))
+      // FastAPI uses 'detail' field for error messages
+      const errorMessage = error.detail || error.message || `HTTP ${response.status}`
+      throw new Error(errorMessage)
     }
 
     return response.json()

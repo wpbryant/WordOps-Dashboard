@@ -28,7 +28,26 @@ export function Sites() {
     },
     onError: (error) => {
       console.error('Failed to create site:', error)
-      alert(`Failed to create site: ${error.message}`)
+      // Parse error message for better user feedback
+      const errorMsg = error.message || 'Unknown error'
+      let userMessage = 'Failed to create site'
+
+      if (errorMsg.includes('already exists')) {
+        userMessage = 'A site with this domain already exists'
+      } else if (errorMsg.includes('invalid domain')) {
+        userMessage = 'Invalid domain name'
+      } else if (errorMsg.includes('dns')) {
+        userMessage = 'DNS configuration failed'
+      } else if (errorMsg.includes('ssl') || errorMsg.includes('certificate')) {
+        userMessage = 'SSL certificate creation failed'
+      } else if (errorMsg.includes('database')) {
+        userMessage = 'Database creation failed'
+      } else {
+        // Show full error for unknown errors
+        userMessage = `Failed to create site: ${errorMsg}`
+      }
+
+      alert(userMessage)
     },
   })
 

@@ -55,7 +55,12 @@ export function SiteDetails() {
     mutationFn: () => deleteSite(domain),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sites'] })
+      queryClient.invalidateQueries({ queryKey: ['site-detail', domain] })
       navigate('/sites')
+    },
+    onError: (error) => {
+      console.error('Failed to delete site:', error)
+      alert(`Failed to delete site: ${error.message}`)
     },
   })
 
