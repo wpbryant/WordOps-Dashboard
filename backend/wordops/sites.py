@@ -1,5 +1,6 @@
 """WordOps site management CLI wrappers."""
 
+import asyncio
 import re
 
 from .cli import run_command
@@ -333,24 +334,28 @@ async def get_site_info(domain: str) -> Site | None:
     # For proxy sites, parse the nginx config to get the proxy destination
     if site_type == SiteType.ALIAS or site_type == SiteType.PROXY:
         try:
-            # Read the nginx config file directly
+            # Read the nginx config file directly using asyncio
             # WordOps stores nginx configs in /etc/nginx/sites-available/
             config_path = f"/etc/nginx/sites-available/{domain}"
-            config_output = await run_command(["cat", config_path])
-            if config_output:
-                for line in config_output.strip().split("\n"):
+
+            def read_nginx_config():
+                with open(config_path, "r") as f:
+                    return f.read()
+
+            config_content = await asyncio.to_thread(read_nginx_config)
+
+            if config_content:
+                for line in config_content.strip().split("\n"):
                     line_stripped = line.strip()
                     # Look for alias target in nginx config
                     if site_type == SiteType.ALIAS and "return" in line_stripped and "http" in line_stripped:
                         # Parse redirect target from: return 301 http://targetdomain.com$request_uri;
-                        import re
                         match = re.search(r'return\s+301\s+https?://([^/\s]+)', line_stripped)
                         if match:
                             alias_target = match.group(1)
                     # Look for proxy destination in nginx config
                     elif site_type == SiteType.PROXY and "proxy_pass" in line_stripped:
                         # Parse proxy_pass from: proxy_pass http://localhost:3000;
-                        import re
                         match = re.search(r'proxy_pass\s+([^;]+)', line_stripped)
                         if match:
                             proxy_destination = match.group(1).strip()
