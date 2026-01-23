@@ -127,6 +127,8 @@ export interface CreateSiteWizardProps {
     sslType?: 'single' | 'wildcard'
     dnsProvider?: 'cloudflare' | 'digitalocean' | 'linode' | 'aws' | 'google' | 'vultr' | 'hetzner'
     hstsEnabled?: boolean
+    proxyDestination?: string
+    aliasTarget?: string
   }) => void
   onCancel?: () => void
   isSubmitting?: boolean

@@ -37,6 +37,8 @@ interface WizardState {
   databaseUser: string
   wpCacheType: WpCacheType
   wpMultisite: boolean
+  proxyDestination: string  // For proxy sites - the destination URL/address
+  aliasTarget: string  // For alias sites - the target domain
 }
 
 const siteTypeOptions: { type: SiteType; label: string; description: string; icon: React.ReactNode }[] = [
@@ -116,7 +118,9 @@ export function CreateSiteWizard({ onCreateSite, onCancel, isSubmitting = false 
     databaseName: '',
     databaseUser: '',
     wpCacheType: 'default',
-    wpMultisite: false
+    wpMultisite: false,
+    proxyDestination: '',
+    aliasTarget: ''
   })
 
   const updateState = (updates: Partial<WizardState>) => {
@@ -150,6 +154,10 @@ export function CreateSiteWizard({ onCreateSite, onCancel, isSubmitting = false 
         return true // Database is optional
       case 'php':
         return true // PHP selection can be skipped for some types
+      case 'proxy':
+        return wizardState.proxyDestination.trim() !== '' // Proxy destination is required
+      case 'alias':
+        return wizardState.aliasTarget.trim() !== '' // Alias target is required
       case 'ssl':
         return true // SSL is optional
       case 'review':
@@ -168,6 +176,8 @@ export function CreateSiteWizard({ onCreateSite, onCancel, isSubmitting = false 
         phpVersion: wizardState.phpVersion,
         enableSsl: wizardState.enableSsl,
         createDatabase: wizardState.createDatabase,
+        proxyDestination: wizardState.proxyDestination,
+        aliasTarget: wizardState.aliasTarget,
       })
       onCreateSite?.({
         domain: wizardState.domain,
@@ -179,7 +189,9 @@ export function CreateSiteWizard({ onCreateSite, onCancel, isSubmitting = false 
         wpMultisite: wizardState.wpMultisite,
         sslType: wizardState.sslType,
         dnsProvider: wizardState.dnsProvider ?? undefined,
-        hstsEnabled: wizardState.hstsEnabled
+        hstsEnabled: wizardState.hstsEnabled,
+        proxyDestination: wizardState.proxyDestination || undefined,
+        aliasTarget: wizardState.aliasTarget || undefined,
       })
     } else {
       // Move to next step
@@ -200,44 +212,79 @@ export function CreateSiteWizard({ onCreateSite, onCancel, isSubmitting = false 
   const needsDatabase = wizardState.siteType === 'wordpress' || wizardState.siteType === 'phpmysql'
   const isWordPress = wizardState.siteType === 'wordpress'
 
-  // Steps 1 and 2 are always shown
-  // Step 3 is Database (only for WordPress and PHP+MySQL)
-  // Step 4 is PHP Version (only for WordPress, PHP, PHP+MySQL)
-  // Step 5 is SSL (always shown)
-  // Step 6 is Final Review
+  // Define which steps are needed for each site type
+  const stepConfig = {
+    domain: true,           // Step 1 - always shown
+    siteType: true,         // Step 2 - always shown
+    database: needsDatabase,  // Step 3 - only for WordPress and PHP+MySQL
+    php: needsPhp,          // Step 4 - only for WordPress, PHP, PHP+MySQL
+    proxy: isProxySite,     // Step 5 - only for Proxy sites (replaces PHP step)
+    alias: isAliasSite,      // Step 5 - only for Alias sites (replaces PHP step)
+    ssl: true,              // Step before review - always shown
+    review: true            // Final step - always shown
+  }
 
-  const needsDatabaseStep = needsDatabase
-  const needsPhpStep = needsPhp
-
-  // Map currentStep to logical step for content display
+  // Map physical step numbers to logical step names
+  // This maps the currentStep (1-8) to the actual content shown
   const getLogicalStep = () => {
-    // The currentStep is the physical step number (1-6)
-    // We need to map it to the logical content based on what's shown
-    if (currentStep === 1) return 'domain'
-    if (currentStep === 2) return 'siteType'
-    if (currentStep === 3) return needsDatabaseStep ? 'database' : (needsPhpStep ? 'php' : 'ssl')
-    if (currentStep === 4) return needsPhpStep ? 'php' : 'ssl'
-    if (currentStep === 5) return 'ssl'
-    if (currentStep === 6) return 'review'
-    return 'domain'
+    const steps = []
+    if (stepConfig.domain) steps.push('domain')
+    if (stepConfig.siteType) steps.push('siteType')
+    if (stepConfig.database) steps.push('database')
+    if (stepConfig.php) steps.push('php')
+    if (stepConfig.proxy) steps.push('proxy')
+    if (stepConfig.alias) steps.push('alias')
+    if (stepConfig.ssl) steps.push('ssl')
+    steps.push('review')
+
+    // Return the logical step at the current step index
+    const index = Math.min(currentStep - 1, steps.length - 1)
+    return steps[index]
   }
 
   const logicalStep = getLogicalStep()
 
   // Calculate total steps
   const getTotalSteps = () => {
-    let total = 4 // Domain, Site Type, SSL, Review
-    if (needsDatabaseStep) total += 1
-    if (needsPhpStep) total += 1
-    return total // 4-6 depending on site type
+    const steps = []
+    if (stepConfig.domain) steps.push('domain')
+    if (stepConfig.siteType) steps.push('siteType')
+    if (stepConfig.database) steps.push('database')
+    if (stepConfig.php) steps.push('php')
+    if (stepConfig.proxy) steps.push('proxy')
+    if (stepConfig.alias) steps.push('alias')
+    if (stepConfig.ssl) steps.push('ssl')
+    steps.push('review')
+    return steps.length
   }
 
   // Get the display step number (skips hidden steps in numbering)
   const getDisplayStep = () => {
-    let displayStep = currentStep
-    if (!needsDatabaseStep && currentStep > 3) displayStep -= 1
-    if (!needsPhpStep && currentStep > (needsDatabaseStep ? 4 : 3)) displayStep -= 1
-    return displayStep
+    // The display step should be based on the actual visible steps, not the physical step number
+    const steps = []
+    if (stepConfig.domain) steps.push(1)
+    if (stepConfig.siteType) steps.push(steps.length + 1)
+    if (stepConfig.database) steps.push(steps.length + 1)
+    if (stepConfig.php) steps.push(steps.length + 1)
+    if (stepConfig.proxy) steps.push(steps.length + 1)
+    if (stepConfig.alias) steps.push(steps.length + 1)
+    if (stepConfig.ssl) steps.push(steps.length + 1)
+    steps.push(steps.length + 1) // review
+
+    // Find the display step for the current logical step
+    const logicalStep = getLogicalStep()
+    const stepMapping: Record<string, number> = {
+      'domain': 1,
+      'siteType': 2,
+      'database': 3,
+      'php': 4,
+      'proxy': 4,
+      'alias': 4,
+      'ssl': 5,
+      'review': steps.length
+    }
+
+    return stepMapping[logicalStep] || currentStep
   }
 
   return (
@@ -264,16 +311,19 @@ export function CreateSiteWizard({ onCreateSite, onCancel, isSubmitting = false 
         {/* Progress Bar */}
         <div className="px-6 pb-4">
           <div className="flex items-center gap-2">
-            {[
-              { step: 1, label: 'Domain', show: true },
-              { step: 2, label: 'Site Type', show: true },
-              { step: 3, label: 'Database', show: needsDatabaseStep },
-              { step: 4, label: 'PHP', show: needsPhpStep },
-              { step: 5, label: 'SSL', show: true },
-              { step: 6, label: 'Review', show: true }
-            ]
-              .filter((s) => s.show)
-              .map((s, index) => {
+            {(() => {
+              // Build the step list dynamically based on current site type
+              const steps = []
+              steps.push({ step: 1, label: 'Domain', show: true })
+              steps.push({ step: 2, label: 'Site Type', show: true })
+              if (stepConfig.database) steps.push({ step: steps.length + 1, label: 'Database', show: true })
+              if (stepConfig.php) steps.push({ step: steps.length + 1, label: 'PHP', show: true })
+              if (stepConfig.proxy) steps.push({ step: steps.length + 1, label: 'Proxy', show: true })
+              if (stepConfig.alias) steps.push({ step: steps.length + 1, label: 'Alias', show: true })
+              steps.push({ step: steps.length + 1, label: 'SSL', show: true })
+              steps.push({ step: steps.length + 1, label: 'Review', show: true })
+
+              return steps.filter((s) => s.show).map((s, index) => {
                 const displayStep = index + 1
                 const isCurrent = displayStep === getDisplayStep()
                 const isPast = displayStep < getDisplayStep()
@@ -301,7 +351,8 @@ export function CreateSiteWizard({ onCreateSite, onCancel, isSubmitting = false 
                     )}
                   </div>
                 )
-              })}
+              })
+            })()}
           </div>
         </div>
       </div>
@@ -555,6 +606,66 @@ export function CreateSiteWizard({ onCreateSite, onCancel, isSubmitting = false 
                     )}
                   </button>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step: Proxy Destination (only for Proxy sites) */}
+          {logicalStep === 'proxy' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+                  Configure Proxy Destination
+                </h2>
+                <p className="text-zinc-600 dark:text-zinc-400">
+                  Enter the destination URL or IP address where this proxy site will forward requests to.
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6">
+                <label className="block text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-2">
+                  Proxy Destination
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., http://localhost:3000 or 192.168.1.100:8080"
+                  value={wizardState.proxyDestination}
+                  onChange={(e) => updateState({ proxyDestination: e.target.value })}
+                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-zinc-900 dark:text-zinc-100"
+                />
+                <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                  Examples: http://localhost:3000, https://api.example.com, 192.168.1.100:8080
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Step: Alias Target (only for Alias sites) */}
+          {logicalStep === 'alias' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 mb-2">
+                  Configure Alias Target
+                </h2>
+                <p className="text-zinc-600 dark:text-zinc-400">
+                  Enter the target domain name that this alias will redirect to.
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6">
+                <label className="block text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-2">
+                  Target Domain
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., mainsite.com or www.example.com"
+                  value={wizardState.aliasTarget}
+                  onChange={(e) => updateState({ aliasTarget: e.target.value })}
+                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-zinc-400 dark:placeholder:text-zinc-500 text-zinc-900 dark:text-zinc-100"
+                />
+                <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                  The target domain must already exist on this server. The alias will redirect all traffic to the target domain.
+                </p>
               </div>
             </div>
           )}

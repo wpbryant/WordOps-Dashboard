@@ -35,6 +35,8 @@ export interface CreateSiteInput {
   sslType?: 'single' | 'wildcard'
   dnsProvider?: 'cloudflare' | 'digitalocean' | 'linode' | 'aws' | 'google' | 'vultr' | 'hetzner'
   hstsEnabled?: boolean
+  proxyDestination?: string
+  aliasTarget?: string
 }
 
 // Site configuration input
@@ -175,6 +177,8 @@ export async function createSite(input: CreateSiteInput): Promise<Site> {
     ssl: input.enableSsl,
     cache: input.wpCacheType ? cacheMap[input.wpCacheType] || 'none' : undefined,
     php_version: input.phpVersion,
+    proxy_destination: input.proxyDestination,
+    alias_target: input.aliasTarget,
   })
 
   return transformSite(response)

@@ -342,16 +342,20 @@ async def create_site(
     ssl: bool = True,
     cache: CacheType | None = None,
     php_version: str | None = None,
+    proxy_destination: str | None = None,
+    alias_target: str | None = None,
 ) -> Site:
     """
     Create a new WordOps site.
 
     Args:
         domain: The domain name for the site
-        site_type: Type of site (wordpress, php, html, proxy, mysql)
+        site_type: Type of site (wordpress, php, html, proxy, mysql, alias)
         ssl: Whether to enable SSL (Let's Encrypt)
         cache: Cache type (wpfc, wpsc, wpredis, redis, none)
         php_version: PHP version (e.g., "8.1", "8.2")
+        proxy_destination: Destination URL for proxy sites (e.g., "http://localhost:3000")
+        alias_target: Target domain for alias sites (e.g., "mainsite.com")
 
     Returns:
         Site object for the newly created site
@@ -374,8 +378,17 @@ async def create_site(
         SiteType.HTML: "--html",
         SiteType.PROXY: "--proxy",
         SiteType.MYSQL: "--mysql",
+        SiteType.ALIAS: "--alias",
     }
     args.append(type_flags.get(site_type, "--wp"))
+
+    # Add proxy destination flag for proxy sites
+    if site_type == SiteType.PROXY and proxy_destination:
+        args.append(f"--proxy={proxy_destination}")
+
+    # Add alias target flag for alias sites
+    if site_type == SiteType.ALIAS and alias_target:
+        args.append(f"--alias={alias_target}")
 
     # Add cache flag if specified (only for WordPress sites)
     if cache and cache != CacheType.NONE and site_type == SiteType.WORDPRESS:

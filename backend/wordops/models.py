@@ -73,6 +73,8 @@ class CreateSiteRequest(BaseModel):
     ssl: bool = True
     cache: CacheType | None = None
     php_version: str | None = None  # e.g., "8.1", "8.2"
+    proxy_destination: str | None = None  # For proxy sites, e.g., "http://localhost:3000"
+    alias_target: str | None = None  # For alias sites, e.g., "mainsite.com"
 
     class Config:
         """Pydantic model configuration."""
