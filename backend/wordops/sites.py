@@ -333,7 +333,10 @@ async def get_site_info(domain: str) -> Site | None:
     # For proxy sites, parse the nginx config to get the proxy destination
     if site_type == SiteType.ALIAS or site_type == SiteType.PROXY:
         try:
-            config_output = await run_command(["site", "info", domain, "--nginx"])
+            # Read the nginx config file directly
+            # WordOps stores nginx configs in /etc/nginx/sites-available/
+            config_path = f"/etc/nginx/sites-available/{domain}"
+            config_output = await run_command(["cat", config_path])
             if config_output:
                 for line in config_output.strip().split("\n"):
                     line_stripped = line.strip()
