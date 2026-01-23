@@ -386,9 +386,10 @@ async def create_site(
     if site_type == SiteType.PROXY and proxy_destination:
         args.append(f"--proxy={proxy_destination}")
 
-    # Add alias target flag for alias sites
+    # Add alias target flag for alias sites (no equals sign, uses space)
     if site_type == SiteType.ALIAS and alias_target:
-        args.append(f"--alias={alias_target}")
+        args.append("--alias")
+        args.append(alias_target)
 
     # Add cache flag if specified (only for WordPress sites)
     if cache and cache != CacheType.NONE and site_type == SiteType.WORDPRESS:
