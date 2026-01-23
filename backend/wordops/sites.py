@@ -295,9 +295,10 @@ async def get_site_info(domain: str) -> Site | None:
         # Parse PHP version - format: "PHP Version         8.3"
         if "php version" in line_lower:
             parts = line_stripped.split()
-            if len(parts) >= 2:
+            if len(parts) >= 3:
                 # Extract version number (e.g., "8.3", "8.1")
-                php_match = re.search(r"(\d+\.\d+)", parts[1])
+                # Format is "PHP Version X.Y" so version is at index 2
+                php_match = re.search(r"(\d+\.\d+)", parts[2])
                 if php_match:
                     php_version = php_match.group(1)
                     # Debug logging
