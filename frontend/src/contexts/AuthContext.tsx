@@ -43,8 +43,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (username: string, password: string) => {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-    const loginUrl = `${apiUrl}/api/v1/auth/login`
+    const apiUrl = import.meta.env.VITE_API_URL ?? ''
+    // Build URL without double slashes - if apiUrl is empty, use relative path
+    const loginUrl = apiUrl ? `${apiUrl}/api/v1/auth/login` : '/api/v1/auth/login'
     console.log('[AUTH DEBUG] Attempting login to:', loginUrl)
     console.log('[AUTH DEBUG] VITE_API_URL env var:', import.meta.env.VITE_API_URL)
     console.log('[AUTH DEBUG] Current origin:', window.location.origin)

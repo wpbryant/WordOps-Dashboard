@@ -14,14 +14,14 @@ export function Login() {
   // Check API connectivity on mount
   useEffect(() => {
     const checkApi = async () => {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-      const healthUrl = `${apiUrl}/api/v1/config-check`
+      const apiUrl = import.meta.env.VITE_API_URL ?? ''
+      const healthUrl = apiUrl ? `${apiUrl}/api/v1/config-check` : '/api/v1/config-check'
       try {
         const response = await fetch(healthUrl)
         const data = await response.json()
-        setDebugInfo(`API URL: ${apiUrl} | CORS: ${data.cors_origins?.[0] || 'unknown'} | Username: ${data.admin_username || 'unknown'}`)
+        setDebugInfo(`API URL: ${apiUrl || '(relative)'} | CORS: ${data.cors_origins?.[0] || 'unknown'} | Username: ${data.admin_username || 'unknown'}`)
       } catch (e) {
-        setDebugInfo(`API URL: ${apiUrl} | Cannot reach API: ${e instanceof Error ? e.message : 'unknown'}`)
+        setDebugInfo(`API URL: ${apiUrl || '(relative)'} | Cannot reach API: ${e instanceof Error ? e.message : 'unknown'}`)
       }
     }
     checkApi()
