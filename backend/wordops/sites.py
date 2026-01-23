@@ -124,7 +124,8 @@ async def list_sites() -> list[Site]:
     if not output or output.strip() == "":
         return []
 
-    sites: list[Site] = []
+    # First, extract just the domain names from the list output
+    domains: list[str] = []
     lines = output.strip().split("\n")
 
     for line in lines:
@@ -138,67 +139,38 @@ async def list_sites() -> list[Site]:
         if "site" in line.lower() and "type" in line.lower():
             continue
 
-        # Parse the line - WordOps output format varies
-        # Common formats:
-        # - "example.com" (just domain)
-        # - "example.com    wp    ssl    wpfc" (tabular)
         parts = line.split()
-
         if not parts:
             continue
 
         domain = parts[0].strip()
 
         # Skip if domain looks like a header or separator
-        if not validate_domain(domain):
-            continue
+        if validate_domain(domain):
+            domains.append(domain)
 
-        # Try to extract additional info from remaining parts
-        site_type = SiteType.WORDPRESS  # Default assumption
-        ssl = False
-        cache = None
-
-        for part in parts[1:]:
-            part_lower = part.lower().strip()
-
-            # Check for site type
-            if any(t in part_lower for t in ["wp", "wordpress"]):
-                site_type = SiteType.WORDPRESS
-            elif "php" in part_lower:
-                site_type = SiteType.PHP
-            elif "html" in part_lower or "static" in part_lower:
-                site_type = SiteType.HTML
-            elif "proxy" in part_lower:
-                site_type = SiteType.PROXY
-            elif "mysql" in part_lower:
-                site_type = SiteType.MYSQL
-
-            # Check for SSL
-            if part_lower in ("ssl", "https", "le", "letsencrypt"):
-                ssl = True
-
-            # Check for cache
-            if any(c in part_lower for c in ["redis", "wpsc", "wpfc", "cache"]):
-                cache = _parse_cache_type(part)
-
-        # Generate database info for sites that would have one
-        from .models import DatabaseInfo
-        database = None
-        if site_type in (SiteType.WORDPRESS, SiteType.PHP, SiteType.MYSQL):
-            db_name = f"{domain.replace('.', '_').replace('-', '_')}_db"
-            db_user = domain.replace('.', '_').replace('-', '_')
-            database = DatabaseInfo(name=db_name, user=db_user, host="localhost")
-
-        sites.append(
-            Site(
-                name=domain,
-                type=site_type,
-                ssl=ssl,
-                cache=cache,
-                php_version=None,  # Not available in list output
-                database=database,
+    # Now fetch detailed info for each domain to get PHP version, database info, etc.
+    sites: list[Site] = []
+    for domain in domains:
+        try:
+            site_info = await get_site_info(domain)
+            if site_info:
+                sites.append(site_info)
+        except Exception as e:
+            # Log error but continue with other sites
+            import logging
+            logging.warning(f"Failed to fetch info for {domain}: {e}")
+            # Create a basic site object with at least the domain
+            sites.append(
+                Site(
+                    name=domain,
+                    type=SiteType.WORDPRESS,
+                    ssl=False,
+                    cache=None,
+                    php_version=None,
+                    database=None,
+                )
             )
-        )
 
     return sites
 
