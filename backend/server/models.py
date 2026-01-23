@@ -9,6 +9,7 @@ class TimeRange(str, Enum):
     """Time range options for metric queries."""
 
     FIVE_MIN = "5m"
+    TEN_MIN = "10m"
     ONE_HOUR = "1h"
     ONE_DAY = "24h"
 

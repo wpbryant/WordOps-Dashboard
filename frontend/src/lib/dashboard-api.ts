@@ -56,7 +56,7 @@ export interface Site {
 // API Hooks
 // =============================================================================
 
-export function useServerMetrics(range: '5m' | '1h' | '24h' = '1h') {
+export function useServerMetrics(range: '5m' | '10m' | '1h' | '24h' = '10m') {
   return useQuery({
     queryKey: ['server', 'metrics', range],
     queryFn: () => apiClient.get<SystemMetricsResponse>(`/api/v1/server/metrics?range=${range}`),

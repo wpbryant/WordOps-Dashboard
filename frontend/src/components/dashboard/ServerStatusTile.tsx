@@ -1,5 +1,5 @@
 import type { Server } from './types'
-import { Activity, Clock, HardDrive, Cpu } from 'lucide-react'
+import { Activity, Clock, HardDrive, Cpu, MemoryStick } from 'lucide-react'
 
 interface ServerStatusTileProps {
   server: Server
@@ -54,7 +54,7 @@ export function ServerStatusTile({ server, onClick, onViewDetails }: ServerStatu
           </span>
         </div>
         <div className="text-center p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg">
-          <Activity className="w-4 h-4 mx-auto mb-1 text-teal-500" />
+          <MemoryStick className="w-4 h-4 mx-auto mb-1 text-teal-500" />
           <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
             {server.memoryUsage}%
           </span>

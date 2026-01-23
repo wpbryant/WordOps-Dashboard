@@ -51,6 +51,13 @@ export function Dashboard({
           onViewDetails={() => onViewDetails?.('server')}
         />
 
+        {/* Updates */}
+        <UpdatesTile
+          updates={updates}
+          onClick={() => onUpdatesClick?.()}
+          onViewDetails={() => onViewDetails?.('updates')}
+        />
+
         {/* Site Counts */}
         <SiteCountTile
           title="WordPress Sites"
@@ -86,13 +93,6 @@ export function Dashboard({
           intrusions={ufwIntrusions}
           onClick={() => onUfwClick?.()}
           onViewDetails={() => onViewDetails?.('ufw')}
-        />
-
-        {/* Updates */}
-        <UpdatesTile
-          updates={updates}
-          onClick={() => onUpdatesClick?.()}
-          onViewDetails={() => onViewDetails?.('updates')}
         />
       </div>
 

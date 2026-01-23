@@ -8,6 +8,7 @@ from backend.server.models import MetricData, MetricPoint, SystemMetrics, TimeRa
 # Time range to seconds mapping (negative for relative time)
 TIME_RANGE_SECONDS = {
     TimeRange.FIVE_MIN: -300,
+    TimeRange.TEN_MIN: -600,
     TimeRange.ONE_HOUR: -3600,
     TimeRange.ONE_DAY: -86400,
 }
@@ -15,6 +16,7 @@ TIME_RANGE_SECONDS = {
 # Points per time range (reasonable sparkline resolution)
 TIME_RANGE_POINTS = {
     TimeRange.FIVE_MIN: 60,
+    TimeRange.TEN_MIN: 60,
     TimeRange.ONE_HOUR: 60,
     TimeRange.ONE_DAY: 144,
 }
@@ -64,10 +66,25 @@ async def fetch_metric(
         return response.json()
 
 
+def _calculate_average(points: list[MetricPoint]) -> float:
+    """Calculate the average value from a list of metric points.
+
+    Args:
+        points: List of metric points
+
+    Returns:
+        Average value, or 0 if no points
+    """
+    if not points:
+        return 0.0
+    return sum(p.value for p in points) / len(points)
+
+
 def _parse_metric_response(
     raw_data: dict,
     name: str,
     unit: str,
+    use_average: bool = False,
 ) -> MetricData:
     """Parse Netdata API response into MetricData model.
 
@@ -78,6 +95,12 @@ def _parse_metric_response(
             "data": [[timestamp, value1, value2, ...], ...]
         }
     }
+
+    Args:
+        raw_data: Raw JSON response from Netdata
+        name: Metric name (cpu, ram, disk)
+        unit: Unit of measurement
+        use_average: If True, calculate average of all points instead of using last value
     """
     result = raw_data.get("result", {})
     labels = result.get("labels", [])
@@ -113,8 +136,7 @@ def _parse_metric_response(
                     value = max(0, min(100, value))  # Clamp to 0-100
                 points.append(MetricPoint(timestamp=timestamp, value=value))
 
-        if points:
-            current = points[-1].value
+        current = _calculate_average(points) if use_average else (points[-1].value if points else 0.0)
     elif name == "ram":
         # Special handling for RAM: calculate percentage as used / total * 100
         # Find indices for 'used' and total (sum of all dimensions)
@@ -148,8 +170,7 @@ def _parse_metric_response(
                 value = max(0, min(100, value))  # Clamp to 0-100
                 points.append(MetricPoint(timestamp=timestamp, value=value))
 
-        if points:
-            current = points[-1].value
+        current = _calculate_average(points) if use_average else (points[-1].value if points else 0.0)
     else:
         # Default parsing: sum all dimensions
         for row in data_rows:
@@ -159,8 +180,7 @@ def _parse_metric_response(
                 value = sum(float(v) for v in row[1:] if v is not None)
                 points.append(MetricPoint(timestamp=timestamp, value=value))
 
-        if points:
-            current = points[-1].value
+        current = _calculate_average(points) if use_average else (points[-1].value if points else 0.0)
 
     return MetricData(
         name=name,
@@ -248,8 +268,11 @@ async def get_system_metrics(time_range: TimeRange) -> SystemMetrics:
     disk_data = await fetch_metric(METRIC_CONTEXTS["disk"], time_range)
     network_data = await fetch_metric(METRIC_CONTEXTS["network"], time_range)
 
+    # For 10-minute range, use average for CPU
+    use_average = time_range == TimeRange.TEN_MIN
+
     # Parse responses
-    cpu = _parse_metric_response(cpu_data, "cpu", "%")
+    cpu = _parse_metric_response(cpu_data, "cpu", "%", use_average=use_average)
     ram = _parse_metric_response(ram_data, "ram", "%")
     disk = _parse_metric_response(disk_data, "disk", "KiB/s")
     network_in, network_out = _parse_network_response(network_data)
