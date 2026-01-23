@@ -30,8 +30,8 @@ export interface SystemMetricsResponse {
 
 export interface ServiceStatus {
   name: string
-  status: 'running' | 'stopped' | 'unknown'
-  version?: string
+  active: boolean
+  sub_state: string
 }
 
 export interface SystemInfoResponse {
@@ -121,7 +121,7 @@ export function transformServerMetrics(
   // Check if server is online by checking critical services
   // php-fpm services are named like php8.1-fpm, php8.2-fpm, etc.
   const isOnline = services.some(
-    s => (s.name === 'nginx' || s.name.startsWith('php') && s.name.includes('fpm')) && s.status === 'running'
+    s => (s.name === 'nginx' || (s.name.startsWith('php') && s.name.includes('-fpm'))) && s.active === true
   )
 
   // Format uptime from seconds to human readable

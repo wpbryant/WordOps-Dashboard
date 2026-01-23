@@ -80,20 +80,52 @@ def _parse_metric_response(
     }
     """
     result = raw_data.get("result", {})
+    labels = result.get("labels", [])
     data_rows = result.get("data", [])
 
     points = []
     current = 0.0
 
-    for row in data_rows:
-        if len(row) >= 2:
-            timestamp = int(row[0])
-            # Sum all dimension values (e.g., user + system CPU)
-            value = sum(float(v) for v in row[1:] if v is not None)
-            points.append(MetricPoint(timestamp=timestamp, value=value))
+    # Special handling for CPU: calculate as 100 - idle
+    if name == "cpu":
+        # Find the index of the 'idle' dimension
+        idle_idx = None
+        for i, label in enumerate(labels):
+            if i == 0:
+                continue  # Skip timestamp label
+            if isinstance(label, str) and label.lower() == "idle":
+                idle_idx = i
+                break
 
-    if points:
-        current = points[-1].value
+        for row in data_rows:
+            if len(row) >= 2:
+                timestamp = int(row[0])
+                if idle_idx is not None and len(row) > idle_idx:
+                    idle_value = float(row[idle_idx]) if row[idle_idx] is not None else 0
+                    value = max(0, min(100, 100 - idle_value))  # Clamp to 0-100
+                else:
+                    # Fallback: sum all non-idle dimensions
+                    value = 0
+                    for i, v in enumerate(row[1:]):
+                        label = labels[i + 1] if i + 1 < len(labels) else ""
+                        if v is not None and (not isinstance(label, str) or label.lower() != "idle"):
+                            value += float(v)
+                    value = max(0, min(100, value))  # Clamp to 0-100
+                points.append(MetricPoint(timestamp=timestamp, value=value))
+
+        if points:
+            current = points[-1].value
+    else:
+        # Default parsing: sum all dimensions
+        for row in data_rows:
+            if len(row) >= 2:
+                timestamp = int(row[0])
+                # Sum all dimension values (e.g., user + system CPU)
+                value = sum(float(v) for v in row[1:] if v is not None)
+                points.append(MetricPoint(timestamp=timestamp, value=value))
+
+        if points:
+            current = points[-1].value
 
     return MetricData(
         name=name,

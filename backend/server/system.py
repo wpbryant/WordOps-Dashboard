@@ -78,7 +78,8 @@ async def get_apt_updates() -> tuple[int, int]:
     try:
         # Run apt list --upgradable to get available updates
         process = await asyncio.create_subprocess_exec(
-            "apt-list",
+            "apt",
+            "list",
             "--upgradable",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,
@@ -91,14 +92,17 @@ async def get_apt_updates() -> tuple[int, int]:
 
         for line in output.splitlines():
             line_lower = line.lower()
-            if line_lower.startswith("security/") or "security" in line_lower:
-                security_count += 1
-            elif line_lower and "/" in line_lower:
-                other_count += 1
+            # Check if this is an upgradable package line (not headers)
+            if "/" in line_lower and "upgradable" in line_lower:
+                # Check for security updates
+                if "security" in line_lower:
+                    security_count += 1
+                else:
+                    other_count += 1
 
         return security_count, other_count
     except (asyncio.TimeoutError, FileNotFoundError, OSError):
-        # apt-list not available or timeout
+        # apt not available or timeout
         return 0, 0
 
 
