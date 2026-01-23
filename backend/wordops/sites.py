@@ -252,6 +252,8 @@ async def get_site_info(domain: str) -> Site | None:
                     elif "wp" in config_value and "redis" in config_value:
                         site_type = SiteType.WORDPRESS
                         cache = "redis"
+                    elif "mysql" in config_value and "basic" in config_value:
+                        site_type = SiteType.PHPMYSQL
                     elif "php" in config_value:
                         site_type = SiteType.PHP
                     elif "html" in config_value or "static" in config_value:
