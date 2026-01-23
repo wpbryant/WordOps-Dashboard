@@ -54,6 +54,7 @@ export function SiteDetails() {
   const deleteMutation = useMutation({
     mutationFn: () => deleteSite(domain),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sites'] })
       navigate('/sites')
     },
   })
@@ -63,6 +64,7 @@ export function SiteDetails() {
     mutationFn: () => enableSite(domain),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['site-detail', domain] })
+      queryClient.invalidateQueries({ queryKey: ['sites'] })
     },
   })
 
@@ -71,6 +73,7 @@ export function SiteDetails() {
     mutationFn: () => disableSite(domain),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['site-detail', domain] })
+      queryClient.invalidateQueries({ queryKey: ['sites'] })
     },
   })
 
