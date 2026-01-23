@@ -236,13 +236,13 @@ async def get_site_info(domain: str) -> Site | None:
         return None
 
     # Parse site info output
-    # WordOps site info format typically includes:
-    # Site Name: example.com
-    # Site Type: wp
-    # Cache: wpfc
-    # SSL: enabled
-    # PHP: 8.1
-    # Database: example_db
+    # WordOps site info format (varies by version):
+    # Nginx configuration     wp basic (enabled)
+    # PHP Version         8.3
+    # SSL             disabled
+    # DB_NAME             baby_com_lK4O2jPu
+    # DB_USER             babycomDQRi
+    # DB_PASS             9TnEui1Dorlc2qeU3CzWdk4t
 
     from .models import DatabaseInfo
 
@@ -252,48 +252,72 @@ async def get_site_info(domain: str) -> Site | None:
     php_version = None
     db_name = None
     db_user = None
+    db_pass = None
 
     lines = output.strip().split("\n")
 
     for line in lines:
+        line_stripped = line.strip()
         line_lower = line.lower().strip()
 
-        # Parse site type
-        if "type" in line_lower and ":" in line:
-            value = line.split(":", 1)[1].strip()
-            site_type = _parse_site_type(value)
+        # Parse site type from "Nginx configuration" line
+        if "nginx configuration" in line_lower:
+            # Extract the part between "configuration" and "(enabled)"
+            if "enabled" in line_lower:
+                parts = line_stripped.split()
+                for i, part in enumerate(parts):
+                    if part.lower() == "configuration" and i + 1 < len(parts):
+                        config_value = parts[i + 1].lower()
+                        # Parse site type from config value
+                        if "wp" in config_value and "basic" in config_value:
+                            site_type = SiteType.WORDPRESS
+                        elif "wp" in config_value and "fc" in config_value:
+                            site_type = SiteType.WORDPRESS
+                            cache = "wpfc"
+                        elif "wp" in config_value and "redis" in config_value:
+                            site_type = SiteType.WORDPRESS
+                            cache = "redis"
+                        elif "php" in config_value:
+                            site_type = SiteType.PHP
+                        elif "html" in config_value or "static" in config_value:
+                            site_type = SiteType.HTML
+                        elif "proxy" in config_value:
+                            site_type = SiteType.PROXY
+                        break
 
         # Parse SSL status
-        if "ssl" in line_lower and ":" in line and "letsencrypt" not in line_lower:
-            value = line.split(":", 1)[1].strip().lower()
-            ssl = value in ("enabled", "true", "yes", "on", "le", "letsencrypt")
+        if "ssl" in line_lower:
+            # Format: "SSL             disabled" or "SSL             enabled"
+            parts = line_stripped.split()
+            if len(parts) >= 2:
+                ssl = parts[1].lower() in ("enabled", "active", "yes", "on", "true")
 
-        # Parse cache
-        if "cache" in line_lower and ":" in line and "cache enabled" not in line_lower:
-            value = line.split(":", 1)[1].strip()
-            cache = _parse_cache_type(value)
+        # Parse PHP version - format: "PHP Version         8.3"
+        if "php version" in line_lower:
+            parts = line_stripped.split()
+            if len(parts) >= 2:
+                # Extract version number (e.g., "8.3", "8.1")
+                php_match = re.search(r"(\d+\.\d+)", parts[1])
+                if php_match:
+                    php_version = php_match.group(1)
 
-        # Parse PHP version
-        if "php" in line_lower and ":" in line:
-            value = line.split(":", 1)[1].strip()
-            # Extract version number (e.g., "8.1", "7.4")
-            php_match = re.search(r"(\d+\.\d+)", value)
-            if php_match:
-                php_version = php_match.group(1)
+        # Parse database info - format: "DB_NAME             baby_com_lK4O2jPu"
+        if "db_name" in line_lower:
+            parts = line_stripped.split()
+            if len(parts) >= 2:
+                db_name = parts[1].strip()
 
-        # Parse database name
-        if "database" in line_lower and "db" not in line_lower and ":" in line:
-            value = line.split(":", 1)[1].strip()
-            if value and value.lower() not in ("none", "n/a", "-"):
-                db_name = value
+        if "db_user" in line_lower:
+            parts = line_stripped.split()
+            if len(parts) >= 2:
+                db_user = parts[1].strip()
 
-        # Parse database user
-        if ("db user" in line_lower or "database user" in line_lower) and ":" in line:
-            value = line.split(":", 1)[1].strip()
-            if value and value.lower() not in ("none", "n/a", "-"):
-                db_user = value
+        if "db_pass" in line_lower:
+            parts = line_stripped.split()
+            if len(parts) >= 2:
+                db_pass = parts[1].strip()
 
-    # If no database info found from wo site info, generate from domain
+    # If database info wasn't found in output, generate from domain
     if not db_name and site_type in (SiteType.WORDPRESS, SiteType.PHP, SiteType.MYSQL):
         db_name = f"{domain.replace('.', '_').replace('-', '_')}_db"
 
@@ -305,6 +329,7 @@ async def get_site_info(domain: str) -> Site | None:
         database = DatabaseInfo(
             name=db_name,
             user=db_user,
+            password=db_pass,
             host="localhost"
         )
 

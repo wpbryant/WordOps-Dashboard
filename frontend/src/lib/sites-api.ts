@@ -11,6 +11,7 @@ interface BackendSite {
   database?: {
     name: string | null
     user: string | null
+    password?: string | null
     host: string
   } | null
   wp_admin_url?: string | null
@@ -69,7 +70,7 @@ function transformSite(backendSite: BackendSite): Site {
     ? {
         name: backendSite.database.name,
         user: backendSite.database.user || '••••••••••••',
-        password: '••••••••••••',  // Password not returned by backend for security
+        password: backendSite.database.password || '••••••••••••',
         host: backendSite.database.host || 'localhost',
       }
     : (backendSite.type === 'wordpress' || backendSite.type === 'php')

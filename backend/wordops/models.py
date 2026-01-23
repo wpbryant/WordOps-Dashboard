@@ -30,6 +30,7 @@ class DatabaseInfo(BaseModel):
 
     name: str | None = None
     user: str | None = None
+    password: str | None = None
     host: str = "localhost"
 
 
