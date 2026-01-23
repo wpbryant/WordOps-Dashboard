@@ -300,6 +300,12 @@ async def get_site_info(domain: str) -> Site | None:
                 php_match = re.search(r"(\d+\.\d+)", parts[1])
                 if php_match:
                     php_version = php_match.group(1)
+                    # Debug logging
+                    import logging
+                    logging.info(f"Parsed PHP version {php_version} from line: {line_stripped}")
+                else:
+                    import logging
+                    logging.warning(f"Failed to parse PHP version from line: {line_stripped}")
 
         # Parse database info - format: "DB_NAME             baby_com_lK4O2jPu"
         if "db_name" in line_lower:

@@ -427,8 +427,18 @@ function OverviewTab({
                   </button>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(site.database!.password)
-                      console.log('Password copied to clipboard')
+                      if (site.database?.password) {
+                        navigator.clipboard.writeText(site.database.password)
+                          .then(() => {
+                            console.log('Password copied to clipboard')
+                            // Optional: show visual feedback
+                            alert('Password copied to clipboard')
+                          })
+                          .catch((err) => {
+                            console.error('Failed to copy password:', err)
+                            alert('Failed to copy password')
+                          })
+                      }
                     }}
                     className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                     title="Copy password"
