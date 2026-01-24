@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { apiClient } from '../lib/api-client'
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false)
   }, [])
 
-  const login = async (username: string, password: string) => {
+  const login = useCallback(async (username: string, password: string) => {
     const apiUrl = import.meta.env.VITE_API_URL ?? ''
     // Build URL without double slashes - if apiUrl is empty, use relative path
     const loginUrl = apiUrl ? `${apiUrl}/api/v1/auth/login` : '/api/v1/auth/login'
@@ -99,15 +99,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const from = (location.state as any)?.from?.pathname
     const targetPath = (from && from !== '/') ? from : '/dashboard'
     navigate(targetPath, { replace: true })
-  }
+  }, [location.state, navigate])
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('auth_token')
     localStorage.removeItem('auth_user')
     apiClient.clearToken()
     setUser(null)
     navigate('/login', { replace: true })
-  }
+  }, [navigate])
 
   const value: AuthContextType = {
     user,
@@ -132,28 +132,34 @@ export function useAuth() {
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
   const navigate = useNavigate()
+  const navigateRef = useRef(navigate)
   const location = useLocation()
+
+  // Keep navigateRef updated
+  useEffect(() => {
+    navigateRef.current = navigate
+  }, [navigate])
 
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       // Don't save state for root path - users should go to dashboard after login
       const shouldSaveState = location.pathname !== '/'
-      navigate('/login', {
+      navigateRef.current('/login', {
         replace: true,
         ...(shouldSaveState && { state: { from: { pathname: location.pathname } } })
       })
     }
-  }, [isAuthenticated, isLoading, navigate, location.pathname])
+  }, [isAuthenticated, isLoading, location.pathname])
 
   // Redirect to dashboard if authenticated user visits root or login page
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       if (location.pathname === '/' || location.pathname === '/login') {
-        navigate('/dashboard', { replace: true })
+        navigateRef.current('/dashboard', { replace: true })
       }
     }
-  }, [isAuthenticated, isLoading, navigate, location.pathname])
+  }, [isAuthenticated, isLoading, location.pathname])
 
   if (isLoading) {
     return (
