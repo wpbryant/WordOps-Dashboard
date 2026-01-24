@@ -43,13 +43,14 @@ const nginxTemplateNames: Record<string, string> = {
   default: 'Default',
 }
 
-type TabKey = 'overview' | 'configuration' | 'monitoring' | 'audit'
+type TabKey = 'overview' | 'configuration' | 'monitoring' | 'audit' | 'wordpress'
 
 const tabs = [
   { key: 'overview' as const, label: 'Overview', icon: FileText },
   { key: 'configuration' as const, label: 'Configuration', icon: Settings },
   { key: 'monitoring' as const, label: 'Monitoring', icon: Activity },
   { key: 'audit' as const, label: 'Audit Log', icon: Clock },
+  { key: 'wordpress' as const, label: 'WordPress', icon: FaWordpress, wordpressOnly: true },
 ]
 
 // Helper functions - defined at module level to be shared across components
@@ -249,8 +250,8 @@ export function SiteDetails({
 
       {/* Tabs */}
       <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl mb-4">
-        <nav className="flex gap-1 px-2 overflow-x-auto">
-          {tabs.map((tab) => {
+        <nav className="flex gap-1 px-2">
+          {tabs.filter((tab) => !tab.wordpressOnly || site.siteType === 'wordpress').map((tab) => {
             const Icon = tab.icon
             return (
               <button
@@ -282,6 +283,9 @@ export function SiteDetails({
           )}
           {currentTab === 'monitoring' && <MonitoringTab site={site} />}
           {currentTab === 'audit' && <AuditTab site={site} />}
+          {currentTab === 'wordpress' && site.siteType === 'wordpress' && (
+            <WordPressTab site={site} />
+          )}
         </div>
       </div>
     </div>
@@ -302,7 +306,6 @@ function OverviewTab({
   onEnable?: () => void
   onDisable?: () => void
 }) {
-  const hasPluginUpdates = site.siteType === 'wordpress' && site.plugins.some((p) => p.updateAvailable)
   const [showDbPassword, setShowDbPassword] = useState(false)
 
   const getNginxTemplateName = (template: string) => {
@@ -469,70 +472,6 @@ function OverviewTab({
         </div>
       )}
 
-      {/* WordPress Admin Credentials */}
-      {site.siteType === 'wordpress' && (
-        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-          <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-              WordPress Admin Credentials
-            </h2>
-          </div>
-          <div className="p-6">
-            {site.wpAdminUser || site.wpAdminPassword ? (
-              <>
-                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-blue-800 dark:text-blue-200">
-                    These credentials were shown when the site was created. Make sure to save them securely.
-                  </p>
-                </div>
-                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Admin URL</dt>
-                    <dd className="text-sm font-mono text-zinc-900 dark:text-zinc-100 break-all">
-                      {site.wpAdminUrl || `${site.sslEnabled ? 'https' : 'http'}://${site.domain}/wp-admin`}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Username</dt>
-                    <dd className="text-sm font-mono text-zinc-900 dark:text-zinc-100">
-                      {site.wpAdminUser || 'admin'}
-                    </dd>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Password</dt>
-                    <dd className="flex items-center gap-2">
-                      <span className="text-sm font-mono text-zinc-900 dark:text-zinc-100">
-                        {site.wpAdminPassword || '•••••••••••••'}
-                      </span>
-                      {site.wpAdminPassword && (
-                        <>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(site.wpAdminPassword!)
-                              alert('Password copied to clipboard')
-                            }}
-                            className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                            title="Copy password"
-                          >
-                            <Copy className="w-4 h-4 text-zinc-500" />
-                          </button>
-                        </>
-                      )}
-                    </dd>
-                  </div>
-                </dl>
-              </>
-            ) : (
-              <div className="bg-zinc-50 dark:bg-zinc-950/30 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                  WordPress admin credentials are not available for this site. They may have been provided during site creation but are not stored in the system for security reasons.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* SSL Certificate */}
       <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
         <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
@@ -558,9 +497,17 @@ function OverviewTab({
                       site.sslCertificate.status === 'expired' && 'text-red-500 dark:text-red-400'
                     )}
                   />
-                  <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                    {site.sslCertificate.provider}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      {site.sslCertificate.provider}
+                    </span>
+                    {site.sslCertificate.dnsApiProvider && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400">
+                        <Network className="w-3 h-3" />
+                        {site.sslCertificate.dnsApiProvider}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <span
                   className={cn(
@@ -576,7 +523,7 @@ function OverviewTab({
                   {site.sslCertificate.status.charAt(0).toUpperCase() + site.sslCertificate.status.slice(1)}
                 </span>
               </div>
-              <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+              <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                 <div>
                   <dt className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">Issued</dt>
                   <dd className="text-sm text-zinc-900 dark:text-zinc-100">
@@ -587,6 +534,17 @@ function OverviewTab({
                   <dt className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">Expires</dt>
                   <dd className="text-sm text-zinc-900 dark:text-zinc-100">
                     {formatDate(site.sslCertificate.expiresDate)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-zinc-500 dark:text-zinc-400 mb-1">Days to Expiration</dt>
+                  <dd className={cn(
+                    'text-sm font-medium',
+                    (site.sslCertificate.daysToExpiration ?? 90) <= 7 && 'text-red-600 dark:text-red-400',
+                    (site.sslCertificate.daysToExpiration ?? 90) > 7 && (site.sslCertificate.daysToExpiration ?? 90) <= 30 && 'text-amber-600 dark:text-amber-400',
+                    (site.sslCertificate.daysToExpiration ?? 90) > 30 && 'text-zinc-900 dark:text-zinc-100'
+                  )}>
+                    {site.sslCertificate.daysToExpiration ?? 90} days
                   </dd>
                 </div>
                 <div>
@@ -610,56 +568,6 @@ function OverviewTab({
           )}
         </div>
       </div>
-
-      {/* WordPress Plugins */}
-      {site.siteType === 'wordpress' && (
-        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-          <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-              Plugins
-            </h2>
-            {hasPluginUpdates && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400">
-                <RefreshCw className="w-3.5 h-3.5" />
-                {site.plugins.filter((p) => p.updateAvailable).length} update
-                {site.plugins.filter((p) => p.updateAvailable).length > 1 ? 's' : ''} available
-              </span>
-            )}
-          </div>
-          <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
-            {site.plugins.length === 0 ? (
-              <div className="p-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
-                No plugins installed
-              </div>
-            ) : (
-              site.plugins.map((plugin) => (
-                <div
-                  key={plugin.id}
-                  className="px-6 py-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-950/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                      <FaWordpress className="w-5 h-5 text-zinc-400 dark:text-zinc-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                        {plugin.name}
-                      </p>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">v{plugin.version}</p>
-                    </div>
-                  </div>
-                  {plugin.updateAvailable && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400">
-                      <RefreshCw className="w-3 h-3" />
-                      Update
-                    </span>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Quick Actions */}
       <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
@@ -702,6 +610,125 @@ function OverviewTab({
               Delete Site
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// WordPress Tab
+function WordPressTab({ site }: { site: Site }) {
+  const hasPluginUpdates = site.siteType === 'wordpress' && site.plugins.some((p) => p.updateAvailable)
+
+  return (
+    <div className="space-y-6">
+      {/* WordPress Admin Credentials */}
+      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+        <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+            WordPress Admin Credentials
+          </h2>
+        </div>
+        <div className="p-6">
+          {site.wpAdminUser || site.wpAdminPassword ? (
+            <>
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  These credentials were shown when the site was created. Make sure to save them securely.
+                </p>
+              </div>
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Admin URL</dt>
+                  <dd className="text-sm font-mono text-zinc-900 dark:text-zinc-100 break-all">
+                    {site.wpAdminUrl || `${site.sslEnabled ? 'https' : 'http'}://${site.domain}/wp-admin`}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Username</dt>
+                  <dd className="text-sm font-mono text-zinc-900 dark:text-zinc-100">
+                    {site.wpAdminUser || 'admin'}
+                  </dd>
+                </div>
+                <div className="sm:col-span-2">
+                  <dt className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">Password</dt>
+                  <dd className="flex items-center gap-2">
+                    <span className="text-sm font-mono text-zinc-900 dark:text-zinc-100">
+                      {site.wpAdminPassword || '•••••••••••••'}
+                    </span>
+                    {site.wpAdminPassword && (
+                      <>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(site.wpAdminPassword!)
+                            alert('Password copied to clipboard')
+                          }}
+                          className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                          title="Copy password"
+                        >
+                          <Copy className="w-4 h-4 text-zinc-500" />
+                        </button>
+                      </>
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            </>
+          ) : (
+            <div className="bg-zinc-50 dark:bg-zinc-950/30 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                WordPress admin credentials are not available for this site. They may have been provided during site creation but are not stored in the system for security reasons.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* WordPress Plugins */}
+      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+        <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+            Plugins
+          </h2>
+          {hasPluginUpdates && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400">
+              <RefreshCw className="w-3.5 h-3.5" />
+              {site.plugins.filter((p) => p.updateAvailable).length} update
+              {site.plugins.filter((p) => p.updateAvailable).length > 1 ? 's' : ''} available
+            </span>
+          )}
+        </div>
+        <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
+          {site.plugins.length === 0 ? (
+            <div className="p-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+              No plugins installed
+            </div>
+          ) : (
+            site.plugins.map((plugin) => (
+              <div
+                key={plugin.id}
+                className="px-6 py-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-950/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                    <FaWordpress className="w-5 h-5 text-zinc-400 dark:text-zinc-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      {plugin.name}
+                    </p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">v{plugin.version}</p>
+                  </div>
+                </div>
+                {plugin.updateAvailable && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-teal-50 dark:bg-teal-950/30 text-teal-700 dark:text-teal-400">
+                    <RefreshCw className="w-3 h-3" />
+                    Update
+                  </span>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

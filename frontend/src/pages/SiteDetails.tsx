@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { SiteDetails as SiteDetailsComponent } from '../components/sites'
 import { fetchSite, getSiteUrl, getWpAdminUrl, getPhpMyAdminUrl, restartSiteServices, fetchSiteMonitoring, deleteSite, enableSite, disableSite } from '../lib/sites-api'
+import { useServerInfo } from '../lib/dashboard-api'
 import type { Site } from '../types'
 
 export function SiteDetails() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<'overview' | 'configuration' | 'monitoring' | 'audit'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'configuration' | 'monitoring' | 'audit' | 'wordpress'>('overview')
 
   // Extract domain from pathname manually since we're not using React Router's Routes
   // The URL format is /sites/{domain}
@@ -38,6 +39,9 @@ export function SiteDetails() {
     retry: 1,
     staleTime: 60000, // Cache for 1 minute
   })
+
+  // Fetch server info for public IP (for phpMyAdmin link)
+  const { data: serverInfo } = useServerInfo()
 
   // Debug: log query state
   console.log('Query state:', { isLoading, error, site })
@@ -89,7 +93,7 @@ export function SiteDetails() {
   }
 
   const handleOpenPhpMyAdmin = () => {
-    window.open(getPhpMyAdminUrl(), '_blank')
+    window.open(getPhpMyAdminUrl(serverInfo?.public_ip), '_blank')
   }
 
   const handleWpAdminLogin = () => {
@@ -171,6 +175,7 @@ export function SiteDetails() {
       onDelete={handleDelete}
       onEnable={handleEnable}
       onDisable={handleDisable}
+      serverPublicIp={serverInfo?.public_ip}
     />
   )
 }

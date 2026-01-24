@@ -105,6 +105,19 @@ function transformSite(backendSite: BackendSite): Site {
         }
       : undefined
 
+  // Calculate days to expiration
+  const expiresDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+  const today = new Date()
+  const daysToExpiration = Math.ceil((expiresDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+
+  // Determine SSL status based on days to expiration
+  let sslStatus: 'active' | 'expiring' | 'expired' = 'active'
+  if (daysToExpiration < 0) {
+    sslStatus = 'expired'
+  } else if (daysToExpiration <= 30) {
+    sslStatus = 'expiring'
+  }
+
   return {
     id: backendSite.name, // Use domain as ID since backend uses domain
     domain: backendSite.name,
@@ -117,9 +130,11 @@ function transformSite(backendSite: BackendSite): Site {
       id: `${backendSite.name}-ssl`,
       provider: "Let's Encrypt",
       issuedDate: new Date().toISOString().split('T')[0],
-      expiresDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      status: 'active' as const,
+      expiresDate: expiresDate.toISOString().split('T')[0],
+      status: sslStatus,
       autoRenew: true,
+      daysToExpiration,
+      dnsApiProvider: undefined, // Will be populated by backend if available
     } : null,
     plugins,
     cacheEnabled: !!backendSite.cache,
@@ -258,8 +273,11 @@ export function getWpAdminUrl(site: Site): string {
 /**
  * Get phpMyAdmin URL
  */
-export function getPhpMyAdminUrl(): string {
-  return '/phpmyadmin' // Relative path or your phpMyAdmin route
+export function getPhpMyAdminUrl(serverPublicIp?: string): string {
+  if (serverPublicIp) {
+    return `http://${serverPublicIp}:22222/db/pma`
+  }
+  return '/phpmyadmin' // Fallback to relative path
 }
 
 /**

@@ -38,6 +38,8 @@ export interface SslCertificate {
   expiresDate: string
   status: 'active' | 'expiring' | 'expired'
   autoRenew: boolean
+  daysToExpiration?: number
+  dnsApiProvider?: string
 }
 
 export interface MonitoringStats {
@@ -106,8 +108,8 @@ export interface SitesListProps {
 
 export interface SiteDetailsProps {
   site: Site
-  activeTab: 'overview' | 'configuration' | 'monitoring' | 'audit'
-  onTabChange?: (tab: 'overview' | 'configuration' | 'monitoring' | 'audit') => void
+  activeTab: 'overview' | 'configuration' | 'monitoring' | 'audit' | 'wordpress'
+  onTabChange?: (tab: 'overview' | 'configuration' | 'monitoring' | 'audit' | 'wordpress') => void
   onVisitSite?: () => void
   onOpenPhpMyAdmin?: () => void
   onWpAdminLogin?: () => void
@@ -115,6 +117,7 @@ export interface SiteDetailsProps {
   onDelete?: () => void
   onEnable?: () => void
   onDisable?: () => void
+  serverPublicIp?: string
 }
 
 export interface CreateSiteWizardProps {
