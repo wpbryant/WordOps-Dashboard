@@ -394,6 +394,7 @@ async def create_site(
     php_version: str | None = None,
     proxy_destination: str | None = None,
     alias_target: str | None = None,
+    hsts: bool | None = None,
 ) -> Site:
     """
     Create a new WordOps site.
@@ -406,6 +407,7 @@ async def create_site(
         php_version: PHP version (e.g., "8.1", "8.2")
         proxy_destination: Destination URL for proxy sites (e.g., "http://localhost:3000")
         alias_target: Target domain for alias sites (e.g., "mainsite.com")
+        hsts: Enable HSTS (requires SSL to be enabled)
 
     Returns:
         Site object for the newly created site
@@ -455,6 +457,9 @@ async def create_site(
     # Add SSL flag
     if ssl:
         args.append("--letsencrypt")
+        # Add HSTS flag if SSL is enabled and HSTS is requested
+        if hsts:
+            args.append("--hsts")
 
     # Add PHP version if specified (only for WordPress sites)
     # Standalone PHP sites use the system default PHP version

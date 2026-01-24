@@ -163,6 +163,7 @@ async def create_new_site(
             php_version=request.php_version,
             proxy_destination=request.proxy_destination,
             alias_target=request.alias_target,
+            hsts=request.hsts,
         )
         return site
     except ValueError as e:

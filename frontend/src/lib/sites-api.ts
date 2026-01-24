@@ -38,6 +38,7 @@ export interface CreateSiteInput {
   wpMultisite?: boolean
   sslType?: 'single' | 'wildcard'
   dnsProvider?: 'cloudflare' | 'digitalocean' | 'linode' | 'aws' | 'google' | 'vultr' | 'hetzner'
+  hstsEnabled?: boolean  // Only applies when enableSsl is true
   proxyDestination?: string
   aliasTarget?: string
 }
@@ -207,6 +208,7 @@ export async function createSite(input: CreateSiteInput): Promise<Site> {
     php_version: input.phpVersion,
     proxy_destination: input.proxyDestination,
     alias_target: input.aliasTarget,
+    hsts: input.enableSsl ? input.hstsEnabled : undefined,  // HSTS only works with SSL
   })
 
   return transformSite(response)

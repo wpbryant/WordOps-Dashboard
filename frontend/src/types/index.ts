@@ -132,6 +132,7 @@ export interface CreateSiteWizardProps {
     wpMultisite?: boolean
     sslType?: 'single' | 'wildcard'
     dnsProvider?: 'cloudflare' | 'digitalocean' | 'linode' | 'aws' | 'google' | 'vultr' | 'hetzner'
+    hstsEnabled?: boolean
     proxyDestination?: string
     aliasTarget?: string
   }) => void

@@ -79,6 +79,7 @@ class CreateSiteRequest(BaseModel):
     php_version: str | None = None  # e.g., "8.1", "8.2"
     proxy_destination: str | None = None  # For proxy sites, e.g., "http://localhost:3000"
     alias_target: str | None = None  # For alias sites, e.g., "mainsite.com"
+    hsts: bool | None = None  # Enable HSTS (requires SSL)
 
     class Config:
         """Pydantic model configuration."""
