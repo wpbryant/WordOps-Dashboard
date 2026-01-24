@@ -23,6 +23,8 @@ interface BackendSite {
   wp_admin_password?: string | null
   alias_target?: string | null
   proxy_destination?: string | null
+  hsts_enabled?: boolean
+  ngxblocker_enabled?: boolean
 }
 
 // Site creation input
@@ -50,6 +52,8 @@ export interface UpdateSiteConfigInput {
   phpMemoryLimit?: string
   maxUploadSize?: string
   maxExecutionTime?: string
+  hstsEnabled?: boolean
+  ngxblockerEnabled?: boolean
 }
 
 // Transform backend site to frontend site
@@ -155,6 +159,9 @@ function transformSite(backendSite: BackendSite): Site {
     proxyDestination: backendSite.proxy_destination || undefined,
     // For backward compatibility, also set targetSite for alias sites
     targetSite: backendSite.alias_target || undefined,
+    // HSTS and ngxblocker
+    hstsEnabled: backendSite.hsts_enabled || false,
+    ngxblockerEnabled: backendSite.ngxblocker_enabled || false,
   }
 }
 
@@ -215,6 +222,8 @@ export async function updateSiteConfig(domain: string, config: UpdateSiteConfigI
     ssl?: boolean
     cache?: string
     php_version?: string
+    hsts?: boolean
+    ngxblocker?: boolean
   } = {}
 
   if (config.sslEnabled !== undefined) {
@@ -225,6 +234,12 @@ export async function updateSiteConfig(domain: string, config: UpdateSiteConfigI
   }
   if (config.phpVersion !== undefined) {
     backendUpdate.php_version = config.phpVersion
+  }
+  if (config.hstsEnabled !== undefined) {
+    backendUpdate.hsts = config.hstsEnabled
+  }
+  if (config.ngxblockerEnabled !== undefined) {
+    backendUpdate.ngxblocker = config.ngxblockerEnabled
   }
 
   const response = await apiClient.put<BackendSite>(`/api/v1/sites/${domain}`, backendUpdate)

@@ -212,6 +212,8 @@ async def update_existing_site(
             ssl=request.ssl,
             cache=request.cache,
             php_version=request.php_version,
+            hsts=request.hsts,
+            ngxblocker=request.ngxblocker,
         )
         return site
     except ValueError as e:

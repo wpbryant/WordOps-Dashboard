@@ -229,6 +229,8 @@ async def get_site_info(domain: str) -> Site | None:
     is_disabled = False  # Track if site is disabled
     alias_target = None  # For alias sites
     proxy_destination = None  # For proxy sites
+    hsts_enabled = False  # Track HSTS status
+    ngxblocker_enabled = False  # Track ngxblocker status
 
     lines = output.strip().split("\n")
 
@@ -332,36 +334,42 @@ async def get_site_info(domain: str) -> Site | None:
 
     # For alias sites, parse the nginx config to get the target domain
     # For proxy sites, parse the nginx config to get the proxy destination
-    if site_type == SiteType.ALIAS or site_type == SiteType.PROXY:
-        try:
-            # Read the nginx config file directly using asyncio
-            # WordOps stores nginx configs in /etc/nginx/sites-available/
-            config_path = f"/etc/nginx/sites-available/{domain}"
+    # Also parse HSTS and ngxblocker status from nginx config
+    try:
+        # Read the nginx config file directly using asyncio
+        # WordOps stores nginx configs in /etc/nginx/sites-available/
+        config_path = f"/etc/nginx/sites-available/{domain}"
 
-            def read_nginx_config():
-                with open(config_path, "r") as f:
-                    return f.read()
+        def read_nginx_config():
+            with open(config_path, "r") as f:
+                return f.read()
 
-            config_content = await asyncio.to_thread(read_nginx_config)
+        config_content = await asyncio.to_thread(read_nginx_config)
 
-            if config_content:
-                for line in config_content.strip().split("\n"):
-                    line_stripped = line.strip()
-                    # Look for alias target in nginx config
-                    if site_type == SiteType.ALIAS and "return" in line_stripped and "http" in line_stripped:
-                        # Parse redirect target from: return 301 http://targetdomain.com$request_uri;
-                        match = re.search(r'return\s+301\s+https?://([^/\s]+)', line_stripped)
-                        if match:
-                            alias_target = match.group(1)
-                    # Look for proxy destination in nginx config
-                    elif site_type == SiteType.PROXY and "proxy_pass" in line_stripped:
-                        # Parse proxy_pass from: proxy_pass http://localhost:3000;
-                        match = re.search(r'proxy_pass\s+([^;]+)', line_stripped)
-                        if match:
-                            proxy_destination = match.group(1).strip()
-        except Exception as e:
-            import logging
-            logging.warning(f"Failed to parse nginx config for {domain}: {e}")
+        if config_content:
+            for line in config_content.strip().split("\n"):
+                line_stripped = line.strip()
+                # Look for alias target in nginx config
+                if site_type == SiteType.ALIAS and "return" in line_stripped and "http" in line_stripped:
+                    # Parse redirect target from: return 301 http://targetdomain.com$request_uri;
+                    match = re.search(r'return\s+301\s+https?://([^/\s]+)', line_stripped)
+                    if match:
+                        alias_target = match.group(1)
+                # Look for proxy destination in nginx config
+                elif site_type == SiteType.PROXY and "proxy_pass" in line_stripped:
+                    # Parse proxy_pass from: proxy_pass http://localhost:3000;
+                    match = re.search(r'proxy_pass\s+([^;]+)', line_stripped)
+                    if match:
+                        proxy_destination = match.group(1).strip()
+                # Check for HSTS (Strict-Transport-Security header)
+                elif "strict-transport-security" in line_stripped.lower():
+                    hsts_enabled = True
+                # Check for ngxblocker (includes bad blockerset or bad bots blocking)
+                elif "blockerset" in line_stripped.lower() or "badbots" in line_stripped.lower():
+                    ngxblocker_enabled = True
+    except Exception as e:
+        import logging
+        logging.warning(f"Failed to parse nginx config for {domain}: {e}")
 
     return Site(
         name=domain,
@@ -373,6 +381,8 @@ async def get_site_info(domain: str) -> Site | None:
         is_disabled=is_disabled,
         alias_target=alias_target,
         proxy_destination=proxy_destination,
+        hsts_enabled=hsts_enabled,
+        ngxblocker_enabled=ngxblocker_enabled,
     )
 
 
@@ -521,6 +531,8 @@ async def update_site(
     ssl: bool | None = None,
     cache: CacheType | None = None,
     php_version: str | None = None,
+    hsts: bool | None = None,
+    ngxblocker: bool | None = None,
 ) -> Site:
     """
     Update an existing WordOps site.
@@ -530,6 +542,8 @@ async def update_site(
         ssl: Enable (True) or disable (False) SSL, or None to skip
         cache: New cache type, or None to skip
         php_version: New PHP version, or None to skip
+        hsts: Enable (True) or disable (False) HSTS, or None to skip
+        ngxblocker: Enable (True) or disable (False) ngxblocker, or None to skip
 
     Returns:
         Updated Site object
@@ -577,6 +591,20 @@ async def update_site(
         # WordOps uses format like --php83, --php82 (no dot, no equals)
         php_flag = f"--php{php_version.replace('.', '')}"
         commands_to_run.append(["site", "update", domain, php_flag])
+
+    # HSTS toggle
+    if hsts is not None:
+        if hsts:
+            commands_to_run.append(["site", "update", domain, "--hsts"])
+        else:
+            commands_to_run.append(["site", "update", domain, "--hsts=off"])
+
+    # ngxblocker toggle
+    if ngxblocker is not None:
+        if ngxblocker:
+            commands_to_run.append(["site", "update", domain, "--ngxblocker"])
+        else:
+            commands_to_run.append(["site", "update", domain, "--ngxblocker=off"])
 
     # Execute all update commands
     for args in commands_to_run:

@@ -52,6 +52,8 @@ class Site(BaseModel):
     nginx_config: str | None = None  # Nginx configuration content (not included by default)
     alias_target: str | None = None  # For alias sites: the target domain
     proxy_destination: str | None = None  # For proxy sites: the destination URL
+    hsts_enabled: bool = False  # Whether HSTS is enabled
+    ngxblocker_enabled: bool = False  # Whether Ultimate Nginx Bad Blocker is enabled
 
     class Config:
         """Pydantic model configuration."""
@@ -93,6 +95,8 @@ class UpdateSiteRequest(BaseModel):
     ssl: bool | None = None  # Enable/disable SSL
     cache: CacheType | None = None  # Change cache type
     php_version: str | None = None  # Change PHP version
+    hsts: bool | None = None  # Enable/disable HSTS
+    ngxblocker: bool | None = None  # Enable/disable Ultimate Nginx Bad Blocker
 
     class Config:
         """Pydantic model configuration."""

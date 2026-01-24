@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { SiteDetails as SiteDetailsComponent } from '../components/sites'
-import { fetchSite, getSiteUrl, getWpAdminUrl, getPhpMyAdminUrl, restartSiteServices, fetchSiteMonitoring, deleteSite, enableSite, disableSite } from '../lib/sites-api'
+import { fetchSite, getSiteUrl, getWpAdminUrl, getPhpMyAdminUrl, fetchSiteMonitoring, deleteSite, enableSite, disableSite } from '../lib/sites-api'
 import { useServerInfo } from '../lib/dashboard-api'
 import type { Site } from '../types'
 
@@ -45,14 +45,6 @@ export function SiteDetails() {
 
   // Debug: log query state
   console.log('Query state:', { isLoading, error, site })
-
-  // Restart services mutation
-  const restartServicesMutation = useMutation({
-    mutationFn: () => restartSiteServices(domain),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['site-detail', domain] })
-    },
-  })
 
   // Delete site mutation
   const deleteMutation = useMutation({
@@ -100,10 +92,6 @@ export function SiteDetails() {
     if (site) {
       window.open(getWpAdminUrl(site), '_blank')
     }
-  }
-
-  const handleRestartServices = () => {
-    restartServicesMutation.mutate()
   }
 
   const handleDelete = () => {
@@ -171,7 +159,6 @@ export function SiteDetails() {
       onVisitSite={handleVisitSite}
       onOpenPhpMyAdmin={handleOpenPhpMyAdmin}
       onWpAdminLogin={handleWpAdminLogin}
-      onRestartServices={handleRestartServices}
       onDelete={handleDelete}
       onEnable={handleEnable}
       onDisable={handleDisable}

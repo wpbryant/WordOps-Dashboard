@@ -7,7 +7,6 @@ import {
   Settings,
   Database,
   RefreshCw,
-  Power,
   HardDrive,
   Network,
   Clock,
@@ -20,10 +19,12 @@ import {
   Eye,
   EyeOff,
   Copy,
-  Bell,
-  Folder,
+  Lock,
+  Shovel,
   Trash2,
   Ban,
+  Folder,
+  Bell,
 } from 'lucide-react'
 import { FaWordpress, FaHtml5, FaPhp } from 'react-icons/fa'
 import type { SiteDetailsProps, Site } from '../../types'
@@ -110,7 +111,6 @@ export function SiteDetails({
   onVisitSite,
   onOpenPhpMyAdmin,
   onWpAdminLogin,
-  onRestartServices,
   onDelete,
   onEnable,
   onDisable,
@@ -307,10 +307,10 @@ export function SiteDetails({
       <div className="flex-1 overflow-auto px-6">
         <div className="max-w-6xl mx-auto py-6">
           {currentTab === 'overview' && (
-            <OverviewTab site={site} onRestartServices={onRestartServices} onDelete={onDelete} onEnable={onEnable} onDisable={onDisable} />
+            <OverviewTab site={site} />
           )}
           {currentTab === 'configuration' && (
-            <ConfigurationTab site={site} domain={site.domain} />
+            <ConfigurationTab site={site} domain={site.domain} onDelete={onDelete} onEnable={onEnable} onDisable={onDisable} />
           )}
           {currentTab === 'monitoring' && <MonitoringTab site={site} />}
           {currentTab === 'audit' && <AuditTab site={site} />}
@@ -326,16 +326,8 @@ export function SiteDetails({
 // Overview Tab
 function OverviewTab({
   site,
-  onRestartServices,
-  onDelete,
-  onEnable,
-  onDisable,
 }: {
   site: Site
-  onRestartServices?: () => void
-  onDelete?: () => void
-  onEnable?: () => void
-  onDisable?: () => void
 }) {
   const [showDbPassword, setShowDbPassword] = useState(false)
 
@@ -595,50 +587,6 @@ function OverviewTab({
           )}
         </div>
       </div>
-
-      {/* Quick Actions */}
-      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-        <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-            Quick Actions
-          </h2>
-        </div>
-        <div className="p-6">
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={onRestartServices}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-medium transition-colors"
-            >
-              <Power className="w-4 h-4" />
-              Restart Services
-            </button>
-            {site.isDisabled ? (
-              <button
-                onClick={onEnable}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 rounded-lg text-sm font-medium transition-colors"
-              >
-                <CheckCircle className="w-4 h-4" />
-                Enable Site
-              </button>
-            ) : (
-              <button
-                onClick={onDisable}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 rounded-lg text-sm font-medium transition-colors"
-              >
-                <Ban className="w-4 h-4" />
-                Disable Site
-              </button>
-            )}
-            <button
-              onClick={onDelete}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 rounded-lg text-sm font-medium transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-              Delete Site
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
@@ -770,13 +718,52 @@ function WordPressTab({ site }: { site: Site }) {
 function ConfigurationTab({
   site,
   domain,
+  onDelete,
+  onEnable,
+  onDisable,
 }: {
   site: Site
   domain: string
+  onDelete?: () => void
+  onEnable?: () => void
+  onDisable?: () => void
 }) {
   const [nginxConfig, setNginxConfig] = useState<string | null>(null)
   const [isLoadingConfig, setIsLoadingConfig] = useState(false)
   const [showConfig, setShowShowConfig] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
+
+  // Handle HSTS toggle
+  const handleToggleHsts = async () => {
+    setIsUpdating(true)
+    try {
+      const { updateSiteConfig } = await import('../../lib/sites-api')
+      await updateSiteConfig(domain, { hstsEnabled: !site.hstsEnabled })
+      // Invalidate and refetch
+      window.location.reload()
+    } catch (error) {
+      console.error('Failed to toggle HSTS:', error)
+      alert('Failed to update HSTS setting')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  // Handle ngxblocker toggle
+  const handleToggleNgxblocker = async () => {
+    setIsUpdating(true)
+    try {
+      const { updateSiteConfig } = await import('../../lib/sites-api')
+      await updateSiteConfig(domain, { ngxblockerEnabled: !site.ngxblockerEnabled })
+      // Invalidate and refetch
+      window.location.reload()
+    } catch (error) {
+      console.error('Failed to toggle ngxblocker:', error)
+      alert('Failed to update nginx bad blocker setting')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
 
   const handleToggleConfig = async () => {
     // If we're showing config and haven't loaded it yet, load it first
@@ -863,6 +850,130 @@ function ConfigurationTab({
                 Disabled
               </span>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+        <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+            Quick Actions
+          </h2>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* HSTS Toggle */}
+            <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/30">
+                  <Lock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">HSTS</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    HTTP Strict Transport Security
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleToggleHsts}
+                disabled={isUpdating}
+                className={cn(
+                  'px-3 py-1.5 text-sm font-medium rounded-lg transition-colors',
+                  site.hstsEnabled
+                    ? 'bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50'
+                    : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-300 dark:hover:bg-zinc-700',
+                  'disabled:opacity-50 disabled:cursor-not-allowed'
+                )}
+              >
+                {site.hstsEnabled ? 'Enabled' : 'Disabled'}
+              </button>
+            </div>
+
+            {/* ngxblocker Toggle */}
+            <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-950/30">
+                  <Shovel className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Bad Blocker</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    Ultimate Nginx Bad Blocker
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleToggleNgxblocker}
+                disabled={isUpdating}
+                className={cn(
+                  'px-3 py-1.5 text-sm font-medium rounded-lg transition-colors',
+                  site.ngxblockerEnabled
+                    ? 'bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50'
+                    : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-300 dark:hover:bg-zinc-700',
+                  'disabled:opacity-50 disabled:cursor-not-allowed'
+                )}
+              >
+                {site.ngxblockerEnabled ? 'Enabled' : 'Disabled'}
+              </button>
+            </div>
+
+            {/* Enable/Disable Site */}
+            <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  'p-2 rounded-lg',
+                  site.isDisabled
+                    ? 'bg-emerald-50 dark:bg-emerald-950/30'
+                    : 'bg-amber-50 dark:bg-amber-950/30'
+                )}>
+                  {site.isDisabled ? (
+                    <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  ) : (
+                    <Ban className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Site Status</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    {site.isDisabled ? 'Disabled' : 'Active'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={site.isDisabled ? onEnable : onDisable}
+                className={cn(
+                  'px-3 py-1.5 text-sm font-medium rounded-lg transition-colors',
+                  site.isDisabled
+                    ? 'bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50'
+                    : 'bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50'
+                )}
+              >
+                {site.isDisabled ? 'Enable' : 'Disable'}
+              </button>
+            </div>
+
+            {/* Delete Site */}
+            <div className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30">
+                  <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-red-900 dark:text-red-100">Delete Site</p>
+                  <p className="text-xs text-red-700 dark:text-red-400 mt-0.5">
+                    Permanently remove this site
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={onDelete}
+                className="px-3 py-1.5 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -89,6 +89,8 @@ export interface Site {
   wpAdminPassword?: string  // WordPress admin password
   isDisabled?: boolean  // Whether the site is disabled
   nginxConfig?: string | null  // Nginx configuration content
+  hstsEnabled?: boolean  // Whether HSTS is enabled
+  ngxblockerEnabled?: boolean  // Whether Ultimate Nginx Bad Blocker is enabled
 }
 
 // Sites component props
@@ -113,7 +115,6 @@ export interface SiteDetailsProps {
   onVisitSite?: () => void
   onOpenPhpMyAdmin?: () => void
   onWpAdminLogin?: () => void
-  onRestartServices?: () => void
   onDelete?: () => void
   onEnable?: () => void
   onDisable?: () => void
