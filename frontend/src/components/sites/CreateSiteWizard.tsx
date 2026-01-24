@@ -31,7 +31,6 @@ interface WizardState {
   enableSsl: boolean
   sslType: 'single' | 'wildcard'
   dnsProvider: DnsProvider | null
-  hstsEnabled: boolean
   createDatabase: boolean
   databaseName: string
   databaseUser: string
@@ -113,7 +112,6 @@ export function CreateSiteWizard({ onCreateSite, onCancel, isSubmitting = false 
     enableSsl: true,
     sslType: 'single',
     dnsProvider: null,
-    hstsEnabled: false,
     createDatabase: true,
     databaseName: '',
     databaseUser: '',
@@ -189,7 +187,6 @@ export function CreateSiteWizard({ onCreateSite, onCancel, isSubmitting = false 
         wpMultisite: wizardState.wpMultisite,
         sslType: wizardState.sslType,
         dnsProvider: wizardState.dnsProvider ?? undefined,
-        hstsEnabled: wizardState.hstsEnabled,
         proxyDestination: wizardState.proxyDestination || undefined,
         aliasTarget: wizardState.aliasTarget || undefined,
       })
@@ -823,58 +820,6 @@ export function CreateSiteWizard({ onCreateSite, onCancel, isSubmitting = false 
                       </div>
                     )}
                   </div>
-
-                  {/* HSTS */}
-                  <button
-                    onClick={() => updateState({ hstsEnabled: !wizardState.hstsEnabled })}
-                    className={cn(
-                      'w-full p-4 rounded-xl border-2 text-left transition-all',
-                      wizardState.hstsEnabled
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
-                        : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900'
-                    )}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={cn(
-                          'p-2 rounded-lg transition-colors',
-                          wizardState.hstsEnabled
-                            ? 'bg-blue-100 dark:bg-blue-900/50'
-                            : 'bg-zinc-100 dark:bg-zinc-800'
-                        )}
-                      >
-                        <Shield
-                          className={cn(
-                            'w-5 h-5',
-                            wizardState.hstsEnabled
-                              ? 'text-blue-600 dark:text-blue-400'
-                              : 'text-zinc-600 dark:text-zinc-400'
-                          )}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                          Enable HSTS (HTTP Strict Transport Security)
-                        </p>
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                          Enforce HTTPS connections for enhanced security
-                        </p>
-                      </div>
-                      <div
-                        className={cn(
-                          'w-11 h-6 rounded-full p-1 transition-colors',
-                          wizardState.hstsEnabled ? 'bg-blue-500' : 'bg-zinc-300 dark:bg-zinc-700'
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            'w-4 h-4 rounded-full bg-white shadow transition-transform',
-                            wizardState.hstsEnabled ? 'translate-x-5' : 'translate-x-0'
-                          )}
-                        />
-                      </div>
-                    </div>
-                  </button>
                 </div>
               )}
 
@@ -1096,12 +1041,6 @@ export function CreateSiteWizard({ onCreateSite, onCancel, isSubmitting = false 
                         </dd>
                       </div>
                     )}
-                    {wizardState.enableSsl && wizardState.hstsEnabled && (
-                      <div className="flex justify-between">
-                        <dt className="text-zinc-600 dark:text-zinc-400">HSTS:</dt>
-                        <dd className="font-medium text-teal-600 dark:text-teal-400">Enabled</dd>
-                      </div>
-                    )}
                     {needsDatabase && (
                       <div className="flex justify-between">
                         <dt className="text-zinc-600 dark:text-zinc-400">Database:</dt>
@@ -1243,7 +1182,6 @@ export function CreateSiteWizard({ onCreateSite, onCancel, isSubmitting = false 
                             <span className="flex items-center gap-2">
                               <Zap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                               {wizardState.sslType === 'wildcard' ? 'Wildcard' : 'Single Domain'}
-                              {wizardState.hstsEnabled && ' • HSTS'}
                               {wizardState.sslType === 'wildcard' &&
                                 ` • ${dnsProviders.find((d) => d.value === wizardState.dnsProvider)?.label || 'DNS'}`}
                             </span>
