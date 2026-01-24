@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { apiClient } from '../lib/api-client'
@@ -21,7 +21,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
+  const navigateRef = useRef(navigate)
   const location = useLocation()
+
+  // Keep navigateRef updated
+  useEffect(() => {
+    navigateRef.current = navigate
+  }, [navigate])
 
   useEffect(() => {
     // Check for existing token on mount
@@ -47,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('auth_user')
       apiClient.clearToken()
       setUser(null)
-      navigate('/login', { replace: true, state: { sessionExpired: true } })
+      navigateRef.current('/login', { replace: true, state: { sessionExpired: true } })
     })
 
     // Cleanup on unmount
