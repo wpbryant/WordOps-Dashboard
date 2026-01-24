@@ -157,11 +157,19 @@ export function Dashboard() {
   }
 
   const handleAliasSitesClick = () => {
-    navigate('/sites?type=proxy')
+    navigate('/sites?type=alias')
   }
 
   const handlePhpSitesClick = () => {
     navigate('/sites?type=php')
+  }
+
+  const handlePhpMysqlSitesClick = () => {
+    navigate('/sites?type=phpmysql')
+  }
+
+  const handleProxySitesClick = () => {
+    navigate('/sites?type=proxy')
   }
 
   const handleUfwClick = () => {
@@ -219,6 +227,8 @@ export function Dashboard() {
         onHtmlSitesClick={handleHtmlSitesClick}
         onAliasSitesClick={handleAliasSitesClick}
         onPhpSitesClick={handlePhpSitesClick}
+        onPhpMysqlSitesClick={handlePhpMysqlSitesClick}
+        onProxySitesClick={handleProxySitesClick}
         onUfwClick={handleUfwClick}
         onUpdatesClick={handleUpdatesClick}
         onViewDetails={handleViewDetails}

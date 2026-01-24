@@ -16,6 +16,8 @@ export const sampleSiteCounts: SiteCounts = {
   html: 3,
   alias: 2,
   php: 4,
+  phpmysql: 0,
+  proxy: 0,
   total: 17,
 }
 

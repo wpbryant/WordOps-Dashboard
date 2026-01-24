@@ -49,7 +49,7 @@ export interface SystemInfoResponse {
 
 export interface Site {
   name: string
-  type: 'wordpress' | 'php' | 'html' | 'proxy' | 'mysql'
+  type: 'wordpress' | 'php' | 'phpmysql' | 'html' | 'proxy' | 'mysql' | 'alias'
   ssl: boolean
   cache: string
   php_version?: string
@@ -170,6 +170,8 @@ export function transformSiteCounts(sites: Site[]): SiteCounts {
     html: 0,
     alias: 0,
     php: 0,
+    phpmysql: 0,
+    proxy: 0,
     total: sites.length,
   }
 
@@ -181,11 +183,18 @@ export function transformSiteCounts(sites: Site[]): SiteCounts {
       case 'html':
         counts.html++
         break
-      case 'proxy':
+      case 'alias':
         counts.alias++
         break
       case 'php':
         counts.php++
+        break
+      case 'phpmysql':
+      case 'mysql': // mysql is an alias for phpmysql in the backend
+        counts.phpmysql++
+        break
+      case 'proxy':
+        counts.proxy++
         break
     }
   }

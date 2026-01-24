@@ -23,6 +23,8 @@ export interface SiteCounts {
   html: number
   alias: number
   php: number
+  phpmysql: number
+  proxy: number
   total: number
 }
 
@@ -73,6 +75,10 @@ export interface DashboardProps {
   onAliasSitesClick?: () => void
   /** Called when user clicks the PHP sites tile */
   onPhpSitesClick?: () => void
+  /** Called when user clicks the PHP+MySQL sites tile */
+  onPhpMysqlSitesClick?: () => void
+  /** Called when user clicks the Proxy sites tile */
+  onProxySitesClick?: () => void
   /** Called when user clicks the UFW Intrusions tile */
   onUfwClick?: () => void
   /** Called when user clicks the Updates tile */

@@ -1,9 +1,9 @@
-import { Globe, FileText, Link, Code } from 'lucide-react'
+import { Globe, FileText, Link, Code, Database, Network } from 'lucide-react'
 
 interface SiteCountTileProps {
   title: string
   count: number
-  icon: 'wordpress' | 'html' | 'alias' | 'php'
+  icon: 'wordpress' | 'html' | 'alias' | 'php' | 'phpmysql' | 'proxy'
   onClick?: () => void
   onViewDetails?: () => void
 }
@@ -13,6 +13,8 @@ const iconConfig = {
   html: { icon: FileText, gradient: 'from-zinc-500 to-zinc-600' },
   alias: { icon: Link, gradient: 'from-zinc-400 to-zinc-500' },
   php: { icon: Code, gradient: 'from-purple-500 to-violet-500' },
+  phpmysql: { icon: Database, gradient: 'from-orange-500 to-amber-500' },
+  proxy: { icon: Network, gradient: 'from-green-500 to-emerald-500' },
 }
 
 export function SiteCountTile({

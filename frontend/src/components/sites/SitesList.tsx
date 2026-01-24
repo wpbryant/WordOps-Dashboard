@@ -82,6 +82,8 @@ export function SitesList({
             <option value="alias">Alias</option>
             <option value="html">HTML</option>
             <option value="php">PHP</option>
+            <option value="phpmysql">PHP+MySQL</option>
+            <option value="proxy">Proxy</option>
           </select>
 
           {/* Status Filter */}

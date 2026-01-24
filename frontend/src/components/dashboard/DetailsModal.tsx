@@ -53,6 +53,8 @@ export function DetailsModal({
       case 'html':
       case 'alias':
       case 'php':
+      case 'phpmysql':
+      case 'proxy':
         return siteCounts ? <SiteTypeDetails tile={tile} siteCounts={siteCounts} /> : null
 
       case 'ufw':
@@ -111,6 +113,10 @@ function getTileTitle(tile: string): string {
       return 'Alias Sites Details'
     case 'php':
       return 'PHP Sites Details'
+    case 'phpmysql':
+      return 'PHP+MySQL Sites Details'
+    case 'proxy':
+      return 'Proxy Sites Details'
     case 'ufw':
       return 'UFW Firewall Details'
     case 'updates':
@@ -250,6 +256,8 @@ function SiteTypeDetails({ tile, siteCounts }: { tile: string; siteCounts: SiteC
     html: { label: 'HTML Sites', count: siteCounts.html },
     alias: { label: 'Alias Sites', count: siteCounts.alias },
     php: { label: 'PHP Sites', count: siteCounts.php },
+    phpmysql: { label: 'PHP+MySQL Sites', count: siteCounts.phpmysql },
+    proxy: { label: 'Proxy Sites', count: siteCounts.proxy },
   }
 
   const { label, count } = config[tile as keyof typeof config]

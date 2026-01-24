@@ -15,6 +15,8 @@ export function Dashboard({
   onHtmlSitesClick,
   onAliasSitesClick,
   onPhpSitesClick,
+  onPhpMysqlSitesClick,
+  onProxySitesClick,
   onUfwClick,
   onUpdatesClick,
   onViewDetails,
@@ -86,6 +88,20 @@ export function Dashboard({
           icon="php"
           onClick={() => onPhpSitesClick?.()}
           onViewDetails={() => onViewDetails?.('php')}
+        />
+        <SiteCountTile
+          title="PHP+MySQL Sites"
+          count={siteCounts.phpmysql}
+          icon="phpmysql"
+          onClick={() => onPhpMysqlSitesClick?.()}
+          onViewDetails={() => onViewDetails?.('phpmysql')}
+        />
+        <SiteCountTile
+          title="Proxy Sites"
+          count={siteCounts.proxy}
+          icon="proxy"
+          onClick={() => onProxySitesClick?.()}
+          onViewDetails={() => onViewDetails?.('proxy')}
         />
 
         {/* UFW Intrusions */}
