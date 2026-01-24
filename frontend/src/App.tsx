@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AppShell, type NavigationItem } from './components/shell'
 import { AuthProvider, ProtectedRoute, useAuth } from './contexts/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import * as Pages from './pages'
 
 // Create Query Client
@@ -96,9 +97,11 @@ function AuthenticatedContent() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   )
 }

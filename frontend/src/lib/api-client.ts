@@ -1,14 +1,25 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? ''
 
+type AuthErrorHandler = ((error: Error) => void) | null
+
 class ApiClient {
   private baseUrl: string
   private token: string | null = null
+  private onAuthError: AuthErrorHandler = null
 
   constructor(baseUrl: string = API_BASE_URL) {
     // Use baseUrl directly (empty string means relative URLs)
     this.baseUrl = baseUrl
     // Load token from localStorage
     this.token = localStorage.getItem('auth_token')
+  }
+
+  setAuthErrorHandler(handler: (error: Error) => void) {
+    this.onAuthError = handler
+  }
+
+  clearAuthErrorHandler() {
+    this.onAuthError = null
   }
 
   setToken(token: string) {
@@ -47,6 +58,16 @@ class ApiClient {
     })
 
     if (!response.ok) {
+      // Handle 401 Unauthorized - token expired
+      if (response.status === 401) {
+        const error = new Error('Session expired. Please log in again.')
+        // Trigger auth error handler if registered
+        if (this.onAuthError) {
+          this.onAuthError(error)
+        }
+        throw error
+      }
+
       const error = await response.json().catch(() => ({ detail: 'An error occurred' }))
       // FastAPI uses 'detail' field for error messages
       const errorMessage = error.detail || error.message || `HTTP ${response.status}`

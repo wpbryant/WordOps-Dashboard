@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Menu } from 'lucide-react'
+import { Menu, Moon, Sun } from 'lucide-react'
 import { MainNav } from './MainNav'
 import { UserMenu } from './UserMenu'
+import { useTheme } from '../../contexts/ThemeContext'
 
 export interface NavigationItem {
   label: string
@@ -31,6 +32,7 @@ export function AppShell({
   onLogout,
 }: AppShellProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { theme, toggleTheme } = useTheme()
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans">
@@ -57,8 +59,25 @@ export function AppShell({
           </div>
         </div>
 
-        {/* User Menu */}
-        {user && <UserMenu user={user} onLogout={onLogout} />}
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            aria-label="Toggle theme"
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? (
+              <Sun className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+            ) : (
+              <Moon className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+            )}
+          </button>
+
+          {/* User Menu */}
+          {user && <UserMenu user={user} onLogout={onLogout} />}
+        </div>
       </header>
 
       {/* Main Layout - padding-top accounts for fixed header */}

@@ -1,14 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { FormEvent } from 'react'
 import { Shield } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useLocation } from 'react-router-dom'
 
 export function Login() {
   const { login } = useAuth()
+  const location = useLocation()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+
+  // Check for session expired state from navigation
+  useEffect(() => {
+    const state = location.state as { sessionExpired?: boolean } | null
+    if (state?.sessionExpired) {
+      setError('Your session has expired. Please log in again.')
+    }
+  }, [location.state])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()

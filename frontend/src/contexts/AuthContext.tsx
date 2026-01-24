@@ -39,6 +39,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('auth_user')
       }
     }
+
+    // Register auth error handler for automatic logout on 401
+    apiClient.setAuthErrorHandler(() => {
+      // Clear auth data and redirect to login
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('auth_user')
+      apiClient.clearToken()
+      setUser(null)
+      navigate('/login', { replace: true, state: { sessionExpired: true } })
+    })
+
+    // Cleanup on unmount
+    return () => {
+      apiClient.clearAuthErrorHandler()
+    }
+
     setIsLoading(false)
   }, [])
 
