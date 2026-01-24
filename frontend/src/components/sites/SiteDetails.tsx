@@ -72,6 +72,37 @@ function formatTimestamp(timestamp: string) {
   })
 }
 
+// Copy text to clipboard with fallback for non-HTTPS contexts
+async function copyToClipboard(text: string): Promise<boolean> {
+  // Try modern Clipboard API first
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text)
+      return true
+    } catch (err) {
+      console.warn('Clipboard API failed, trying fallback:', err)
+    }
+  }
+
+  // Fallback: use textarea method
+  try {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.style.position = 'fixed'
+    textarea.style.left = '-999999px'
+    textarea.style.top = '-999999px'
+    document.body.appendChild(textarea)
+    textarea.focus()
+    textarea.select()
+    const successful = document.execCommand('copy')
+    document.body.removeChild(textarea)
+    return successful
+  } catch (err) {
+    console.error('Fallback copy failed:', err)
+    return false
+  }
+}
+
 export function SiteDetails({
   site,
   activeTab = 'overview',
@@ -446,18 +477,14 @@ function OverviewTab({
                     )}
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       if (site.database?.password) {
-                        navigator.clipboard.writeText(site.database.password)
-                          .then(() => {
-                            console.log('Password copied to clipboard')
-                            // Optional: show visual feedback
-                            alert('Password copied to clipboard')
-                          })
-                          .catch((err) => {
-                            console.error('Failed to copy password:', err)
-                            alert('Failed to copy password')
-                          })
+                        const success = await copyToClipboard(site.database.password)
+                        if (success) {
+                          alert('Password copied to clipboard')
+                        } else {
+                          alert('Failed to copy password')
+                        }
                       }
                     }}
                     className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
@@ -659,9 +686,13 @@ function WordPressTab({ site }: { site: Site }) {
                     {site.wpAdminPassword && (
                       <>
                         <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(site.wpAdminPassword!)
-                            alert('Password copied to clipboard')
+                          onClick={async () => {
+                            const success = await copyToClipboard(site.wpAdminPassword!)
+                            if (success) {
+                              alert('Password copied to clipboard')
+                            } else {
+                              alert('Failed to copy password')
+                            }
                           }}
                           className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                           title="Copy password"
