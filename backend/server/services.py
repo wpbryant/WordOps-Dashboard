@@ -359,19 +359,20 @@ async def get_php_fpm_status(name: str) -> dict | None:
     Returns:
         Dict with "connections" and "max_children" or None
     """
+    import logging
+
     try:
         # Extract PHP version from service name
         php_version = name.replace("php", "").replace("-fpm", "")
 
-        # Try to get status from PHP-FPM status page or socket
-        # For now, return a simplified implementation based on pool config
+        # Try to get max_children from pool config
         process = await asyncio.create_subprocess_exec(
             "bash", "-c",
             f"grep -E '^pm\\.max_children' /etc/php/{php_version}/fpm/pool.d/www.conf 2>/dev/null || echo 'not found'",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=STATUS_TIMEOUT)
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=STATUS_TIMEOUT)
         output = stdout.decode("utf-8", errors="replace").strip()
 
         max_children = None
@@ -380,23 +381,28 @@ async def get_php_fpm_status(name: str) -> dict | None:
             if match:
                 max_children = int(match.group(1))
 
-        # For active connections, we'd need PHP-FPM status page configured
-        # For now, estimate based on process count
+        # For active connections, count PHP-FPM worker processes
+        # Use broader pattern to match various PHP-FPM process name formats
         process = await asyncio.create_subprocess_exec(
             "bash", "-c",
-            f"pgrep -c 'php-fpm: pool www' 2>/dev/null || echo 0",
+            f"pgrep -f 'php.*fpm.*pool' 2>/dev/null | wc -l || echo 0",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=STATUS_TIMEOUT)
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=STATUS_TIMEOUT)
         connections_str = stdout.decode("utf-8", errors="replace").strip()
-        connections = int(connections_str) if connections_str.isdigit() else None
+
+        # Log for debugging
+        logging.debug(f"PHP-FPM {php_version}: pgrep result='{connections_str}'")
+
+        connections = int(connections_str) if connections_str.isdigit() and int(connections_str) > 0 else None
 
         return {
             "connections": connections,
             "max_children": max_children,
         }
-    except (asyncio.TimeoutError, ValueError, Exception):
+    except (asyncio.TimeoutError, ValueError, Exception) as e:
+        logging.error(f"Failed to get PHP-FPM status for {name}: {e}")
         return None
 
 
