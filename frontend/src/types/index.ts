@@ -244,3 +244,29 @@ export interface MonitoringAlert {
   enabled: boolean
   notificationEmail: string
 }
+
+// -----------------------------------------------------------------------------
+// Server Config - Overview
+// -----------------------------------------------------------------------------
+
+export interface ServerOverviewInfo {
+  hostname: string
+  public_ip: string
+  os_version: string
+  kernel_version: string
+  uptime_seconds: number
+  wordops_version: string | null
+  security_updates: number
+  other_updates: number
+  last_backup_date: string | null
+}
+
+export interface PackageUpdateRequest {
+  update_type: 'all' | 'security'
+}
+
+export interface PackageUpdateResponse {
+  status: 'running' | 'completed' | 'failed'
+  message: string
+  updated_count: number
+}
