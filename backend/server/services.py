@@ -464,13 +464,42 @@ async def get_redis_status() -> dict | None:
     Returns:
         Dict with "connected_clients" or None
     """
+    import logging
+
     try:
+        # Try to read Redis password from config
+        redis_conf_path = "/etc/redis/redis.conf"
+        redis_password = None
+
+        try:
+            with open(redis_conf_path, "r") as f:
+                for line in f:
+                    if line.startswith("requirepass"):
+                        parts = line.split(None, 1)
+                        if len(parts) >= 2:
+                            redis_password = parts[1].strip()
+                            break
+        except (OSError, IOError):
+            pass
+
+        # Build redis-cli command with or without auth
+        cmd = ["redis-cli", "INFO", "clients"]
+        if redis_password:
+            cmd.insert(1, "-a")
+            cmd.insert(2, redis_password)
+
         process = await asyncio.create_subprocess_exec(
-            "redis-cli", "INFO", "clients",
+            *cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=STATUS_TIMEOUT)
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=STATUS_TIMEOUT)
+
+        if process.returncode != 0:
+            stderr_str = stderr.decode("utf-8", errors="replace").strip()
+            logging.error(f"Redis status command failed: {stderr_str}")
+            return None
+
         output = stdout.decode("utf-8", errors="replace")
 
         # Parse output: "connected_clients:10"
@@ -479,7 +508,8 @@ async def get_redis_status() -> dict | None:
             return {"connected_clients": int(match.group(1))}
 
         return None
-    except (asyncio.TimeoutError, ValueError, Exception):
+    except (asyncio.TimeoutError, ValueError, Exception) as e:
+        logging.error(f"Failed to get Redis status: {e}")
         return None
 
 
