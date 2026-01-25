@@ -1,0 +1,126 @@
+# WordOps Dashboard - Persistent Instructions for Claude
+
+## Project Overview
+WordOps Dashboard is a modern web-based API for managing WordOps servers.
+- **Backend**: FastAPI (Python 3.10+) with JWT auth, bcrypt hashing
+- **Frontend**: React + TypeScript + Vite, Tailwind CSS, lucide-react icons, React Router
+- **Deployment**: Nginx reverse proxy, systemd service, one-command installer
+- **Key Dependencies**: TanStack Query (React Query), Pydantic, python-multipart
+
+## Critical Workflow Rules
+
+### After Making Changes
+1. **Always commit and push changes** after completing any work
+2. **Build frontend** (`cd frontend && npm run build`) before committing to ensure no TypeScript errors
+3. **Check for impacts** - verify your changes don't break other areas of the site
+4. **API consistency** - use existing API endpoints OR follow existing patterns when adding new ones
+
+### Commit Message Style
+Follow conventional commit format:
+```
+type: brief description
+
+Optional detailed explanation.
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+Types: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`
+
+Examples from this project:
+- `feat: add HSTS support to site creation`
+- `fix: add fallback for copy password button`
+- `refactor: remove unused hstsEnabled from site creation`
+
+## Code Conventions
+
+### Backend (FastAPI/Python)
+- Use **async/await** for all route handlers and I/O operations
+- **Pydantic models** for request/response (in `backend/wordops/models.py`)
+- Routes defined in `backend/wordops/routes.py`
+- Business logic in `backend/wordops/sites.py`
+- Error handling: raise `HTTPException` with appropriate status codes
+- Command execution: use `run_command()` helper from `backend/wordops/cli.py`
+
+### Frontend (React/TypeScript)
+- Use **functional components** with hooks (useState, useEffect, useCallback)
+- **TypeScript strict mode** - all types must be defined
+- Components organized by feature: `components/sites/`, `components/dashboard/`, `components/shell/`
+- API calls in `lib/` directory: `sites-api.ts`, `dashboard-api.ts`
+- Types defined in `types/index.ts`
+- Use `cn()` utility for conditional Tailwind classes (from `lib/utils.ts`)
+
+### State Management
+- **Server state**: TanStack Query (useQuery, useMutation)
+- **Auth state**: AuthContext
+- **Theme state**: ThemeContext
+- **URL state**: React Router search params for filters
+
+### Styling
+- **Tailwind CSS** with dark mode support (`dark:` prefix)
+- **Icons**: lucide-react (default), react-icons/fa for WordPress/HTML/PHP
+- **Colors**: zinc (grays), blue (primary), emerald (success), amber (warning), red (danger/error)
+
+### API Pattern
+When adding new API endpoints:
+1. Add Pydantic model to `backend/wordops/models.py`
+2. Add route to `backend/wordops/routes.py`
+3. Add business logic to `backend/wordops/sites.py` or appropriate module
+4. Add TypeScript types to `frontend/src/types/index.ts`
+5. Add API function to `frontend/src/lib/*-api.ts`
+6. Use `apiClient` helper for consistent error handling
+
+### WordOps CLI Integration
+- Site commands: `wo site create|update|delete|info|list`
+- `--hsts` flag requires `--letsencrypt` (SSL must be enabled)
+- Site types: wordpress (`--wp`), php (`--php`), phpmysql (`--mysql`), html (`--html`), proxy (`--proxy`), alias (`--alias`)
+- Cache types: wpfc, wpsc, wpredis (for WordPress sites)
+- PHP versions: --php74, --php80, --php81, --php82, --php83 (no dot)
+
+## Testing Before Committing
+1. Run `npm run build` in frontend directory (checks TypeScript)
+2. If adding backend routes, verify the API works
+3. Check for console errors in browser DevTools
+4. Verify dark mode works (toggle in settings)
+
+## File Structure
+```
+WordOps-Dashboard/
+├── backend/
+│   ├── wordops/
+│   │   ├── models.py      # Pydantic models
+│   │   ├── routes.py      # API routes
+│   │   ├── sites.py       # Site business logic
+│   │   ├── cli.py         # WordOps command wrapper
+│   │   └── exceptions.py  # Custom exceptions
+│   ├── auth/              # Authentication module
+│   └── main.py            # FastAPI app entry
+├── frontend/
+│   ├── src/
+│   │   ├── components/    # React components
+│   │   ├── pages/         # Route pages
+│   │   ├── lib/           # API clients
+│   │   ├── types/         # TypeScript types
+│   │   └── contexts/      # React contexts
+│   └── vite.config.ts
+└── install.sh             # One-command installer
+```
+
+## Key Files to Reference
+- `frontend/src/lib/sites-api.ts` - Site API patterns
+- `backend/wordops/sites.py` - Site management patterns
+- `frontend/src/types/index.ts` - Type definitions
+- `backend/wordops/routes.py` - API route patterns
+
+## Common Gotchas
+- **HSTS requires SSL** - `--hsts` flag only works with `--letsencrypt`
+- **Alias syntax** - `wo site create alias.tld --alias target.com` (space, not equals)
+- **WordPress credentials** - Only available during site creation, not stored
+- **Dark mode** - Always add `dark:` variant for new UI components
+- **Dynamic imports** - Used in SiteDetails for API calls to avoid circular deps
+
+## When in Doubt
+1. Check existing similar code for patterns
+2. Build frontend to catch TypeScript errors early
+3. Commit with descriptive message following conventional commit format
+4. Always push after committing
