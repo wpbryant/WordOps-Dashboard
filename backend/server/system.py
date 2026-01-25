@@ -314,7 +314,6 @@ async def get_last_backup_date() -> str | None:
 
     backup_dirs = [
         "/var/backups/wordops",
-        "/var/backups",
         os.path.expanduser("~/backups"),
         "/opt/wordops/backups",
     ]

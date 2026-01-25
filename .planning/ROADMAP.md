@@ -62,12 +62,13 @@ Plans:
   4. User can view stack service list with status, version, and memory usage
   5. User can start, stop, and restart stack services with confirmation
   6. User can edit service configuration via modal
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
 - [x] 05-01: Server overview API and UI (server info, package updates)
 - [x] 05-02: Stack services display and management (status, start/stop/restart, config editing)
-**Completed**: 2026-01-25
+- [ ] 05-03: Gap fixes (backup directory exclusion, service statistics with authentication)
+**Status**: Gap closure pending - fixes for /var/backups exclusion and service-specific statistics (MySQL/PHP-FPM/Redis authentication)
 
 #### Phase 6: Security Management
 **Goal**: User can configure SSH, fail2ban, firewall rules, and DNS API credentials through the UI
@@ -110,6 +111,6 @@ Plans:
 | 2. Site Management APIs | v1.0 | 3/3 | Complete | 2026-01-17 |
 | 3. Server Monitoring APIs | v1.0 | 3/3 | Complete | 2026-01-18 |
 | 4. Production Deployment | v1.0 | 3/3 | Complete | 2026-01-19 |
-| 5. Overview and Stack Services | v1.1 | 2/2 | Complete | 2026-01-25 |
+| 5. Overview and Stack Services | v1.1 | 2/3 | Gap closure | - |
 | 6. Security Management | v1.1 | 0/3 | Not started | - |
 | 7. Logs and Monitoring | v1.1 | 0/3 | Not started | - |
