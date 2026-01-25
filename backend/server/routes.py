@@ -17,12 +17,13 @@ from backend.server.models import (
     PackageUpdateResponse,
     ServerOverviewInfo,
     ServiceStatus,
+    StackServiceInfo,
     SystemInfo,
     SystemMetrics,
     TimeRange,
 )
 from backend.server.netdata import get_system_metrics
-from backend.server.services import get_all_services, get_service_status, restart_service
+from backend.server.services import get_all_services, get_service_status, restart_service, get_stack_service_details, validate_service
 from backend.server.system import get_server_overview, get_system_info
 from backend.server.websocket import log_manager
 
@@ -227,6 +228,42 @@ async def list_services(
         )
 
 
+@router.get("/stack-services", response_model=list[StackServiceInfo])
+async def get_stack_services(
+    current_user: User = Depends(get_current_user),
+) -> list[StackServiceInfo]:
+    """Get detailed information about all installed stack services.
+
+    Args:
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        List of StackServiceInfo with enriched details for installed services
+
+    Raises:
+        HTTPException: 503 if service queries fail
+    """
+    try:
+        from backend.server.services import ALLOWED_SERVICES
+
+        services = []
+        for service_name in sorted(ALLOWED_SERVICES):
+            try:
+                service_details = await get_stack_service_details(service_name)
+                if service_details is not None:
+                    services.append(service_details)
+            except (ValueError, RuntimeError):
+                # Skip services that error or aren't installed
+                continue
+
+        return services
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch stack services: {str(e)}",
+        )
+
+
 @router.get("/services/{service_name}", response_model=ServiceStatus)
 async def get_service(
     service_name: str,
@@ -305,6 +342,126 @@ async def restart_service_endpoint(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Timeout restarting service {service_name}",
+        )
+
+
+@router.post("/services/{service_name}/start")
+async def start_service_endpoint(
+    service_name: str,
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Start a specific service.
+
+    Args:
+        service_name: Name of the service to start
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException: 400 if service not in allowlist, 503 if start fails
+    """
+    if not validate_service(service_name):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Service '{service_name}' is not in the allowed services list",
+        )
+
+    try:
+        process = await asyncio.create_subprocess_exec(
+            "sudo",
+            "systemctl",
+            "start",
+            service_name,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+
+        _, stderr = await asyncio.wait_for(
+            process.communicate(), timeout=30
+        )
+
+        if process.returncode != 0:
+            stderr_str = stderr.decode("utf-8", errors="replace").strip()
+            raise RuntimeError(f"Failed to start {service_name}: {stderr_str}")
+
+        return {"success": True, "message": f"Service {service_name} started"}
+
+    except RuntimeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e),
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Timeout starting service {service_name}",
+        )
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="systemctl or sudo command not found",
+        )
+
+
+@router.post("/services/{service_name}/stop")
+async def stop_service_endpoint(
+    service_name: str,
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Stop a specific service.
+
+    Args:
+        service_name: Name of the service to stop
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException: 400 if service not in allowlist, 503 if stop fails
+    """
+    if not validate_service(service_name):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Service '{service_name}' is not in the allowed services list",
+        )
+
+    try:
+        process = await asyncio.create_subprocess_exec(
+            "sudo",
+            "systemctl",
+            "stop",
+            service_name,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+
+        _, stderr = await asyncio.wait_for(
+            process.communicate(), timeout=30
+        )
+
+        if process.returncode != 0:
+            stderr_str = stderr.decode("utf-8", errors="replace").strip()
+            raise RuntimeError(f"Failed to stop {service_name}: {stderr_str}")
+
+        return {"success": True, "message": f"Service {service_name} stopped"}
+
+    except RuntimeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e),
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Timeout stopping service {service_name}",
+        )
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="systemctl or sudo command not found",
         )
 
 
