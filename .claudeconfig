@@ -21,8 +21,6 @@ Follow conventional commit format:
 type: brief description
 
 Optional detailed explanation.
-
-Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 Types: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`
