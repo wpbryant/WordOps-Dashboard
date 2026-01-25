@@ -1,6 +1,7 @@
 """Systemctl wrapper for safe service status queries and management."""
 
 import asyncio
+import logging
 import re
 from datetime import datetime, timezone
 
@@ -359,8 +360,6 @@ async def get_php_fpm_status(name: str) -> dict | None:
     Returns:
         Dict with "connections" and "max_children" or None
     """
-    import logging
-
     try:
         # Extract PHP version from service name
         php_version = name.replace("php", "").replace("-fpm", "")
@@ -414,7 +413,6 @@ async def get_mysql_status() -> dict | None:
         Dict with "connections" or None
     """
     import os
-    import logging
 
     try:
         # Try ~/.my.cnf first (standard for WordOps MySQL setups)
@@ -464,8 +462,6 @@ async def get_redis_status() -> dict | None:
     Returns:
         Dict with "connected_clients" or None
     """
-    import logging
-
     try:
         # Try to read Redis password from config
         redis_conf_path = "/etc/redis/redis.conf"
