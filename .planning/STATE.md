@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-25)
 ## Current Position
 
 Phase: 5 of 7 (Overview and Stack Services)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-01-25 19:59 UTC — Completed 05-01 (Server Overview API and UI)
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-01-25 19:56 UTC — Completed 05-02 (Stack Services Display and Management)
 
-Progress: [██████████░] 54% (13/24 plans complete)
+Progress: [██████████░] 58% (14/24 plans complete)
 
 ## Performance Metrics
 
@@ -26,8 +26,8 @@ Progress: [██████████░] 54% (13/24 plans complete)
 
 **v1.1 Server Config UI:**
 - Total plans planned: 8
-- Plans completed: 1
-- Status: Phase 5 in progress (2 plans: 1 complete, 1 remaining)
+- Plans completed: 2
+- Status: Phase 5 complete, ready for Phase 6
 
 ## Accumulated Context
 
@@ -42,6 +42,11 @@ Recent decisions affecting v1.1:
 - **Progress Tracking**: Synthetic progress animation (0%, 25%, 50%, 75%, 100%) at 2-second intervals
 - **Backup Detection**: Check multiple common backup directory locations for latest timestamp
 - **Modal Auto-Close**: Success state auto-closes after 5 seconds but allows manual dismiss
+- **Service Icon Color Coding**: Blue (nginx), Purple (PHP-FPM), Teal (MySQL), Amber (Redis)
+- **Status Dot Colors**: Green (running), Red (stopped), Amber (error/restarting)
+- **Config Editing**: Out of scope for 05-02 - modal shows placeholder message
+- **Manual Refresh Only**: No auto-refresh for stack services per CONTEXT decisions
+- **No Confirmations**: Start/Stop/Restart actions execute immediately per CONTEXT decisions
 
 ### Pending Todos
 
@@ -53,7 +58,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-25 19:59 UTC
-Stopped at: Completed 05-01 (Server Overview API and UI)
+Last session: 2026-01-25 19:56 UTC
+Stopped at: Completed 05-02 (Stack Services Display and Management)
 Resume file: None
-Next action: Execute 05-02 (Stack Services Tab) or continue with next phase
+Next action: Execute 06-01 (SSH Key Management) or continue with Phase 6
