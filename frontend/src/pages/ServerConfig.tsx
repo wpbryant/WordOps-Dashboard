@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { OverviewTab } from '../components/server-config/OverviewTab'
+import { StackServicesTab } from '../components/server-config/StackServicesTab'
 
 type TabKey = 'overview' | 'stack-services'
 
@@ -43,11 +44,7 @@ export function ServerConfig() {
       <div className="flex-1 overflow-auto px-6">
         <div className="max-w-6xl mx-auto py-6">
           {activeTab === 'overview' && <OverviewTab />}
-          {activeTab === 'stack-services' && (
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-12 text-center">
-              <p className="text-zinc-600 dark:text-zinc-400">Stack Services tab coming soon...</p>
-            </div>
-          )}
+          {activeTab === 'stack-services' && <StackServicesTab />}
         </div>
       </div>
     </div>
