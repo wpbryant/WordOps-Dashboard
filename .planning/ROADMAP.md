@@ -67,8 +67,8 @@ Plans:
 Plans:
 - [x] 05-01: Server overview API and UI (server info, package updates)
 - [x] 05-02: Stack services display and management (status, start/stop/restart, config editing)
-- [ ] 05-03: Gap fixes (backup directory exclusion, service statistics with authentication)
-**Status**: Gap closure pending - fixes for /var/backups exclusion and service-specific statistics (MySQL/PHP-FPM/Redis authentication)
+- [x] 05-03: Gap fixes (backup directory exclusion, service statistics with authentication)
+**Status**: Complete (verified 2026-01-25)
 
 #### Phase 6: Security Management
 **Goal**: User can configure SSH, fail2ban, firewall rules, and DNS API credentials through the UI
@@ -111,6 +111,6 @@ Plans:
 | 2. Site Management APIs | v1.0 | 3/3 | Complete | 2026-01-17 |
 | 3. Server Monitoring APIs | v1.0 | 3/3 | Complete | 2026-01-18 |
 | 4. Production Deployment | v1.0 | 3/3 | Complete | 2026-01-19 |
-| 5. Overview and Stack Services | v1.1 | 2/3 | Gap closure | - |
+| 5. Overview and Stack Services | v1.1 | 3/3 | Complete | 2026-01-25 |
 | 6. Security Management | v1.1 | 0/3 | Not started | - |
 | 7. Logs and Monitoring | v1.1 | 0/3 | Not started | - |
