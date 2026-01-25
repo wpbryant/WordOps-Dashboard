@@ -1,9 +1,10 @@
 """Systemctl wrapper for safe service status queries and management."""
 
 import asyncio
+import re
 from datetime import datetime, timezone
 
-from .models import ServiceStatus
+from .models import ServiceStatus, StackServiceInfo
 
 # Strict allowlist of services that can be queried or managed
 ALLOWED_SERVICES = frozenset({
@@ -234,3 +235,298 @@ def _parse_uptime(timestamp_str: str) -> int | None:
         return None
     except (ValueError, IndexError):
         return None
+
+
+# Service version detection and configuration paths
+SERVICE_CONFIG_PATHS = {
+    "nginx": "/etc/nginx/nginx.conf",
+    "php7.4-fpm": "/etc/php/7.4/fpm/pool.d/www.conf",
+    "php8.0-fpm": "/etc/php/8.0/fpm/pool.d/www.conf",
+    "php8.1-fpm": "/etc/php/8.1/fpm/pool.d/www.conf",
+    "php8.2-fpm": "/etc/php/8.2/fpm/pool.d/www.conf",
+    "php8.3-fpm": "/etc/php/8.3/fpm/pool.d/www.conf",
+    "php8.4-fpm": "/etc/php/8.4/fpm/pool.d/www.conf",
+    "mariadb": "/etc/mysql/my.cnf",
+    "mysql": "/etc/mysql/my.cnf",
+    "redis-server": "/etc/redis/redis.conf",
+}
+
+SERVICE_DISPLAY_NAMES = {
+    "nginx": "Nginx",
+    "php7.4-fpm": "PHP 7.4-FPM",
+    "php8.0-fpm": "PHP 8.0-FPM",
+    "php8.1-fpm": "PHP 8.1-FPM",
+    "php8.2-fpm": "PHP 8.2-FPM",
+    "php8.3-fpm": "PHP 8.3-FPM",
+    "php8.4-fpm": "PHP 8.4-FPM",
+    "mariadb": "MariaDB",
+    "mysql": "MySQL",
+    "redis-server": "Redis",
+}
+
+
+async def get_service_version(name: str) -> str | None:
+    """
+    Get version string for a service.
+
+    Args:
+        name: Service name (must be in ALLOWED_SERVICES)
+
+    Returns:
+        Version string or None if unable to determine
+    """
+    try:
+        if name == "nginx":
+            process = await asyncio.create_subprocess_exec(
+                "nginx", "-v",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _, stderr = await asyncio.wait_for(process.communicate(), timeout=STATUS_TIMEOUT)
+            # nginx outputs version to stderr
+            output = stderr.decode("utf-8", errors="replace")
+            match = re.search(r"nginx/([\d.]+)", output)
+            return match.group(1) if match else None
+
+        elif name.startswith("php") and "-fpm" in name:
+            # Extract PHP version from service name (e.g., "php8.1-fpm" -> "8.1")
+            php_version = name.replace("php", "").replace("-fpm", "")
+            process = await asyncio.create_subprocess_exec(
+                f"php{php_version}", "--version",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, _ = await asyncio.wait_for(process.communicate(), timeout=STATUS_TIMEOUT)
+            output = stdout.decode("utf-8", errors="replace")
+            match = re.search(r"PHP ([\d.]+)", output)
+            return match.group(1) if match else php_version
+
+        elif name in ("mysql", "mariadb"):
+            process = await asyncio.create_subprocess_exec(
+                "mysql", "--version",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, _ = await asyncio.wait_for(process.communicate(), timeout=STATUS_TIMEOUT)
+            output = stdout.decode("utf-8", errors="replace")
+            # MariaDB outputs like: mysql  Ver 15.1 Distrib 10.6.12-MariaDB
+            # MySQL outputs like: mysql  Ver 8.0.35
+            match = re.search(r"Distrib ([\d.]+)", output) or re.search(r"mysql\s+Ver\s+([\d.]+)", output)
+            return match.group(1) if match else None
+
+        elif name == "redis-server":
+            process = await asyncio.create_subprocess_exec(
+                "redis-cli", "--version",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, _ = await asyncio.wait_for(process.communicate(), timeout=STATUS_TIMEOUT)
+            output = stdout.decode("utf-8", errors="replace")
+            match = re.search(r"redis-cli\s+([\d.]+)", output)
+            return match.group(1) if match else None
+
+        return None
+    except (asyncio.TimeoutError, FileNotFoundError, Exception):
+        return None
+
+
+def format_memory_bytes(bytes: int | None) -> str | None:
+    """
+    Convert bytes to human-readable format.
+
+    Args:
+        bytes: Memory in bytes
+
+    Returns:
+        Formatted string like "256 MB" or None if bytes is None
+    """
+    if bytes is None:
+        return None
+
+    for unit, divisor in [("GB", 1024**3), ("MB", 1024**2), ("KB", 1024)]:
+        if bytes >= divisor:
+            return f"{bytes / divisor:.1f} {unit}"
+    return f"{bytes} B"
+
+
+async def get_php_fpm_status(name: str) -> dict | None:
+    """
+    Get PHP-FPM specific status (connections and max children).
+
+    Args:
+        name: PHP-FPM service name (e.g., "php8.1-fpm")
+
+    Returns:
+        Dict with "connections" and "max_children" or None
+    """
+    try:
+        # Extract PHP version from service name
+        php_version = name.replace("php", "").replace("-fpm", "")
+
+        # Try to get status from PHP-FPM status page or socket
+        # For now, return a simplified implementation based on pool config
+        process = await asyncio.create_subprocess_exec(
+            "bash", "-c",
+            f"grep -E '^pm\\.max_children' /etc/php/{php_version}/fpm/pool.d/www.conf 2>/dev/null || echo 'not found'",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=STATUS_TIMEOUT)
+        output = stdout.decode("utf-8", errors="replace").strip()
+
+        max_children = None
+        if output and "not found" not in output.lower():
+            match = re.search(r"pm\.max_children\s*=\s*(\d+)", output)
+            if match:
+                max_children = int(match.group(1))
+
+        # For active connections, we'd need PHP-FPM status page configured
+        # For now, estimate based on process count
+        process = await asyncio.create_subprocess_exec(
+            "bash", "-c",
+            f"pgrep -c 'php-fpm: pool www' 2>/dev/null || echo 0",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=STATUS_TIMEOUT)
+        connections_str = stdout.decode("utf-8", errors="replace").strip()
+        connections = int(connections_str) if connections_str.isdigit() else None
+
+        return {
+            "connections": connections,
+            "max_children": max_children,
+        }
+    except (asyncio.TimeoutError, ValueError, Exception):
+        return None
+
+
+async def get_mysql_status() -> dict | None:
+    """
+    Get MySQL/MariaDB specific status (connection count).
+
+    Returns:
+        Dict with "connections" or None
+    """
+    try:
+        process = await asyncio.create_subprocess_exec(
+            "mysql", "-e", "SHOW STATUS LIKE 'Threads_connected';",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=STATUS_TIMEOUT)
+        output = stdout.decode("utf-8", errors="replace")
+
+        # Parse output: "Threads_connected\t15"
+        for line in output.split("\n"):
+            if "\t" in line and "Threads_connected" not in line:
+                parts = line.split("\t")
+                if len(parts) >= 2:
+                    connections = int(parts[1].strip())
+                    return {"connections": connections}
+
+        return None
+    except (asyncio.TimeoutError, ValueError, Exception):
+        return None
+
+
+async def get_redis_status() -> dict | None:
+    """
+    Get Redis specific status (connected clients).
+
+    Returns:
+        Dict with "connected_clients" or None
+    """
+    try:
+        process = await asyncio.create_subprocess_exec(
+            "redis-cli", "INFO", "clients",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=STATUS_TIMEOUT)
+        output = stdout.decode("utf-8", errors="replace")
+
+        # Parse output: "connected_clients:10"
+        match = re.search(r"connected_clients:(\d+)", output)
+        if match:
+            return {"connected_clients": int(match.group(1))}
+
+        return None
+    except (asyncio.TimeoutError, ValueError, Exception):
+        return None
+
+
+async def get_stack_service_details(name: str) -> StackServiceInfo | None:
+    """
+    Get detailed information about a stack service.
+
+    Args:
+        name: Service name (must be in ALLOWED_SERVICES)
+
+    Returns:
+        StackServiceInfo with enriched details or None if not installed
+
+    Raises:
+        ValueError: If service name is not in allowlist
+    """
+    if not validate_service(name):
+        raise ValueError(f"Service '{name}' is not in the allowed services list")
+
+    # Get base service status
+    base_status = await get_service_status(name)
+    if base_status is None:
+        return None
+
+    # Determine status string
+    if base_status.active:
+        status = "running"
+    elif base_status.sub_state in ("restarting", "auto-restart"):
+        status = "restarting"
+    else:
+        status = "stopped"
+
+    # Get version
+    version = await get_service_version(name)
+
+    # Format memory
+    memory_display = format_memory_bytes(base_status.memory_bytes)
+
+    # Get config file path
+    config_file = SERVICE_CONFIG_PATHS.get(name, "/etc/unknown.conf")
+
+    # Get display name
+    display_name = SERVICE_DISPLAY_NAMES.get(name, name.capitalize())
+
+    # Service-specific stats
+    php_fpm_connections = None
+    php_fpm_max_children = None
+    mysql_connections = None
+    redis_connected_clients = None
+
+    if name.startswith("php") and "-fpm" in name:
+        fpm_status = await get_php_fpm_status(name)
+        if fpm_status:
+            php_fpm_connections = fpm_status.get("connections")
+            php_fpm_max_children = fpm_status.get("max_children")
+    elif name in ("mysql", "mariadb"):
+        mysql_status = await get_mysql_status()
+        if mysql_status:
+            mysql_connections = mysql_status.get("connections")
+    elif name == "redis-server":
+        redis_status = await get_redis_status()
+        if redis_status:
+            redis_connected_clients = redis_status.get("connected_clients")
+
+    return StackServiceInfo(
+        name=base_status.name,
+        display_name=display_name,
+        status=status,
+        version=version,
+        memory_usage=base_status.memory_bytes,
+        memory_display=memory_display,
+        uptime_seconds=base_status.uptime_seconds,
+        config_file=config_file,
+        php_fpm_connections=php_fpm_connections,
+        php_fpm_max_children=php_fpm_max_children,
+        mysql_connections=mysql_connections,
+        redis_connected_clients=redis_connected_clients,
+    )

@@ -109,3 +109,20 @@ class PackageUpdateResponse(BaseModel):
     status: str  # "running", "completed", "failed"
     message: str
     updated_count: int
+
+
+class StackServiceInfo(BaseModel):
+    """Detailed information about a stack service (nginx, PHP-FPM, MySQL, Redis)."""
+
+    name: str  # Service name like "nginx", "php8.1-fpm"
+    display_name: str  # Human-readable name like "Nginx", "PHP 8.1-FPM"
+    status: str  # "running" | "stopped" | "restarting" | "error"
+    version: str | None = None  # Version string
+    memory_usage: int | None = None  # Memory in bytes
+    memory_display: str | None = None  # Formatted like "256 MB"
+    uptime_seconds: int | None = None
+    config_file: str  # Path to main config file
+    php_fpm_connections: int | None = None  # For PHP-FPM services only
+    php_fpm_max_children: int | None = None  # For PHP-FPM services only
+    mysql_connections: int | None = None  # For MySQL only
+    redis_connected_clients: int | None = None  # For Redis only
