@@ -98,7 +98,7 @@ export async function restartService(
  * @returns Promise with config content and path
  */
 export async function getServiceConfig(
-  serviceName: string
+  _serviceName: string
 ): Promise<{ config: string; path: string }> {
   // Stub for future implementation
   return { config: '', path: '' }
@@ -111,8 +111,8 @@ export async function getServiceConfig(
  * @returns Promise with success status
  */
 export async function updateServiceConfig(
-  serviceName: string,
-  config: string
+  _serviceName: string,
+  _config: string
 ): Promise<{ success: boolean }> {
   // Stub for future implementation
   return { success: true }

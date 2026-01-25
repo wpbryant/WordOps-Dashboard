@@ -6,7 +6,7 @@ import {
   Pause,
   RotateCw,
   Settings,
-  Memory,
+  HardDrive,
   Activity,
   Database,
   Zap,
@@ -22,12 +22,11 @@ export function StackServicesTab() {
 
   const [configModalOpen, setConfigModalOpen] = useState(false)
   const [selectedService, setSelectedService] = useState<StackServiceInfo | null>(null)
-  const [configContent, setConfigContent] = useState('')
 
   // Start service mutation
   const startMutation = useMutation({
     mutationFn: startService,
-    onSuccess: (data, serviceName) => {
+    onSuccess: (_data, serviceName) => {
       toast.success(`${serviceName} started successfully`)
       queryClient.invalidateQueries({ queryKey: ['server', 'stack-services'] })
     },
@@ -39,7 +38,7 @@ export function StackServicesTab() {
   // Stop service mutation
   const stopMutation = useMutation({
     mutationFn: stopService,
-    onSuccess: (data, serviceName) => {
+    onSuccess: (_data, serviceName) => {
       toast.success(`${serviceName} stopped successfully`)
       queryClient.invalidateQueries({ queryKey: ['server', 'stack-services'] })
     },
@@ -51,7 +50,7 @@ export function StackServicesTab() {
   // Restart service mutation
   const restartMutation = useMutation({
     mutationFn: restartService,
-    onSuccess: (data, serviceName) => {
+    onSuccess: (_data, serviceName) => {
       toast.success(`${serviceName} restarted successfully`)
       queryClient.invalidateQueries({ queryKey: ['server', 'stack-services'] })
     },
@@ -80,7 +79,6 @@ export function StackServicesTab() {
   const handleCloseConfigModal = () => {
     setConfigModalOpen(false)
     setSelectedService(null)
-    setConfigContent('')
   }
 
   const getServiceIcon = (serviceName: string) => {
@@ -203,7 +201,7 @@ export function StackServicesTab() {
                 {service.memory_display && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
-                      <Memory className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500" />
+                      <HardDrive className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500" />
                       <span className="text-xs text-zinc-500 dark:text-zinc-400">Memory</span>
                     </div>
                     <span className="text-xs font-mono font-medium text-zinc-900 dark:text-zinc-100">

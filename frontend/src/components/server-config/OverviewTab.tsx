@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Server,
   Terminal,
   Cpu,
   Clock,
-  HardDrive,
   Shield,
   RefreshCw,
   Download,
@@ -16,7 +15,6 @@ import {
   Loader2,
 } from 'lucide-react'
 import { useServerOverview, updatePackages } from '../../lib/server-config-api'
-import type { ServerOverviewInfo } from '../../types'
 import { cn } from '../../lib/utils'
 
 /**
@@ -258,7 +256,7 @@ export function OverviewTab() {
           {(overview?.security_updates || 0) > 0 && (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400">
               <Shield className="w-3.5 h-3.5" />
-              {overview.security_updates} security
+              {overview?.security_updates} security
             </span>
           )}
         </div>
@@ -349,7 +347,7 @@ export function OverviewTab() {
                     {(overview?.security_updates || 0) > 0 && (
                       <p>
                         <span className="font-medium text-amber-600 dark:text-amber-400">
-                          {overview.security_updates}
+                          {overview?.security_updates}
                         </span>{' '}
                         security updates
                       </p>

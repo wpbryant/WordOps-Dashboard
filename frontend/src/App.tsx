@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Toaster } from 'sonner'
 import { AppShell, type NavigationItem } from './components/shell'
 import { AuthProvider, ProtectedRoute, useAuth } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
@@ -100,6 +101,7 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <AppContent />
+          <Toaster richColors position="top-right" />
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
