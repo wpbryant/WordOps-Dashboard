@@ -10,10 +10,20 @@ from backend.auth.dependencies import get_current_user
 from backend.auth.models import User
 from backend.auth.utils import decode_token
 from backend.server.logs import tail_log, validate_log_type
-from backend.server.models import LogEntry, LogType, ServiceStatus, SystemInfo, SystemMetrics, TimeRange
+from backend.server.models import (
+    LogEntry,
+    LogType,
+    PackageUpdateRequest,
+    PackageUpdateResponse,
+    ServerOverviewInfo,
+    ServiceStatus,
+    SystemInfo,
+    SystemMetrics,
+    TimeRange,
+)
 from backend.server.netdata import get_system_metrics
 from backend.server.services import get_all_services, get_service_status, restart_service
-from backend.server.system import get_system_info
+from backend.server.system import get_server_overview, get_system_info
 from backend.server.websocket import log_manager
 
 router = APIRouter(prefix="/api/v1/server", tags=["server"])
@@ -69,6 +79,122 @@ async def get_info(
         SystemInfo with hostname, boot time, and update counts
     """
     return await get_system_info()
+
+
+@router.get("/overview", response_model=ServerOverviewInfo)
+async def get_overview(
+    current_user: User = Depends(get_current_user),
+) -> ServerOverviewInfo:
+    """Get server overview information including OS, kernel, WordOps version, and updates.
+
+    Args:
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        ServerOverviewInfo with complete server details
+
+    Raises:
+        HTTPException: 503 if unable to fetch server information
+    """
+    try:
+        return await get_server_overview()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch server overview: {str(e)}",
+        )
+
+
+@router.post("/packages/update", response_model=PackageUpdateResponse)
+async def update_packages(
+    request: PackageUpdateRequest,
+    current_user: User = Depends(get_current_user),
+) -> PackageUpdateResponse:
+    """Update system packages.
+
+    Args:
+        request: Package update request with update_type ('all' or 'security')
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        PackageUpdateResponse with status, message, and updated count
+
+    Raises:
+        HTTPException: 503 if package update fails
+    """
+    try:
+        update_type = request.update_type
+
+        # Build the apt command based on update type
+        if update_type == "security":
+            # Security-only updates (using apt's security filters)
+            cmd = [
+                "sudo",
+                "apt-get",
+                "update",
+                "&&",
+                "sudo",
+                "apt-get",
+                "-y",
+                "upgrade",
+                "-o",
+                "APT::Get::Show-Upgraded=true",
+            ]
+        else:
+            # All updates
+            cmd = [
+                "sudo",
+                "apt-get",
+                "update",
+                "&&",
+                "sudo",
+                "apt-get",
+                "-y",
+                "upgrade",
+                "-o",
+                "APT::Get::Show-Upgraded=true",
+            ]
+
+        # Run the update command
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=300)
+
+        stdout_str = stdout.decode("utf-8", errors="replace")
+        stderr_str = stderr.decode("utf-8", errors="replace")
+
+        if process.returncode == 0:
+            # Parse output to count updated packages
+            # Look for lines like "The following packages will be upgraded:"
+            # and count the packages listed
+            updated_count = stdout_str.count(" upgraded")
+
+            return PackageUpdateResponse(
+                status="completed",
+                message=f"System packages updated successfully",
+                updated_count=updated_count,
+            )
+        else:
+            return PackageUpdateResponse(
+                status="failed",
+                message=f"Package update failed: {stderr_str or stdout_str}",
+                updated_count=0,
+            )
+
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Package update timed out after 5 minutes",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to update packages: {str(e)}",
+        )
 
 
 @router.get("/services", response_model=list[ServiceStatus])
