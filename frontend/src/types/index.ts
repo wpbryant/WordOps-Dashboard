@@ -270,3 +270,22 @@ export interface PackageUpdateResponse {
   message: string
   updated_count: number
 }
+
+// -----------------------------------------------------------------------------
+// Server Config - Stack Services
+// -----------------------------------------------------------------------------
+
+export interface StackServiceInfo {
+  name: string
+  display_name: string
+  status: 'running' | 'stopped' | 'restarting' | 'error'
+  version: string | null
+  memory_usage: number | null
+  memory_display: string | null
+  uptime_seconds: number | null
+  config_file: string
+  php_fpm_connections: number | null
+  php_fpm_max_children: number | null
+  mysql_connections: number | null
+  redis_connected_clients: number | null
+}
