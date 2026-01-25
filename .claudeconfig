@@ -117,6 +117,15 @@ WordOps-Dashboard/
 - **Dark mode** - Always add `dark:` variant for new UI components
 - **Dynamic imports** - Used in SiteDetails for API calls to avoid circular deps
 
+## Documentation References
+- **WordOps Documentation**: https://docs.wordops.net/
+  - Site commands: https://docs.wordops.net/commands/site-commands/
+  - HTTP/SSL: https://docs.wordops.net/commands/http-ssl-commands/
+  - Stack commands: https://docs.wordops.net/commands/stack-commands/
+- **FastAPI Docs**: https://fastapi.tiangolo.com/
+- **React Query Docs**: https://tanstack.com/query/latest
+- **Tailwind CSS**: https://tailwindcss.com/docs
+
 ## When in Doubt
 1. Check existing similar code for patterns
 2. Build frontend to catch TypeScript errors early
