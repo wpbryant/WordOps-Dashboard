@@ -69,35 +69,251 @@ No REQUIREMENTS.md mapping exists for this phase. Verification based on must-hav
 
 ### Human Verification Required
 
-#### 1. Package Update Flow
+## Complete Testing Instructions for Phase 5
 
-**Test:** Click "Update All Packages" or "Update Security Only" button when updates are available
-**Expected:** Confirmation modal appears showing package count, click Update to trigger system update, see progress bar animation (0% -> 25% -> 50% -> 75% -> 100%), success state with updated count, modal auto-closes after 5 seconds
-**Why human:** Requires real system with available packages and sudo privileges to execute apt commands. Cannot verify full flow programmatically without actual package updates.
+### Prerequisites
 
-#### 2. Service Start/Stop/Restart Actions
+1. **Backend Running:**
+   ```bash
+   cd /home/william/Projects/WordOps-Dashboard/backend
+   python -m backend.main
+   ```
+   Expected output: `Uvicorn running on http://0.0.0.0:8000`
 
-**Test:** Click Start on a stopped service, Stop on a running service, Restart on any service
-**Expected:** Toast notification appears ("[service] started/stopped/restarted successfully"), service status updates in UI, status dot color changes appropriately
-**Why human:** Requires real services (nginx, php-fpm, mysql, redis) installed and running. Cannot verify actual systemctl commands affect service state without live system.
+2. **Frontend Running:**
+   ```bash
+   cd /home/william/Projects/WordOps-Dashboard/frontend
+   npm run dev
+   ```
+   Expected output: `Local: http://localhost:5173/`
 
-#### 3. Service Version Detection
+3. **Test Build:**
+   ```bash
+   cd /home/william/Projects/WordOps-Dashboard/frontend
+   npm run build
+   ```
+   Expected output: `✓ built in X.XXs` with no TypeScript errors
 
-**Test:** View stack services list, check version displayed for each service type
-**Expected:** Nginx shows version (e.g., "1.24.0"), PHP-FPM shows version (e.g., "8.1"), MySQL/MariaDB shows version (e.g., "10.6.12"), Redis shows version (e.g., "7.0.12")
-**Why human:** Version detection relies on CLI command execution (`nginx -v`, `php --version`, `mysql --version`, `redis-cli --version`) on installed services. Cannot verify actual version parsing without real services present.
+### Test Cases
 
-#### 4. Memory Usage Display
+#### 1. Server Overview Tab - Header and Quick Info Cards
 
-**Test:** View stack services, check memory usage for running services
-**Expected:** Memory displayed in human-readable format (e.g., "256.5 MB", "1.2 GB") with reasonable values for running services
-**Why human:** Memory data comes from systemctl show MemoryCurrent field. Cannot verify accurate memory formatting without real services consuming memory.
+**Steps:**
+1. Navigate to http://localhost:5173
+2. Log in with admin credentials
+3. Click "Server Config" in navigation
+4. Click "Overview" tab
 
-#### 5. Service-Specific Statistics
+**Verify:**
+- [ ] Server header displays hostname (e.g., "ubuntuserver2204")
+- [ ] Public IP address displays below hostname
+- [ ] Status indicator shows green dot + "Online" (or red + "Offline")
+- [ ] OS Version card shows OS name (e.g., "Ubuntu 22.04.3 LTS")
+- [ ] Kernel card shows kernel version (e.g., "5.15.0-xyz-generic")
+- [ ] Uptime card shows formatted time (e.g., "5d 12h" or "45m")
+- [ ] WordOps card shows version (e.g., "v3.14.0") or "Not detected"
 
-**Test:** View stack services, check PHP-FPM shows connections/max children, MySQL shows connections, Redis shows connected clients
-**Expected:** PHP-FPM: "Connections: 15 / 50" format, MySQL: "Connections: 12" format, Redis: "Connected Clients: 3" format
-**Why human:** Service-specific stats parsed from pool config (PHP-FPM), SHOW STATUS (MySQL), INFO clients (Redis). Cannot verify actual stats retrieval without running services.
+#### 2. Package Updates Section
+
+**Steps:**
+1. In Overview tab, locate "Package Updates" section
+2. Note the update count displayed
+3. If updates > 0, click "Update All Packages" button
+4. Verify confirmation modal appears
+5. Click "Cancel" to dismiss modal
+6. If security updates > 0, click "Update Security Only" button
+7. Verify confirmation modal shows security count
+8. Click "Cancel" to dismiss
+
+**Verify:**
+- [ ] Package count displays correctly (e.g., "15 packages available")
+- [ ] Security badge shows when applicable (e.g., "3 security")
+- [ ] "Update All Packages" button enabled when updates available
+- [ ] "Update Security Only" button enabled when security updates available
+- [ ] Both buttons disabled when no updates available
+- [ ] Confirmation modal shows package breakdown
+- [ ] Modal displays warning text about update duration
+- [ ] Cancel/Update buttons work correctly
+
+#### 3. Package Update Flow (End-to-End)
+
+**WARNING:** This will update your system packages. Only run on test server.
+
+**Steps:**
+1. Ensure test system has available updates
+2. Click "Update All Packages"
+3. Click "Update" button in confirmation modal
+4. Observe progress bar animation
+
+**Verify:**
+- [ ] Modal shows "Updating Packages..." with progress bar
+- [ ] Progress animates: 0% → 25% → 50% → 75% → 100%
+- [ ] Each step takes ~2 seconds
+- [ ] Success state shows: "Update Complete" header
+- [ ] Success message shows: "Successfully updated X packages"
+- [ ] Modal auto-closes after 5 seconds
+- [ ] Update counts refresh after modal closes
+- [ ] Toast notification confirms completion
+
+#### 4. Last Backup Section
+
+**Steps:**
+1. In Overview tab, locate "Last Backup" section
+2. Check displayed backup date
+
+**Verify:**
+- [ ] Shows last backup date in format like "Jan 25, 2026"
+- [ ] Shows "Never" if no backup found
+- [ ] Archive icon displays correctly
+
+#### 5. Stack Services Tab - Service List
+
+**Steps:**
+1. Click "Stack Services" tab in Server Config
+2. Observe service cards grid
+
+**Verify:**
+- [ ] Service cards display in responsive grid (1 col mobile, 2 col tablet, 3 col desktop)
+- [ ] Each card shows: service icon, display name, status dot
+- [ ] Status dot colors: green (running), red (stopped), amber (error)
+- [ ] Each card shows: version, memory usage (if available)
+- [ ] Service-specific stats display:
+  - PHP-FPM: Connections / max children
+  - MySQL: Connections
+  - Redis: Connected Clients
+
+#### 6. Service Start/Stop/Restart Actions
+
+**Steps:**
+1. Find a running service (green dot)
+2. Click "Stop" button
+3. Observe toast notification and status change
+4. Click "Start" button on the stopped service
+5. Observe toast notification and status change
+6. Click "Restart" button on any running service
+7. Observe toast notification
+
+**Verify:**
+- [ ] Toast notification appears: "[Service] stopped successfully"
+- [ ] Status dot changes from green to red
+- [ ] Status badge changes from "Running" to "Stopped"
+- [ ] "Stop" button replaced with "Start" button
+- [ ] Toast notification appears: "[Service] started successfully"
+- [ ] Status dot returns to green
+- [ ] "Start" button replaced with "Stop" button
+- [ ] Toast notification appears: "[Service] restarted successfully"
+- [ ] Service list refreshes after action
+
+#### 7. Service Configuration Modal
+
+**Steps:**
+1. Click "Config" button on any service card
+2. Observe configuration modal
+3. Click "Close" button
+
+**Verify:**
+- [ ] Modal opens with service display name
+- [ ] Config file path displays in monospace font (e.g., "/etc/nginx/nginx.conf")
+- [ ] Placeholder message: "Configuration file viewing and editing will be available in a future update"
+- [ ] Close button dismisses modal
+- [ ] Backdrop click dismisses modal (except on config text area)
+
+### Expected API Endpoints
+
+Test with curl (requires auth token):
+
+```bash
+# Get auth token first
+TOKEN=$(curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"your-password"}' | jq -r '.access_token')
+
+# Test server overview
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:8000/api/v1/server/overview | jq
+
+# Expected output includes:
+# - hostname, public_ip, os_version, kernel_version
+# - uptime_seconds, wordops_version
+# - security_updates, other_updates
+# - last_backup_date
+
+# Test stack services
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:8000/api/v1/server/stack-services | jq
+
+# Expected output includes array of services with:
+# - name, display_name, status (running/stopped)
+# - version, memory_usage, memory_display
+# - php_fpm_connections (for PHP-FPM)
+# - mysql_connections (for MySQL)
+# - redis_connected_clients (for Redis)
+```
+
+### Common Issues and Fixes
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| TypeScript build errors | Unused imports/variables | Run `npm run build` and fix reported errors |
+| Toast notifications not appearing | Toaster component not in App | Check App.tsx imports `<Toaster />` from sonner |
+| Services show "Not installed" | Services not installed on system | Install nginx, php-fpm, mysql, redis via WordOps |
+| Package update fails | Insufficient permissions | Ensure backend runs with sudo privileges |
+| Memory usage shows "N/A" | systemctl MemoryCurrent not available | Check if systemd cgroups enabled |
+| Version detection fails | CLI commands not in PATH | Ensure nginx, php, mysql, redis-cli in PATH |
+
+### Regression Testing (Before Completing Phase)
+
+Run these commands to ensure nothing broke:
+
+```bash
+# Backend tests (if available)
+cd backend && pytest
+
+# Frontend build
+cd frontend && npm run build
+
+# Frontend type check
+cd frontend && npx tsc --noEmit
+
+# Check for console errors in browser
+# Open browser DevTools Console, look for red errors
+```
+
+---
+
+### Manual Testing Checklist Summary
+
+**Overview Tab:**
+- [ ] Server header (hostname, IP, status)
+- [ ] Quick info cards (OS, kernel, uptime, WordOps)
+- [ ] Package updates display count correctly
+- [ ] Package update confirmation modal
+- [ ] Package update progress animation
+- [ ] Package update success state
+- [ ] Last backup date display
+- [ ] All buttons enabled/disabled correctly
+- [ ] No TypeScript errors (`npm run build`)
+
+**Stack Services Tab:**
+- [ ] Service cards display in grid
+- [ ] Status indicators (green/red dots)
+- [ ] Service version displays
+- [ ] Memory usage displays
+- [ ] Service-specific stats (PHP-FPM, MySQL, Redis)
+- [ ] Start button works (toast + status change)
+- [ ] Stop button works (toast + status change)
+- [ ] Restart button works (toast)
+- [ ] Config modal opens with correct file path
+- [ ] All mutations refresh service list
+- [ ] No TypeScript errors (`npm run build`)
+
+**Build Verification:**
+- [ ] `npm run build` succeeds with no errors
+- [ ] No TypeScript compilation errors
+- [ ] No missing imports
+- [ ] No unused variables
+- [ ] sonner package installed
+- [ ] Toaster component in App.tsx
 
 ### Gaps Summary
 
