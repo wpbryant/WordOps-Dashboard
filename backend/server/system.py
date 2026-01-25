@@ -4,7 +4,7 @@ import asyncio
 import time
 
 import httpx
-from backend.server.models import SystemInfo
+from backend.server.models import ServerOverviewInfo, SystemInfo
 
 
 async def get_hostname() -> str:
@@ -239,4 +239,164 @@ async def get_system_info() -> SystemInfo:
         inodes_used=inodes_used,
         inodes_total=inodes_total,
         inodes_percent=inodes_percent,
+    )
+
+
+async def get_os_version() -> str:
+    """Get the OS version from /etc/os-release.
+
+    Returns:
+        The PRETTY_NAME from /etc/os-release, or "Unknown" if unavailable
+    """
+    try:
+        with open("/etc/os-release", "r") as f:
+            content = f.read()
+            for line in content.splitlines():
+                if line.startswith("PRETTY_NAME="):
+                    # Remove quotes and variable name
+                    value = line.split("=", 1)[1].strip('"\'')
+                    return value
+        return "Unknown"
+    except (OSError, IndexError):
+        return "Unknown"
+
+
+async def get_kernel_version() -> str:
+    """Get the kernel version using uname -r.
+
+    Returns:
+        The kernel version string, or "Unknown" if unavailable
+    """
+    try:
+        process = await asyncio.create_subprocess_exec(
+            "uname",
+            "-r",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=5.0)
+        return stdout.decode("utf-8").strip()
+    except (asyncio.TimeoutError, FileNotFoundError, OSError):
+        return "Unknown"
+
+
+async def get_wordops_version() -> str | None:
+    """Get the WordOps version.
+
+    Returns:
+        The WordOps version string (e.g., "3.14.0") or None if unavailable
+    """
+    try:
+        from backend.wordops.cli import run_command
+
+        output = await run_command(["--version"], timeout=10)
+        # Parse output like "WordOps v3.14.0" or "WordOps 3.14.0"
+        # Extract just the version number
+        import re
+        match = re.search(r'(\d+\.\d+\.\d+)', output)
+        if match:
+            return match.group(1)
+        return None
+    except Exception:
+        return None
+
+
+async def get_last_backup_date() -> str | None:
+    """Get the last backup date.
+
+    Checks common WordOps backup directories for the latest backup.
+
+    Returns:
+        ISO date string of the last backup, or None if no backups found
+    """
+    import os
+    from datetime import datetime
+
+    backup_dirs = [
+        "/var/backups/wordops",
+        "/var/backups",
+        os.path.expanduser("~/backups"),
+        "/opt/wordops/backups",
+    ]
+
+    latest_timestamp = 0
+
+    for backup_dir in backup_dirs:
+        if not os.path.isdir(backup_dir):
+            continue
+
+        try:
+            for entry in os.listdir(backup_dir):
+                entry_path = os.path.join(backup_dir, entry)
+                if os.path.isfile(entry_path):
+                    stat = os.stat(entry_path)
+                    if stat.st_mtime > latest_timestamp:
+                        latest_timestamp = stat.st_mtime
+                elif os.path.isdir(entry_path):
+                    # Check directory modification time
+                    stat = os.stat(entry_path)
+                    if stat.st_mtime > latest_timestamp:
+                        latest_timestamp = stat.st_mtime
+        except (OSError, PermissionError):
+            continue
+
+    if latest_timestamp > 0:
+        return datetime.fromtimestamp(latest_timestamp).isoformat()
+
+    return None
+
+
+async def get_server_overview():
+    """Get complete server overview information.
+
+    Gathers all server information including OS, kernel, WordOps version,
+    and backup status in parallel for efficiency.
+
+    Returns:
+        ServerOverviewInfo with all server details
+    """
+    hostname, public_ip, os_version, kernel_version, boot_time_result, updates_result, wordops_version, last_backup = await asyncio.gather(
+        get_hostname(),
+        get_public_ip(),
+        get_os_version(),
+        get_kernel_version(),
+        get_boot_time(),
+        get_apt_updates(),
+        get_wordops_version(),
+        get_last_backup_date(),
+        return_exceptions=True,
+    )
+
+    # Handle results
+    if isinstance(hostname, BaseException):
+        hostname = "unknown"
+    if isinstance(public_ip, BaseException):
+        public_ip = "unknown"
+    if isinstance(os_version, BaseException):
+        os_version = "Unknown"
+    if isinstance(kernel_version, BaseException):
+        kernel_version = "Unknown"
+    if isinstance(boot_time_result, BaseException):
+        _, uptime = int(time.time()), 0
+    else:
+        _, uptime = boot_time_result
+    if isinstance(updates_result, BaseException):
+        security_updates, other_updates = 0, 0
+    else:
+        security_updates, other_updates = updates_result
+    if isinstance(wordops_version, BaseException):
+        wordops_version = None
+    if isinstance(last_backup, BaseException):
+        last_backup = None
+
+    return ServerOverviewInfo(
+        hostname=hostname,
+        public_ip=public_ip,
+        os_version=os_version,
+        kernel_version=kernel_version,
+        uptime_seconds=uptime,
+        wordops_version=wordops_version,
+        security_updates=security_updates,
+        other_updates=other_updates,
+        last_backup_date=last_backup,
     )

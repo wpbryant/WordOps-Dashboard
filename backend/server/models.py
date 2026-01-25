@@ -81,3 +81,31 @@ class LogEntry(BaseModel):
     lines: list[str]
     log_type: LogType
     timestamp: int
+
+
+class ServerOverviewInfo(BaseModel):
+    """Server overview information including OS, kernel, WordOps version, and updates."""
+
+    hostname: str
+    public_ip: str
+    os_version: str
+    kernel_version: str
+    uptime_seconds: int
+    wordops_version: str | None = None
+    security_updates: int
+    other_updates: int
+    last_backup_date: str | None = None
+
+
+class PackageUpdateRequest(BaseModel):
+    """Request model for package updates."""
+
+    update_type: str  # "all" or "security"
+
+
+class PackageUpdateResponse(BaseModel):
+    """Response model for package updates."""
+
+    status: str  # "running", "completed", "failed"
+    message: str
+    updated_count: int
