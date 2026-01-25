@@ -9,12 +9,13 @@ See: .planning/PROJECT.md (updated 2026-01-19)
 
 ## Current Position
 
-Milestone: v1.0 complete
-Phase: Ready for next milestone
-Status: Milestone archived
-Last activity: 2026-01-19 — v1.0 milestone complete
+Milestone: v1.1 Server Config UI
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-01-25 — Milestone v1.1 started
 
-Progress: Milestone complete
+Progress: Requirements gathering
 
 ## Performance Metrics
 

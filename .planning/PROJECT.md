@@ -27,11 +27,12 @@ Site management through a web UI — create, configure, and delete sites without
 
 ### Active
 
-- [ ] Sites list view UI with filtering and search
-- [ ] Site detail view with tabbed interface (Overview, Configuration, Admin Actions, Logs, Danger Zone)
-- [ ] Create site wizard UI
-- [ ] Server dashboard UI with metrics visualization
-- [ ] Quick access tools (phpMyAdmin, Adminer links)
+- [ ] Server Config UI with tabbed interface (Overview, Stack, Security, Logs, Monitoring)
+- [ ] Overview tab with server health and package updates
+- [ ] Stack tab for managing services (nginx, PHP-FPM, Redis, MySQL)
+- [ ] Security tab for SSH, fail2ban, firewall, DNS credentials
+- [ ] Logs tab with filtering and search
+- [ ] Monitoring tab with alert configuration and Netdata link
 
 ### Out of Scope
 
@@ -92,6 +93,17 @@ Frontend (React/TypeScript) → Backend API (Python FastAPI or Node.js) → Word
 | WebSocket auth via query param | Headers don't work well with WebSocket connections | Good |
 | Unix socket for uvicorn | Better performance than TCP for local nginx proxy | Good |
 
+## Current Milestone: v1.1 Server Config UI
+
+**Goal:** Implement comprehensive Server Config feature with tabbed interface for server management.
+
+**Target features:**
+- Overview tab with server health and package updates
+- Stack tab for managing nginx, PHP-FPM, Redis, MySQL services
+- Security tab for SSH, fail2ban, firewall, and DNS credentials
+- Logs tab with filtering and search
+- Monitoring tab with alert configuration and Netdata integration
+
 ## Current State
 
 **v1.0 Shipped:** 2026-01-19
@@ -103,9 +115,18 @@ Backend API complete with:
 - Real-time log streaming
 - Production deployment configs
 
-**Tech stack:** Python 3.10+, FastAPI, pydantic-settings, python-jose, passlib, httpx, aiofiles
+**Frontend (Milestones 1-3):**
+- Foundation: Routes, shell, navigation, auth
+- Dashboard: Server metrics tiles with real data
+- Sites: List view, site details, create wizard
 
-**Lines of code:** 2,093 Python across 18 files
+**Tech stack:**
+- Backend: Python 3.10+, FastAPI, pydantic-settings
+- Frontend: React, TypeScript, Tailwind CSS, React Router, TanStack Query
+
+**Lines of code:**
+- Backend: 2,093 Python across 18 files
+- Frontend: ~15+ React components with API integration
 
 ---
-*Last updated: 2026-01-19 after v1.0 milestone*
+*Last updated: 2026-01-25 after v1.1 milestone start*
