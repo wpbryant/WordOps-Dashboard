@@ -407,13 +407,34 @@ async def get_mysql_status() -> dict | None:
     Returns:
         Dict with "connections" or None
     """
+    import os
+    import logging
+
     try:
+        # Try ~/.my.cnf first (standard for WordOps MySQL setups)
+        my_cnf_path = os.path.expanduser("~/.my.cnf")
+        mysql_cmd = ["mysql"]
+
+        if os.path.exists(my_cnf_path):
+            mysql_cmd.extend(["--defaults-file=" + my_cnf_path])
+        else:
+            # Fallback to sudo mysql
+            mysql_cmd = ["sudo", "mysql"]
+
+        mysql_cmd.extend(["-e", "SHOW STATUS LIKE 'Threads_connected';"])
+
         process = await asyncio.create_subprocess_exec(
-            "mysql", "-e", "SHOW STATUS LIKE 'Threads_connected';",
+            *mysql_cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=STATUS_TIMEOUT)
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=STATUS_TIMEOUT)
+
+        if process.returncode != 0:
+            stderr_str = stderr.decode("utf-8", errors="replace").strip()
+            logging.error(f"MySQL status command failed: {stderr_str}")
+            return None
+
         output = stdout.decode("utf-8", errors="replace")
 
         # Parse output: "Threads_connected\t15"
@@ -425,7 +446,8 @@ async def get_mysql_status() -> dict | None:
                     return {"connections": connections}
 
         return None
-    except (asyncio.TimeoutError, ValueError, Exception):
+    except (asyncio.TimeoutError, ValueError, Exception) as e:
+        logging.error(f"Failed to get MySQL status: {e}")
         return None
 
 
