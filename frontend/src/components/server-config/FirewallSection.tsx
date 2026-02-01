@@ -9,7 +9,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { useFirewallRules, useAddFirewallRule, useDeleteFirewallRule } from '../../lib/server-config-api'
-import type { UfwFirewallRule as FirewallRule, UfwFirewallRuleCreate } from '../../types'
+import type { UfwFirewallRuleCreate } from '../../types'
 import { FirewallRuleForm } from './FirewallRuleForm'
 import { cn } from '../../lib/utils'
 
@@ -21,7 +21,7 @@ export function FirewallSection() {
   const [showForm, setShowForm] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
-  const handleAddRule = (rule: FirewallRuleCreate) => {
+  const handleAddRule = (rule: UfwFirewallRuleCreate) => {
     addMutation.mutate(rule, {
       onSuccess: () => {
         setShowForm(false)
