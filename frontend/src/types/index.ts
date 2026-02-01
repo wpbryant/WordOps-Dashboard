@@ -220,10 +220,11 @@ export type LogSeverity = 'debug' | 'info' | 'warn' | 'error' | 'fatal'
 export interface ServerLog {
   id: string
   source: LogSource
-  timestamp: string
+  timestamp: string  // ISO timestamp string from backend
   severity: LogSeverity
   message: string
   clientIp?: string
+  raw_line?: string  // Raw log line for detailed view
 }
 
 export type AlertMetric = 'cpu' | 'memory' | 'disk' | 'mysql_connections' | 'network' | 'custom'

@@ -9,10 +9,12 @@ import {
   XCircle,
   Activity,
   Loader2,
+  ExternalLink,
+  X,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { useLogs } from '../../lib/server-config-api'
-import type { LogSource, LogSeverity } from '../../types'
+import type { LogSource, LogSeverity, ServerLog } from '../../types'
 
 /**
  * Get severity color classes for log entries
@@ -88,7 +90,13 @@ function getSourceInfo(source: LogSource) {
 /**
  * Single log entry component with timeline layout
  */
-function LogEntry({ log }: { log: { id: string; source: LogSource; timestamp: string; severity: LogSeverity; message: string; clientIp?: string } }) {
+function LogEntry({
+  log,
+  onViewRaw,
+}: {
+  log: ServerLog
+  onViewRaw: (log: ServerLog) => void
+}) {
   const severityClasses = getSeverityClasses(log.severity)
   const sourceInfo = getSourceInfo(log.source)
   const SeverityIcon = severityClasses.icon
@@ -108,19 +116,29 @@ function LogEntry({ log }: { log: { id: string; source: LogSource; timestamp: st
       <div className={`absolute left-0 top-6 w-3 h-3 rounded-full ${severityClasses.dot} -translate-x-[7px]`} />
 
       <div className="p-4 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-        {/* Header: Source badge and timestamp */}
+        {/* Header: Source badge, timestamp, and view raw button */}
         <div className="flex items-center justify-between mb-2">
           <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium text-white ${sourceInfo.color}`}>
             <FileText className="w-3 h-3" />
             {sourceInfo.name}
           </span>
-          <span className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-            <SeverityIcon className="w-3 h-3" />
-            {formattedTime}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onViewRaw(log)}
+              className="text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300 flex items-center gap-1 transition-colors"
+              title="View raw log entry"
+            >
+              <ExternalLink className="w-3 h-3" />
+              View
+            </button>
+            <span className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+              <SeverityIcon className="w-3 h-3" />
+              {formattedTime}
+            </span>
+          </div>
         </div>
 
-        {/* Message */}
+        {/* Message - truncated for list view */}
         <p className={`text-sm ${severityClasses.text} font-mono break-all whitespace-pre-wrap`}>
           {log.message}
         </p>
@@ -146,6 +164,8 @@ export function LogsTab() {
   const [sourceFilter, setSourceFilter] = useState<LogSource | 'all'>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [searchInput, setSearchInput] = useState('')
+  const [showAllLogs, setShowAllLogs] = useState(false)
+  const [rawLogModal, setRawLogModal] = useState<ServerLog | null>(null)
 
   // Debounced search
   useEffect(() => {
@@ -157,6 +177,9 @@ export function LogsTab() {
 
   // Fetch logs
   const { data: logs = [], isLoading, error, refetch } = useLogs(sourceFilter, searchQuery)
+
+  // Limit to 100 entries unless showAllLogs is true
+  const displayedLogs = showAllLogs ? logs : logs.slice(0, 100)
 
   const sourceOptions: { value: LogSource | 'all'; label: string }[] = [
     { value: 'all', label: 'All Sources' },
@@ -288,6 +311,16 @@ export function LogsTab() {
           />
         </div>
 
+        {/* Show All / Show 100 toggle button */}
+        {logs.length > 100 && (
+          <button
+            onClick={() => setShowAllLogs(!showAllLogs)}
+            className="px-3 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+          >
+            {showAllLogs ? `Show Recent 100` : `Show All (${logs.length})`}
+          </button>
+        )}
+
         {/* Refresh button */}
         <button
           onClick={() => refetch()}
@@ -298,12 +331,63 @@ export function LogsTab() {
         </button>
       </div>
 
+      {/* Log count indicator */}
+      {!showAllLogs && logs.length > 100 && (
+        <div className="text-xs text-zinc-500 dark:text-zinc-400 text-center">
+          Showing 100 of {logs.length} log entries
+        </div>
+      )}
+
       {/* Logs timeline */}
       <div className="py-4">
-        {logs.map((log) => (
-          <LogEntry key={log.id} log={log} />
+        {displayedLogs.map((log) => (
+          <LogEntry key={log.id} log={log} onViewRaw={(log) => setRawLogModal(log)} />
         ))}
       </div>
+
+      {/* Raw Log Modal */}
+      {rawLogModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setRawLogModal(null)}
+          />
+          <div className="relative bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-xl max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Raw Log Entry</h2>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                  {rawLogModal.source} • {new Date(rawLogModal.timestamp).toLocaleString()}
+                </p>
+              </div>
+              <button
+                onClick={() => setRawLogModal(null)}
+                className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <X className="w-5 h-5 text-zinc-400" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto flex-1">
+              <pre className="text-sm font-mono bg-zinc-50 dark:bg-zinc-950 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800 whitespace-pre-wrap break-all text-zinc-800 dark:text-zinc-200">
+                {rawLogModal.raw_line || rawLogModal.message}
+              </pre>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-zinc-200 dark:border-zinc-800 flex justify-end">
+              <button
+                onClick={() => setRawLogModal(null)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

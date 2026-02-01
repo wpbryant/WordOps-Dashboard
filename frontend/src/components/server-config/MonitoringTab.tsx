@@ -293,7 +293,7 @@ function AlertFormModal({ mode, alert, onSubmit, onCancel, isSubmitting = false 
           {/* Notification Email (Optional) */}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-              Notification Email <span className="text-zinc-400">(optional)</span>
+              Notification Email <span className="text-zinc-500 dark:text-zinc-400">(optional)</span>
             </label>
             <input
               id="email"
