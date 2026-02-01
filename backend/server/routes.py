@@ -10,9 +10,12 @@ from backend.auth.dependencies import get_current_user
 from backend.auth.models import User
 from backend.auth.utils import decode_token
 from backend.server.dns import get_dns_credentials
+from backend.server.firewall import add_ufw_rule as add_ufw_rule_impl, delete_ufw_rule as delete_ufw_rule_impl, get_ufw_rules
 from backend.server.logs import tail_log, validate_log_type
 from backend.server.models import (
     DnsCredential,
+    FirewallRule,
+    FirewallRuleCreate,
     LogEntry,
     LogType,
     PackageUpdateRequest,
@@ -137,6 +140,105 @@ async def get_dns_credentials_endpoint(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Failed to fetch DNS credentials: {str(e)}",
+        )
+
+
+@router.get("/security/firewall", response_model=list[FirewallRule])
+async def get_firewall_rules_endpoint(
+    current_user: User = Depends(get_current_user),
+) -> list[FirewallRule]:
+    """Get UFW firewall rules.
+
+    Returns a list of all UFW firewall rules with their numbers, ports,
+    protocols, actions, and source addresses.
+
+    Args:
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        List of FirewallRule objects representing current UFW rules
+
+    Raises:
+        HTTPException: 503 if unable to fetch firewall rules
+    """
+    try:
+        return await get_ufw_rules()
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Timeout fetching firewall rules",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch firewall rules: {str(e)}",
+        )
+
+
+@router.post("/security/firewall")
+async def add_firewall_rule_endpoint(
+    request: FirewallRuleCreate,
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Add a new UFW firewall rule.
+
+    Creates a new firewall rule with the specified action, port, protocol,
+    and source address.
+
+    Args:
+        request: Firewall rule creation request
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException: 503 if unable to add rule
+    """
+    try:
+        return await add_ufw_rule_impl(request)
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Timeout adding firewall rule",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to add firewall rule: {str(e)}",
+        )
+
+
+@router.delete("/security/firewall/{rule_id}")
+async def delete_firewall_rule_endpoint(
+    rule_id: str,
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Delete a UFW firewall rule by number.
+
+    Deletes the firewall rule with the specified rule number.
+
+    Args:
+        rule_id: The rule number from ufw status numbered output
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException: 503 if unable to delete rule
+    """
+    try:
+        return await delete_ufw_rule_impl(rule_id)
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Timeout deleting firewall rule",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to delete firewall rule: {str(e)}",
         )
 
 

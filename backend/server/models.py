@@ -135,3 +135,23 @@ class DnsCredential(BaseModel):
     email: str | None = None  # Email for provider (if applicable)
     key_preview: str  # Masked key preview (first 8 chars + "...")
     configured: bool  # True if credentials found
+
+
+class FirewallRule(BaseModel):
+    """UFW firewall rule."""
+
+    id: str  # Rule number from ufw status numbered
+    port: str
+    protocol: str
+    action: str  # "allow" or "deny"
+    from_addr: str
+    enabled: bool
+
+
+class FirewallRuleCreate(BaseModel):
+    """Request to create a new firewall rule."""
+
+    action: str  # "allow" or "deny"
+    port: str
+    protocol: str = "tcp"
+    from_addr: str = "Anywhere"
