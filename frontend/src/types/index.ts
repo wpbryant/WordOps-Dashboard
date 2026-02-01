@@ -202,7 +202,8 @@ export interface Fail2banConfigUpdate {
   destemail: string
 }
 
-export interface FirewallRule {
+// Reserved for future general firewall rules (not currently implemented)
+export interface LegacyFirewallRule {
   id: string
   action: 'allow' | 'deny' | 'limit' | 'reject'
   direction: 'in' | 'out' | 'routed'

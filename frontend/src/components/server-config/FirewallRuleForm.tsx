@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Shield, X } from 'lucide-react'
-import type { UfwFirewallRuleCreate as FirewallRuleCreate } from '../../types'
+import type { UfwFirewallRuleCreate } from '../../types'
 import { cn } from '../../lib/utils'
 
 interface FirewallRuleFormProps {
-  onSubmit: (rule: FirewallRuleCreate) => void
+  onSubmit: (rule: UfwFirewallRuleCreate) => void
   onCancel: () => void
   isSubmitting?: boolean
 }

@@ -9,7 +9,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { useFirewallRules, useAddFirewallRule, useDeleteFirewallRule } from '../../lib/server-config-api'
-import type { UfwFirewallRule as FirewallRule, UfwFirewallRuleCreate as FirewallRuleCreate } from '../../types'
+import type { UfwFirewallRule as FirewallRule, UfwFirewallRuleCreate } from '../../types'
 import { FirewallRuleForm } from './FirewallRuleForm'
 import { cn } from '../../lib/utils'
 
