@@ -300,3 +300,19 @@ export interface DnsCredential {
   key_preview: string
   configured: boolean
 }
+
+export interface FirewallRule {
+  id: string
+  port: string
+  protocol: string
+  action: 'allow' | 'deny'
+  from_addr: string
+  enabled: boolean
+}
+
+export interface FirewallRuleCreate {
+  action: 'allow' | 'deny'
+  port: string
+  protocol: 'tcp' | 'udp' | 'any'
+  from_addr: string
+}

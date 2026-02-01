@@ -1,4 +1,5 @@
 import { DnsCredentialsSection } from './DnsCredentialsSection'
+import { FirewallSection } from './FirewallSection'
 
 /**
  * SecurityTab component displays security-related server configuration
@@ -10,9 +11,11 @@ export function SecurityTab() {
       {/* DNS API Credentials Section */}
       <DnsCredentialsSection />
 
+      {/* Firewall Rules Section */}
+      <FirewallSection />
+
       {/* Additional security sections will be added in future plans:
           - SSH Configuration
-          - Firewall Rules
           - Fail2ban Status
       */}
     </div>

@@ -1,7 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from './api-client'
+import { toast } from 'sonner'
 import type {
   DnsCredential,
+  FirewallRule,
+  FirewallRuleCreate,
   ServerOverviewInfo,
   PackageUpdateRequest,
   PackageUpdateResponse,
@@ -137,7 +140,64 @@ export function useDnsCredentials() {
 }
 
 // =============================================================================
+// Security API - Firewall Rules
+// =============================================================================
+
+/**
+ * Hook to fetch firewall rules
+ * @returns React Query hook for firewall rules data
+ */
+export function useFirewallRules() {
+  return useQuery<FirewallRule[]>({
+    queryKey: ['server', 'security', 'firewall'],
+    queryFn: () => apiClient.get<FirewallRule[]>('/api/v1/server/security/firewall'),
+    refetchInterval: undefined, // Manual refresh only
+    staleTime: 30000, // Consider data fresh for 30 seconds
+  })
+}
+
+/**
+ * Hook to add a firewall rule
+ * @returns React Query mutation hook for adding firewall rules
+ */
+export function useAddFirewallRule() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (rule: FirewallRuleCreate) =>
+      apiClient.post<{ success: boolean; message: string }>('/api/v1/server/security/firewall', rule),
+    onSuccess: () => {
+      toast.success('Firewall rule added successfully')
+      queryClient.invalidateQueries({ queryKey: ['server', 'security', 'firewall'] })
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to add firewall rule: ${error.message}`)
+    },
+  })
+}
+
+/**
+ * Hook to delete a firewall rule
+ * @returns React Query mutation hook for deleting firewall rules
+ */
+export function useDeleteFirewallRule() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (ruleId: string) =>
+      apiClient.delete<{ success: boolean; message: string }>(`/api/v1/server/security/firewall/${ruleId}`),
+    onSuccess: () => {
+      toast.success('Firewall rule deleted successfully')
+      queryClient.invalidateQueries({ queryKey: ['server', 'security', 'firewall'] })
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to delete firewall rule: ${error.message}`)
+    },
+  })
+}
+
+// =============================================================================
 // Type Exports
 // =============================================================================
 
-export type { ServerOverviewInfo, PackageUpdateRequest, PackageUpdateResponse, StackServiceInfo, DnsCredential }
+export type { ServerOverviewInfo, PackageUpdateRequest, PackageUpdateResponse, StackServiceInfo, DnsCredential, FirewallRule, FirewallRuleCreate }
