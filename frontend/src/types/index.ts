@@ -289,3 +289,14 @@ export interface StackServiceInfo {
   mysql_connections: number | null
   redis_connected_clients: number | null
 }
+
+// -----------------------------------------------------------------------------
+// Server Config - DNS Credentials
+// -----------------------------------------------------------------------------
+
+export interface DnsCredential {
+  provider: string
+  email: string | null
+  key_preview: string
+  configured: boolean
+}

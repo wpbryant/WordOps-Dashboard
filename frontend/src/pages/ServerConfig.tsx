@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { OverviewTab } from '../components/server-config/OverviewTab'
 import { StackServicesTab } from '../components/server-config/StackServicesTab'
+import { SecurityTab } from '../components/server-config/SecurityTab'
 
-type TabKey = 'overview' | 'stack-services'
+type TabKey = 'overview' | 'stack-services' | 'security'
 
 const tabs = [
   { key: 'overview' as const, label: 'Overview' },
   { key: 'stack-services' as const, label: 'Stack Services' },
+  { key: 'security' as const, label: 'Security' },
 ]
 
 export function ServerConfig() {
@@ -45,6 +47,7 @@ export function ServerConfig() {
         <div className="max-w-6xl mx-auto py-6">
           {activeTab === 'overview' && <OverviewTab />}
           {activeTab === 'stack-services' && <StackServicesTab />}
+          {activeTab === 'security' && <SecurityTab />}
         </div>
       </div>
     </div>

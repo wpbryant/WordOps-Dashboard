@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from './api-client'
 import type {
+  DnsCredential,
   ServerOverviewInfo,
   PackageUpdateRequest,
   PackageUpdateResponse,
@@ -119,7 +120,24 @@ export async function updateServiceConfig(
 }
 
 // =============================================================================
+// Security API - DNS Credentials
+// =============================================================================
+
+/**
+ * Hook to fetch DNS credentials information
+ * @returns React Query hook for DNS credentials data
+ */
+export function useDnsCredentials() {
+  return useQuery<DnsCredential[]>({
+    queryKey: ['server', 'security', 'dns-credentials'],
+    queryFn: () => apiClient.get<DnsCredential[]>('/api/v1/server/security/dns-credentials'),
+    refetchInterval: undefined, // Manual refresh only
+    staleTime: 60000, // Consider data fresh for 1 minute
+  })
+}
+
+// =============================================================================
 // Type Exports
 // =============================================================================
 
-export type { ServerOverviewInfo, PackageUpdateRequest, PackageUpdateResponse, StackServiceInfo }
+export type { ServerOverviewInfo, PackageUpdateRequest, PackageUpdateResponse, StackServiceInfo, DnsCredential }
