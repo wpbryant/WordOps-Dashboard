@@ -174,38 +174,32 @@ export interface SystemPackage {
 
 export interface SSHConfig {
   port: number
-  permitRootLogin: boolean
-  passwordAuthentication: boolean
-  allowedUsers: string[]
-  maxAuthTries: number
-}
-
-export interface Fail2banJail {
-  name: string
-  enabled: boolean
-  banned: number
+  permit_root_login: boolean
+  password_authentication: boolean
+  max_auth_tries: number
 }
 
 export interface Fail2banConfig {
   enabled: boolean
   bantime: number
   findtime: number
-  maxRetry: number
+  maxretry: number
   destemail: string
-  jails: Fail2banJail[]
+  banned_total: number
+  jails: string[]
 }
 
-export interface DNSApiCredentials {
-  provider: 'cloudflare' | 'digitalocean' | 'linode' | 'godaddy' | 'none'
-  email: string
-  apiKey: string
-  zoneId: string
+export interface SSHConfigUpdate {
+  port: number
+  permit_root_login: boolean
+  password_authentication: boolean
 }
 
-export interface SecurityConfig {
-  ssh: SSHConfig
-  fail2ban: Fail2banConfig
-  dnsApiCredentials: DNSApiCredentials
+export interface Fail2banConfigUpdate {
+  bantime: number
+  findtime: number
+  maxretry: number
+  destemail: string
 }
 
 export interface FirewallRule {

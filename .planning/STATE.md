@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-25)
 ## Current Position
 
 Phase: 6 of 7 (Security Management)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-01 — Completed 06-03 DNS Credentials Viewing
+Last activity: 2026-02-01 — Completed 06-02 Firewall Rules
 
-Progress: [█████████░] 67% (16/24 plans complete)
+Progress: [█████████░] 71% (17/24 plans complete)
 
 ## Performance Metrics
 
@@ -26,8 +26,8 @@ Progress: [█████████░] 67% (16/24 plans complete)
 
 **v1.1 Server Config UI:**
 - Total plans planned: 8
-- Plans completed: 4
-- Status: Phase 6 in progress, DNS credentials viewing complete (2026-02-01)
+- Plans completed: 5
+- Status: Phase 6 in progress, firewall rules management complete (2026-02-01)
 
 ## Accumulated Context
 
@@ -51,6 +51,8 @@ Recent decisions affecting v1.1:
 - **Error Visibility**: Capture stderr and log with context instead of silent None returns
 - **DNS Credentials**: Read from /etc/letsencrypt/config/account.conf via sudo cat, mask API keys at source (first 8 chars + "..."), support 12+ providers (Cloudflare, DigitalOcean, Linode, GoDaddy, AWS, Google, Vultr, Hetzner, OVH, Aliyun, Name.com, Lexicon)
 - **DNS View-Only**: No credential editing in UI for MVP; users configure via WordOps CLI export commands
+- **Firewall MVP**: No edit or toggle functionality for UFW rules - users can delete and re-add rules to modify them
+- **UFW Commands**: Async subprocess execution with 10s timeout, rule number used as ID for deletion
 
 ### Pending Todos
 
@@ -63,6 +65,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed 06-03 DNS Credentials Viewing — backend module and frontend SecurityTab with DNS credentials display
+Stopped at: Completed 06-02 Firewall Rules — backend UFW module, frontend components with add/delete actions
 Resume file: None
-Next action: Continue with 06-04 Firewall Rules or other Phase 6 plans
+Next action: Continue with remaining Phase 6 plans or other security features

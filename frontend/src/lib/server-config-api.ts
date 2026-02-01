@@ -3,11 +3,15 @@ import { apiClient } from './api-client'
 import { toast } from 'sonner'
 import type {
   DnsCredential,
+  Fail2banConfig,
+  Fail2banConfigUpdate,
   FirewallRule,
   FirewallRuleCreate,
-  ServerOverviewInfo,
   PackageUpdateRequest,
   PackageUpdateResponse,
+  ServerOverviewInfo,
+  SSHConfig,
+  SSHConfigUpdate,
   StackServiceInfo,
 } from '../types'
 
@@ -197,7 +201,133 @@ export function useDeleteFirewallRule() {
 }
 
 // =============================================================================
+// Security API - SSH Configuration
+// =============================================================================
+
+/**
+ * Hook to fetch SSH configuration
+ * @returns React Query hook for SSH config data
+ */
+export function useSshConfig() {
+  return useQuery<SSHConfig>({
+    queryKey: ['server', 'security', 'ssh'],
+    queryFn: () => apiClient.get<SSHConfig>('/api/v1/server/security/ssh'),
+    refetchInterval: undefined, // Manual refresh only
+    staleTime: 60000, // Consider data fresh for 1 minute
+  })
+}
+
+/**
+ * Hook to update SSH configuration
+ * @returns React Query mutation hook for updating SSH config
+ */
+export function useUpdateSshConfig() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (config: SSHConfigUpdate) =>
+      apiClient.put<{ success: boolean; message: string }>('/api/v1/server/security/ssh', config),
+    onSuccess: () => {
+      toast.success('SSH configuration updated successfully')
+      queryClient.invalidateQueries({ queryKey: ['server', 'security', 'ssh'] })
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update SSH configuration: ${error.message}`)
+    },
+  })
+}
+
+// =============================================================================
+// Security API - Fail2ban Configuration
+// =============================================================================
+
+/**
+ * Hook to fetch fail2ban configuration
+ * @returns React Query hook for fail2ban config data
+ */
+export function useFail2banConfig() {
+  return useQuery<Fail2banConfig>({
+    queryKey: ['server', 'security', 'fail2ban'],
+    queryFn: () => apiClient.get<Fail2banConfig>('/api/v1/server/security/fail2ban'),
+    refetchInterval: undefined, // Manual refresh only
+    staleTime: 60000, // Consider data fresh for 1 minute
+  })
+}
+
+/**
+ * Hook to update fail2ban configuration
+ * @returns React Query mutation hook for updating fail2ban config
+ */
+export function useUpdateFail2banConfig() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (config: Fail2banConfigUpdate) =>
+      apiClient.put<{ success: boolean; message: string }>('/api/v1/server/security/fail2ban', config),
+    onSuccess: () => {
+      toast.success('Fail2ban configuration updated successfully')
+      queryClient.invalidateQueries({ queryKey: ['server', 'security', 'fail2ban'] })
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update fail2ban configuration: ${error.message}`)
+    },
+  })
+}
+
+/**
+ * Hook to start fail2ban service
+ * @returns React Query mutation hook for starting fail2ban
+ */
+export function useStartFail2ban() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: () =>
+      apiClient.post<{ success: boolean; message: string }>('/api/v1/server/security/fail2ban/start'),
+    onSuccess: () => {
+      toast.success('Fail2ban service started')
+      queryClient.invalidateQueries({ queryKey: ['server', 'security', 'fail2ban'] })
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to start fail2ban: ${error.message}`)
+    },
+  })
+}
+
+/**
+ * Hook to stop fail2ban service
+ * @returns React Query mutation hook for stopping fail2ban
+ */
+export function useStopFail2ban() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: () =>
+      apiClient.post<{ success: boolean; message: string }>('/api/v1/server/security/fail2ban/stop'),
+    onSuccess: () => {
+      toast.success('Fail2ban service stopped')
+      queryClient.invalidateQueries({ queryKey: ['server', 'security', 'fail2ban'] })
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to stop fail2ban: ${error.message}`)
+    },
+  })
+}
+
+// =============================================================================
 // Type Exports
 // =============================================================================
 
-export type { ServerOverviewInfo, PackageUpdateRequest, PackageUpdateResponse, StackServiceInfo, DnsCredential, FirewallRule, FirewallRuleCreate }
+export type {
+  ServerOverviewInfo,
+  PackageUpdateRequest,
+  PackageUpdateResponse,
+  StackServiceInfo,
+  DnsCredential,
+  FirewallRule,
+  FirewallRuleCreate,
+  SSHConfig,
+  SSHConfigUpdate,
+  Fail2banConfig,
+  Fail2banConfigUpdate,
+}
