@@ -73,19 +73,20 @@ Plans:
 #### Phase 6: Security Management
 **Goal**: User can configure SSH, fail2ban, firewall rules, and DNS API credentials through the UI
 **Depends on**: Phase 5
-**Requirements**: SEC-01, SEC-02, SEC-03, SEC-04, SEC-05, SEC-06, SEC-07, SEC-08, SEC-09, SEC-10, SEC-11, API-01, API-02, API-03, API-04
+**Requirements**: SEC-01, SEC-02, SEC-03, SEC-04, SEC-05, SEC-06, SEC-07, SEC-08, SEC-09, SEC-10, API-01, API-02, API-03, API-04
 **Success Criteria** (what must be TRUE):
   1. User can view and edit SSH configuration (port, root login, password auth)
   2. User can view and edit fail2ban configuration (enabled status, ban time, max retries)
   3. User can view list of UFW firewall rules
-  4. User can add, edit, delete, and toggle firewall rules
-  5. User can view and add/edit DNS API credentials for Let's Encrypt
-**Plans**: TBD
+  4. User can add and delete firewall rules (edit and toggle deferred to post-MVP)
+  5. User can view DNS API credentials for Let's Encrypt (add/edit deferred to post-MVP)
+**Plans**: 3 plans
 
 Plans:
 - [ ] 06-01: SSH and fail2ban configuration UI
-- [ ] 06-02: UFW firewall rule management (CRUD operations)
-- [ ] 06-03: DNS API credential storage and management
+- [ ] 06-02: UFW firewall rule management (add/delete, MVP scope)
+- [ ] 06-03: DNS API credential viewing (view-only, MVP scope)
+**Status**: Ready for execution
 
 #### Phase 7: Logs and Monitoring
 **Goal**: User can view filtered log entries and configure monitoring alerts with Netdata integration

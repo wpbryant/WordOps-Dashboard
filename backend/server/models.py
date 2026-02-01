@@ -126,3 +126,12 @@ class StackServiceInfo(BaseModel):
     php_fpm_max_children: int | None = None  # For PHP-FPM services only
     mysql_connections: int | None = None  # For MySQL only
     redis_connected_clients: int | None = None  # For Redis only
+
+
+class DnsCredential(BaseModel):
+    """DNS API credential for Let's Encrypt."""
+
+    provider: str  # "cloudflare", "digitalocean", "linode", "godaddy", "aws", etc.
+    email: str | None = None  # Email for provider (if applicable)
+    key_preview: str  # Masked key preview (first 8 chars + "...")
+    configured: bool  # True if credentials found

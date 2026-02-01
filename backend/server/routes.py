@@ -9,8 +9,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSock
 from backend.auth.dependencies import get_current_user
 from backend.auth.models import User
 from backend.auth.utils import decode_token
+from backend.server.dns import get_dns_credentials
 from backend.server.logs import tail_log, validate_log_type
 from backend.server.models import (
+    DnsCredential,
     LogEntry,
     LogType,
     PackageUpdateRequest,
@@ -103,6 +105,38 @@ async def get_overview(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Failed to fetch server overview: {str(e)}",
+        )
+
+
+@router.get("/security/dns-credentials", response_model=list[DnsCredential])
+async def get_dns_credentials_endpoint(
+    current_user: User = Depends(get_current_user),
+) -> list[DnsCredential]:
+    """Get configured DNS API credentials from acme.sh account.conf.
+
+    Returns a list of configured DNS provider credentials for Let's Encrypt
+    wildcard SSL certificate validation. API keys are masked for security.
+
+    Args:
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        List of DnsCredential objects with provider, email, and masked key preview
+
+    Raises:
+        HTTPException: 503 if unable to read credentials
+    """
+    try:
+        return await get_dns_credentials()
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Timeout reading DNS credentials configuration",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch DNS credentials: {str(e)}",
         )
 
 
