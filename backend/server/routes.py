@@ -17,7 +17,7 @@ from backend.server.fail2ban import (
     update_fail2ban_config as update_fail2ban_config_impl,
 )
 from backend.server.firewall import add_ufw_rule as add_ufw_rule_impl, delete_ufw_rule as delete_ufw_rule_impl, get_ufw_rules
-from backend.server.logs import tail_log, validate_log_type
+from backend.server.logs import get_log_entries, tail_log, validate_log_type
 from backend.server.models import (
     DnsCredential,
     Fail2banConfig,
@@ -33,6 +33,7 @@ from backend.server.models import (
     PackageUpdateResponse,
     SSHConfig,
     SSHConfigUpdate,
+    ServerLog,
     ServerOverviewInfo,
     ServiceStatus,
     StackServiceInfo,
@@ -855,6 +856,41 @@ async def get_logs(
         log_type=LogType(log_type),
         timestamp=int(time.time()),
     )
+
+
+@router.get("/logs", response_model=list[ServerLog])
+async def get_parsed_logs(
+    source: str | None = Query(None, description="Filter by log source (nginx, php, mysql, system, fail2ban, ufw)"),
+    search: str | None = Query(None, description="Text search query (searches message, source, severity)"),
+    limit: int = Query(500, ge=1, le=1000, description="Maximum entries to return"),
+    current_user: User = Depends(get_current_user),
+) -> list[ServerLog]:
+    """Get parsed log entries with optional filtering.
+
+    Args:
+        source: Filter by log source (nginx, php, mysql, system, fail2ban, ufw)
+        search: Text search query (searches message, source, severity)
+        limit: Maximum entries to return (default 500, max 1000)
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        List of log entries sorted by timestamp descending (newest first)
+
+    Raises:
+        HTTPException: 400 if source is invalid
+    """
+    # Validate source if provided
+    allowed_sources = ["nginx", "php", "mysql", "system", "fail2ban", "ufw"]
+    if source and source not in allowed_sources:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid log source: {source}. Valid sources: {', '.join(allowed_sources)}",
+        )
+
+    # Get log entries from logs module
+    entries = await get_log_entries(source=source, search=search, limit=limit)
+
+    return entries
 
 
 @router.get("/monitoring/alerts", response_model=list[MonitoringAlert])
