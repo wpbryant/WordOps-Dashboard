@@ -28,17 +28,17 @@ Requirements for Server Config milestone. Each maps to roadmap phases.
 
 ### Security
 
-- [ ] **SEC-01**: User can view SSH configuration (port, root login setting, password auth setting)
-- [ ] **SEC-02**: User can edit SSH configuration and save changes
-- [ ] **SEC-03**: User can view fail2ban configuration (enabled status, ban time, max retries)
-- [ ] **SEC-04**: User can edit fail2ban configuration and save changes
-- [ ] **SEC-05**: User can view list of UFW firewall rules
-- [ ] **SEC-06**: User can add a new firewall rule via form
-- [ ] **SEC-07**: User can edit an existing firewall rule
-- [ ] **SEC-08**: User can delete a firewall rule with confirmation
-- [ ] **SEC-09**: User can toggle firewall rule enabled/disabled
-- [ ] **SEC-10**: User can view DNS API credentials for Let's Encrypt
-- [ ] **SEC-11**: User can add/edit DNS API credentials (provider, key, secret)
+- [x] **SEC-01**: User can view SSH configuration (port, root login setting, password auth setting)
+- [x] **SEC-02**: User can edit SSH configuration and save changes
+- [x] **SEC-03**: User can view fail2ban configuration (enabled status, ban time, max retries)
+- [x] **SEC-04**: User can edit fail2ban configuration and save changes
+- [x] **SEC-05**: User can view list of UFW firewall rules
+- [x] **SEC-06**: User can add a new firewall rule via form
+- [ ] **SEC-07**: User can edit an existing firewall rule (deferred to post-MVP)
+- [x] **SEC-08**: User can delete a firewall rule with confirmation
+- [ ] **SEC-09**: User can toggle firewall rule enabled/disabled (deferred to post-MVP)
+- [x] **SEC-10**: User can view DNS API credentials for Let's Encrypt
+- [ ] **SEC-11**: User can add/edit DNS API credentials (deferred to post-MVP)
 
 ### Logs
 
@@ -58,10 +58,10 @@ Requirements for Server Config milestone. Each maps to roadmap phases.
 
 ### Backend API Extensions
 
-- [ ] **API-01**: Backend provides SSH configuration endpoints
-- [ ] **API-02**: Backend provides fail2ban configuration endpoints
-- [ ] **API-03**: Backend provides UFW firewall rule CRUD endpoints
-- [ ] **API-04**: Backend provides DNS API credential storage endpoints
+- [x] **API-01**: Backend provides SSH configuration endpoints
+- [x] **API-02**: Backend provides fail2ban configuration endpoints
+- [x] **API-03**: Backend provides UFW firewall rule CRUD endpoints
+- [x] **API-04**: Backend provides DNS API credential storage endpoints
 - [ ] **API-05**: Backend provides monitoring alert storage endpoints
 - [x] **API-06**: Backend provides system package update trigger endpoint
 
@@ -108,17 +108,17 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STK-06 | Phase 5 | Complete |
 | STK-07 | Phase 5 | Complete |
 | STK-08 | Phase 5 | Complete |
-| SEC-01 | Phase 6 | Pending |
-| SEC-02 | Phase 6 | Pending |
-| SEC-03 | Phase 6 | Pending |
-| SEC-04 | Phase 6 | Pending |
-| SEC-05 | Phase 6 | Pending |
-| SEC-06 | Phase 6 | Pending |
-| SEC-07 | Phase 6 | Pending |
-| SEC-08 | Phase 6 | Pending |
-| SEC-09 | Phase 6 | Pending |
-| SEC-10 | Phase 6 | Pending |
-| SEC-11 | Phase 6 | Pending |
+| SEC-01 | Phase 6 | Complete |
+| SEC-02 | Phase 6 | Complete |
+| SEC-03 | Phase 6 | Complete |
+| SEC-04 | Phase 6 | Complete |
+| SEC-05 | Phase 6 | Complete |
+| SEC-06 | Phase 6 | Complete |
+| SEC-07 | Phase 6 | Deferred (post-MVP) |
+| SEC-08 | Phase 6 | Complete |
+| SEC-09 | Phase 6 | Deferred (post-MVP) |
+| SEC-10 | Phase 6 | Complete |
+| SEC-11 | Phase 6 | Deferred (post-MVP) |
 | LOG-01 | Phase 7 | Pending |
 | LOG-02 | Phase 7 | Pending |
 | LOG-03 | Phase 7 | Pending |
@@ -129,10 +129,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MON-04 | Phase 7 | Pending |
 | MON-05 | Phase 7 | Pending |
 | MON-06 | Phase 7 | Pending |
-| API-01 | Phase 6 | Pending |
-| API-02 | Phase 6 | Pending |
-| API-03 | Phase 6 | Pending |
-| API-04 | Phase 6 | Pending |
+| API-01 | Phase 6 | Complete |
+| API-02 | Phase 6 | Complete |
+| API-03 | Phase 6 | Complete |
+| API-04 | Phase 6 | Complete |
 | API-05 | Phase 7 | Pending |
 | API-06 | Phase 5 | Complete |
 
@@ -143,9 +143,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 **Phase Distribution:**
 - Phase 5 (Overview + Stack): 14 requirements (OV-01 to OV-05, STK-01 to STK-08, API-06)
-- Phase 6 (Security): 15 requirements (SEC-01 to SEC-11, API-01 to API-04)
+- Phase 6 (Security): 15 requirements (SEC-01 to SEC-11, API-01 to API-04) - 9 Complete, 3 Deferred (post-MVP)
 - Phase 7 (Logs + Monitoring): 10 requirements (LOG-01 to LOG-04, MON-01 to MON-06, API-05)
 
 ---
 *Requirements defined: 2026-01-25*
-*Last updated: 2026-01-25 after roadmap creation*
+*Last updated: 2026-02-01 after Phase 6 completion*

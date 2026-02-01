@@ -193,3 +193,52 @@ class Fail2banConfigUpdate(BaseModel):
     findtime: int
     maxretry: int
     destemail: str
+
+
+class ServerLog(BaseModel):
+    """Parsed log entry from various system log sources."""
+
+    id: str  # Unique identifier (timestamp + line number)
+    source: str  # Log source name (nginx, php, mysql, system, fail2ban, ufw)
+    timestamp: int  # Unix timestamp
+    severity: str  # debug, info, warn, error, fatal
+    message: str  # Parsed log message
+    client_ip: str | None = None  # Client IP if available
+    raw_line: str  # Original line for reference
+
+
+class MonitoringAlert(BaseModel):
+    """A monitoring alert configuration."""
+
+    id: str  # UUID or timestamp-based ID
+    name: str  # Human-readable alert name
+    metric: str  # cpu, memory, disk, mysql_connections, network, custom
+    threshold: float  # Threshold value
+    operator: str  # greater, less, equal
+    duration: str  # Duration in format like "5m", "1h", "24h"
+    enabled: bool  # Whether alert is active
+    notification_email: str | None = None  # Email for notifications (future use)
+    created_at: int  # Unix timestamp
+    updated_at: int  # Unix timestamp
+
+
+class MonitoringAlertCreate(BaseModel):
+    """Request to create a new monitoring alert."""
+
+    name: str
+    metric: str
+    threshold: float
+    operator: str
+    duration: str
+    notification_email: str | None = None
+
+
+class MonitoringAlertUpdate(BaseModel):
+    """Request to update an existing monitoring alert."""
+
+    name: str
+    metric: str
+    threshold: float
+    operator: str
+    duration: str
+    notification_email: str | None = None

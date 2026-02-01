@@ -83,10 +83,10 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 06-01: SSH and fail2ban configuration UI
-- [ ] 06-02: UFW firewall rule management (add/delete, MVP scope)
-- [ ] 06-03: DNS API credential viewing (view-only, MVP scope)
-**Status**: Ready for execution
+- [x] 06-01: SSH and fail2ban configuration UI
+- [x] 06-02: UFW firewall rule management (add/delete, MVP scope)
+- [x] 06-03: DNS API credential viewing (view-only, MVP scope)
+**Status**: Complete (verified 2026-02-01)
 
 #### Phase 7: Logs and Monitoring
 **Goal**: User can view filtered log entries and configure monitoring alerts with Netdata integration
@@ -97,12 +97,12 @@ Plans:
   2. User can filter logs by source and search by text query
   3. User can view, create, edit, delete, and toggle monitoring alerts
   4. User can open Netdata dashboard in new tab via button
-**Plans**: TBD
+**Plans**: 3 plans in 2 waves
 
 Plans:
-- [ ] 07-01: Logs UI with filtering and search
-- [ ] 07-02: Monitoring alert management (CRUD operations)
-- [ ] 07-03: Netdata integration link
+- [ ] 07-01-PLAN.md — Logs UI with filtering and search
+- [ ] 07-02-PLAN.md — Monitoring alert management (CRUD operations)
+- [ ] 07-03-PLAN.md — Netdata integration link
 
 ## Progress
 
@@ -113,5 +113,5 @@ Plans:
 | 3. Server Monitoring APIs | v1.0 | 3/3 | Complete | 2026-01-18 |
 | 4. Production Deployment | v1.0 | 3/3 | Complete | 2026-01-19 |
 | 5. Overview and Stack Services | v1.1 | 3/3 | Complete | 2026-01-25 |
-| 6. Security Management | v1.1 | 0/3 | Not started | - |
+| 6. Security Management | v1.1 | 3/3 | Complete | 2026-02-01 |
 | 7. Logs and Monitoring | v1.1 | 0/3 | Not started | - |
