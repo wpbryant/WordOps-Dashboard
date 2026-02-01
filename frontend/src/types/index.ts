@@ -236,7 +236,27 @@ export interface MonitoringAlert {
   operator: AlertOperator
   duration: string
   enabled: boolean
-  notificationEmail: string
+  notificationEmail: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MonitoringAlertCreate {
+  name: string
+  metric: AlertMetric
+  threshold: number
+  operator: AlertOperator
+  duration: string
+  notificationEmail?: string
+}
+
+export interface MonitoringAlertUpdate {
+  name: string
+  metric: AlertMetric
+  threshold: number
+  operator: AlertOperator
+  duration: string
+  notificationEmail?: string
 }
 
 // -----------------------------------------------------------------------------

@@ -7,8 +7,13 @@ import type {
   Fail2banConfigUpdate,
   FirewallRule,
   FirewallRuleCreate,
+  LogSource,
+  MonitoringAlert,
+  MonitoringAlertCreate,
+  MonitoringAlertUpdate,
   PackageUpdateRequest,
   PackageUpdateResponse,
+  ServerLog,
   ServerOverviewInfo,
   SSHConfig,
   SSHConfigUpdate,
@@ -315,6 +320,123 @@ export function useStopFail2ban() {
 }
 
 // =============================================================================
+// Logs API
+// =============================================================================
+
+/**
+ * Hook to fetch server logs with optional filtering
+ * @param source - Log source filter (optional, can be 'all' or specific source)
+ * @param search - Text search query (optional)
+ * @returns React Query hook for server logs data
+ */
+export function useLogs(source?: LogSource | 'all', search?: string) {
+  return useQuery<ServerLog[]>({
+    queryKey: ['server', 'logs', source, search],
+    queryFn: async () => {
+      const params = new URLSearchParams()
+      if (source && source !== 'all') params.append('source', source)
+      if (search) params.append('search', search)
+      const query = params.toString() ? `?${params}` : ''
+      return apiClient.get<ServerLog[]>(`/api/v1/server/logs${query}`)
+    },
+    refetchInterval: undefined, // Manual refresh only
+    staleTime: 30000, // Consider data fresh for 30 seconds
+  })
+}
+
+// =============================================================================
+// Monitoring Alerts API
+// =============================================================================
+
+/**
+ * Hook to fetch monitoring alerts
+ * @returns React Query hook for monitoring alerts data
+ */
+export function useMonitoringAlerts() {
+  return useQuery<MonitoringAlert[]>({
+    queryKey: ['server', 'monitoring', 'alerts'],
+    queryFn: () => apiClient.get<MonitoringAlert[]>('/api/v1/server/monitoring/alerts'),
+    refetchInterval: undefined,
+    staleTime: 60000,
+  })
+}
+
+/**
+ * Hook to create a monitoring alert
+ * @returns React Query mutation hook for creating alerts
+ */
+export function useCreateAlert() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (alert: MonitoringAlertCreate) =>
+      apiClient.post<MonitoringAlert>('/api/v1/server/monitoring/alerts', alert),
+    onSuccess: () => {
+      toast.success('Alert created successfully')
+      queryClient.invalidateQueries({ queryKey: ['server', 'monitoring', 'alerts'] })
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create alert')
+    },
+  })
+}
+
+/**
+ * Hook to update a monitoring alert
+ * @returns React Query mutation hook for updating alerts
+ */
+export function useUpdateAlert() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, alert }: { id: string; alert: MonitoringAlertUpdate }) =>
+      apiClient.put<MonitoringAlert>(`/api/v1/server/monitoring/alerts/${id}`, alert),
+    onSuccess: () => {
+      toast.success('Alert updated successfully')
+      queryClient.invalidateQueries({ queryKey: ['server', 'monitoring', 'alerts'] })
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update alert')
+    },
+  })
+}
+
+/**
+ * Hook to delete a monitoring alert
+ * @returns React Query mutation hook for deleting alerts
+ */
+export function useDeleteAlert() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiClient.delete<{ message: string }>(`/api/v1/server/monitoring/alerts/${id}`),
+    onSuccess: () => {
+      toast.success('Alert deleted successfully')
+      queryClient.invalidateQueries({ queryKey: ['server', 'monitoring', 'alerts'] })
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete alert')
+    },
+  })
+}
+
+/**
+ * Hook to toggle a monitoring alert enabled/disabled
+ * @returns React Query mutation hook for toggling alerts
+ */
+export function useToggleAlert() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiClient.patch<MonitoringAlert>(`/api/v1/server/monitoring/alerts/${id}/toggle`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['server', 'monitoring', 'alerts'] })
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to toggle alert')
+    },
+  })
+}
+
+// =============================================================================
 // Type Exports
 // =============================================================================
 
@@ -330,4 +452,8 @@ export type {
   SSHConfigUpdate,
   Fail2banConfig,
   Fail2banConfigUpdate,
+  MonitoringAlert,
+  MonitoringAlertCreate,
+  MonitoringAlertUpdate,
+  ServerLog,
 }

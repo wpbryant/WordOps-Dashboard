@@ -2,13 +2,15 @@ import { useState } from 'react'
 import { OverviewTab } from '../components/server-config/OverviewTab'
 import { StackServicesTab } from '../components/server-config/StackServicesTab'
 import { SecurityTab } from '../components/server-config/SecurityTab'
+import { MonitoringTab } from '../components/server-config/MonitoringTab'
 
-type TabKey = 'overview' | 'stack-services' | 'security'
+type TabKey = 'overview' | 'stack-services' | 'security' | 'monitoring'
 
 const tabs = [
   { key: 'overview' as const, label: 'Overview' },
   { key: 'stack-services' as const, label: 'Stack Services' },
   { key: 'security' as const, label: 'Security' },
+  { key: 'monitoring' as const, label: 'Monitoring' },
 ]
 
 export function ServerConfig() {
@@ -48,6 +50,7 @@ export function ServerConfig() {
           {activeTab === 'overview' && <OverviewTab />}
           {activeTab === 'stack-services' && <StackServicesTab />}
           {activeTab === 'security' && <SecurityTab />}
+          {activeTab === 'monitoring' && <MonitoringTab />}
         </div>
       </div>
     </div>
