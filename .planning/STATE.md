@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-25)
 ## Current Position
 
 Phase: 7 of 7 (Logs and Monitoring)
-Plan: 0 of 3 in current phase
-Status: Ready to plan
-Last activity: 2026-02-01 — Phase 6 complete, all 5 must-haves verified
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-01 — Completed 07-01 (Log Viewer) implementation, awaiting checkpoint verification
 
-Progress: [██████████] 75% (18/24 plans complete)
+Progress: [█████████░] 79% (19/24 plans complete)
 
 ## Performance Metrics
 
@@ -38,6 +38,11 @@ Recent decisions affecting v1.1:
 - Phase 5: Overview and Stack Services grouped together (server info + stack management)
 - Phase 6: All security features in single phase (SSH, fail2ban, firewall, DNS)
 - Phase 7: Logs and Monitoring combined (observability features)
+- **Log Parsing**: Parse logs at backend with source-specific regex patterns to avoid sending raw log files to frontend
+- **Log Severity**: Map nginx status codes to severity (4xx=warn, 5xx=error), parse severity levels from PHP-FPM, MySQL, fail2ban logs
+- **Log Limits**: Return 500 entries max across all sources (1000 max at API level) to prevent memory issues
+- **Timeline UI**: Vertical left border with colored dots and severity-based background tinting for log entries
+- **Log Search**: Debounced text input (500ms delay) covering message, source, severity, and client_ip fields
 - **Package Update Execution**: Synchronous execution for this phase (returns final result after apt completes)
 - **Progress Tracking**: Synthetic progress animation (0%, 25%, 50%, 75%, 100%) at 2-second intervals
 - **Backup Detection**: Check multiple common backup directory locations for latest timestamp, excluding generic /var/backups
@@ -68,6 +73,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-01
-Stopped at: Completed Phase 6 (Security Management) — SSH, fail2ban, firewall, and DNS credentials all verified
+Stopped at: Completed 07-01 (Log Viewer) implementation - backend parsing, API endpoint, and frontend timeline UI all committed
 Resume file: None
-Next action: /gsd:plan-phase 7 or /gsd:discuss-phase 7
+Next action: Verify log viewer functionality at checkpoint (type "approved" or describe issues)
