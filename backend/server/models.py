@@ -155,3 +155,41 @@ class FirewallRuleCreate(BaseModel):
     port: str
     protocol: str = "tcp"
     from_addr: str = "Anywhere"
+
+
+class SSHConfig(BaseModel):
+    """SSH server configuration."""
+
+    port: int
+    permit_root_login: bool
+    password_authentication: bool
+    max_auth_tries: int = 3
+
+
+class Fail2banConfig(BaseModel):
+    """Fail2ban configuration."""
+
+    enabled: bool
+    bantime: int  # seconds
+    findtime: int  # seconds
+    maxretry: int
+    destemail: str
+    banned_total: int = 0
+    jails: list[str] = []
+
+
+class SSHConfigUpdate(BaseModel):
+    """SSH configuration update request."""
+
+    port: int
+    permit_root_login: bool
+    password_authentication: bool
+
+
+class Fail2banConfigUpdate(BaseModel):
+    """Fail2ban configuration update request."""
+
+    bantime: int
+    findtime: int
+    maxretry: int
+    destemail: str

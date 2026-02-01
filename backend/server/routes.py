@@ -10,16 +10,26 @@ from backend.auth.dependencies import get_current_user
 from backend.auth.models import User
 from backend.auth.utils import decode_token
 from backend.server.dns import get_dns_credentials
+from backend.server.fail2ban import (
+    get_fail2ban_status as get_fail2ban_status_impl,
+    start_fail2ban as start_fail2ban_impl,
+    stop_fail2ban as stop_fail2ban_impl,
+    update_fail2ban_config as update_fail2ban_config_impl,
+)
 from backend.server.firewall import add_ufw_rule as add_ufw_rule_impl, delete_ufw_rule as delete_ufw_rule_impl, get_ufw_rules
 from backend.server.logs import tail_log, validate_log_type
 from backend.server.models import (
     DnsCredential,
+    Fail2banConfig,
+    Fail2banConfigUpdate,
     FirewallRule,
     FirewallRuleCreate,
     LogEntry,
     LogType,
     PackageUpdateRequest,
     PackageUpdateResponse,
+    SSHConfig,
+    SSHConfigUpdate,
     ServerOverviewInfo,
     ServiceStatus,
     StackServiceInfo,
@@ -27,6 +37,7 @@ from backend.server.models import (
     SystemMetrics,
     TimeRange,
 )
+from backend.server.ssh import get_ssh_config as get_ssh_config_impl, update_ssh_config as update_ssh_config_impl
 from backend.server.netdata import get_system_metrics
 from backend.server.services import get_all_services, get_service_status, restart_service, get_stack_service_details, validate_service
 from backend.server.system import get_server_overview, get_system_info
@@ -239,6 +250,214 @@ async def delete_firewall_rule_endpoint(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Failed to delete firewall rule: {str(e)}",
+        )
+
+
+@router.get("/security/ssh", response_model=SSHConfig)
+async def get_ssh_config_endpoint(
+    current_user: User = Depends(get_current_user),
+) -> SSHConfig:
+    """Get SSH server configuration.
+
+    Returns the current SSH configuration including port, root login settings,
+    and password authentication status.
+
+    Args:
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        SSHConfig with current settings
+
+    Raises:
+        HTTPException: 503 if unable to read SSH config
+    """
+    try:
+        return await get_ssh_config_impl()
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Timeout reading SSH configuration",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch SSH configuration: {str(e)}",
+        )
+
+
+@router.put("/security/ssh")
+async def update_ssh_config_endpoint(
+    request: SSHConfigUpdate,
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Update SSH server configuration.
+
+    Updates SSH settings and validates with sshd -t before applying.
+    Changes take effect immediately via sshd reload.
+
+    Args:
+        request: SSH configuration update request
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException: 400 if validation fails, 503 if unable to update
+    """
+    try:
+        from backend.server.ssh import SSHConfig
+
+        # Create full SSH config for update
+        ssh_config = SSHConfig(
+            port=request.port,
+            permit_root_login=request.permit_root_login,
+            password_authentication=request.password_authentication,
+        )
+        return await update_ssh_config_impl(ssh_config)
+    except RuntimeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Timeout updating SSH configuration",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to update SSH configuration: {str(e)}",
+        )
+
+
+@router.get("/security/fail2ban", response_model=Fail2banConfig)
+async def get_fail2ban_status_endpoint(
+    current_user: User = Depends(get_current_user),
+) -> Fail2banConfig:
+    """Get fail2ban status and configuration.
+
+    Returns fail2ban service status, configuration values, banned IP count,
+    and list of active jails.
+
+    Args:
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Fail2banConfig with current settings
+
+    Raises:
+        HTTPException: 503 if unable to read fail2ban status
+    """
+    try:
+        return await get_fail2ban_status_impl()
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Timeout reading fail2ban status",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to fetch fail2ban status: {str(e)}",
+        )
+
+
+@router.put("/security/fail2ban")
+async def update_fail2ban_config_endpoint(
+    request: Fail2banConfigUpdate,
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Update fail2ban configuration.
+
+    Updates fail2ban settings in /etc/fail2ban/jail.d/custom-dashboard.conf
+    and reloads the service.
+
+    Args:
+        request: Fail2ban configuration update request
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException: 503 if unable to update config
+    """
+    try:
+        return await update_fail2ban_config_impl(
+            bantime=request.bantime,
+            findtime=request.findtime,
+            maxretry=request.maxretry,
+            destemail=request.destemail,
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Timeout updating fail2ban configuration",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to update fail2ban configuration: {str(e)}",
+        )
+
+
+@router.post("/security/fail2ban/start")
+async def start_fail2ban_endpoint(
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Start the fail2ban service.
+
+    Args:
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException: 503 if unable to start service
+    """
+    try:
+        return await start_fail2ban_impl()
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Timeout starting fail2ban service",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to start fail2ban: {str(e)}",
+        )
+
+
+@router.post("/security/fail2ban/stop")
+async def stop_fail2ban_endpoint(
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    """Stop the fail2ban service.
+
+    Args:
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException: 503 if unable to stop service
+    """
+    try:
+        return await stop_fail2ban_impl()
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Timeout stopping fail2ban service",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Failed to stop fail2ban: {str(e)}",
         )
 
 
