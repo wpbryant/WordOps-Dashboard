@@ -9,7 +9,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { useFirewallRules, useAddFirewallRule, useDeleteFirewallRule } from '../../lib/server-config-api'
-import type { FirewallRule, FirewallRuleCreate } from '../../types'
+import type { UfwFirewallRule as FirewallRule, UfwFirewallRuleCreate as FirewallRuleCreate } from '../../types'
 import { FirewallRuleForm } from './FirewallRuleForm'
 import { cn } from '../../lib/utils'
 
@@ -168,7 +168,7 @@ export function FirewallSection() {
                         <span className="text-sm font-mono font-medium text-zinc-900 dark:text-zinc-100">
                           {rule.port}
                         </span>
-                        {rule.protocol && rule.protocol !== 'any' && (
+                        {rule.protocol && rule.protocol.toLowerCase() !== 'any' && (
                           <span className="text-xs text-zinc-500 dark:text-zinc-400">
                             /{rule.protocol}
                           </span>

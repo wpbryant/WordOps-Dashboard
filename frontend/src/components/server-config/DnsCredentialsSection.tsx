@@ -1,6 +1,5 @@
 import { Globe, Cloud, ExternalLink, AlertCircle, Loader2 } from 'lucide-react'
 import { useDnsCredentials } from '../../lib/server-config-api'
-import type { DnsCredential } from '../../types'
 
 /**
  * Format provider name for display
@@ -26,7 +25,7 @@ function formatProviderName(provider: string): string {
 /**
  * Get provider icon component based on provider name
  */
-function getProviderIcon(provider: string) {
+function getProviderIcon(_provider: string) {
   // Use Cloud icon for all DNS providers (they're cloud-based DNS services)
   return Cloud
 }

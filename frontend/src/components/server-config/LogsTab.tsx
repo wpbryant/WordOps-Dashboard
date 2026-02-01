@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import {
   FileText,
   Search,
@@ -19,7 +18,6 @@ import type { LogSource, LogSeverity } from '../../types'
  * Get severity color classes for log entries
  */
 function getSeverityClasses(severity: LogSeverity) {
-  const baseClasses = 'rounded-lg border'
   switch (severity) {
     case 'debug':
       return {

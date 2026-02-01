@@ -315,7 +315,7 @@ export interface DnsCredential {
   configured: boolean
 }
 
-export interface FirewallRule {
+export interface UfwFirewallRule {
   id: string
   port: string
   protocol: string
@@ -324,7 +324,7 @@ export interface FirewallRule {
   enabled: boolean
 }
 
-export interface FirewallRuleCreate {
+export interface UfwFirewallRuleCreate {
   action: 'allow' | 'deny'
   port: string
   protocol: 'tcp' | 'udp' | 'any'

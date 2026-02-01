@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Shield, X } from 'lucide-react'
-import type { FirewallRuleCreate } from '../../types'
+import type { UfwFirewallRuleCreate as FirewallRuleCreate } from '../../types'
 import { cn } from '../../lib/utils'
 
 interface FirewallRuleFormProps {

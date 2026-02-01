@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Shield, AlertTriangle, Play, Pause, Settings, Loader2, CheckCircle, XCircle } from 'lucide-react'
+import { Shield, AlertTriangle, Play, Pause, Settings, Loader2, CheckCircle } from 'lucide-react'
 import { useFail2banConfig, useUpdateFail2banConfig, useStartFail2ban, useStopFail2ban } from '../../lib/server-config-api'
-import type { Fail2banConfig, Fail2banConfigUpdate } from '../../types'
+import type { Fail2banConfigUpdate } from '../../types'
 import { cn } from '../../lib/utils'
 
 /**

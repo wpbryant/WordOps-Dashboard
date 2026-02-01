@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Shield, Lock, Settings, Loader2, AlertTriangle } from 'lucide-react'
 import { useSshConfig, useUpdateSshConfig } from '../../lib/server-config-api'
-import type { SSHConfig, SSHConfigUpdate } from '../../types'
+import type { SSHConfigUpdate } from '../../types'
 import { cn } from '../../lib/utils'
 
 export function SSHConfigSection() {
