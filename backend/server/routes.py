@@ -26,6 +26,9 @@ from backend.server.models import (
     FirewallRuleCreate,
     LogEntry,
     LogType,
+    MonitoringAlert,
+    MonitoringAlertCreate,
+    MonitoringAlertUpdate,
     PackageUpdateRequest,
     PackageUpdateResponse,
     SSHConfig,
@@ -37,6 +40,7 @@ from backend.server.models import (
     SystemMetrics,
     TimeRange,
 )
+from backend.server.monitoring import create_alert, delete_alert, get_alerts, toggle_alert, update_alert
 from backend.server.ssh import get_ssh_config as get_ssh_config_impl, update_ssh_config as update_ssh_config_impl
 from backend.server.netdata import get_system_metrics
 from backend.server.services import get_all_services, get_service_status, restart_service, get_stack_service_details, validate_service
@@ -851,6 +855,106 @@ async def get_logs(
         log_type=LogType(log_type),
         timestamp=int(time.time()),
     )
+
+
+@router.get("/monitoring/alerts", response_model=list[MonitoringAlert])
+async def get_monitoring_alerts(
+    current_user: User = Depends(get_current_user),
+) -> list[MonitoringAlert]:
+    """Get all monitoring alerts.
+
+    Returns:
+        List of monitoring alerts (empty if none configured)
+    """
+    return await get_alerts()
+
+
+@router.post("/monitoring/alerts", response_model=MonitoringAlert)
+async def create_monitoring_alert(
+    create: MonitoringAlertCreate,
+    current_user: User = Depends(get_current_user),
+) -> MonitoringAlert:
+    """Create a new monitoring alert.
+
+    Args:
+        create: Alert creation data
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Created alert with generated ID
+    """
+    return await create_alert(create)
+
+
+@router.put("/monitoring/alerts/{alert_id}", response_model=MonitoringAlert)
+async def update_monitoring_alert(
+    alert_id: str,
+    update: MonitoringAlertUpdate,
+    current_user: User = Depends(get_current_user),
+) -> MonitoringAlert:
+    """Update an existing monitoring alert.
+
+    Args:
+        alert_id: ID of alert to update
+        update: Updated alert data
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Updated alert
+
+    Raises:
+        HTTPException: 404 if alert not found
+    """
+    result = await update_alert(alert_id, update)
+    if not result:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    return result
+
+
+@router.delete("/monitoring/alerts/{alert_id}")
+async def delete_monitoring_alert(
+    alert_id: str,
+    current_user: User = Depends(get_current_user),
+) -> dict[str, str]:
+    """Delete a monitoring alert.
+
+    Args:
+        alert_id: ID of alert to delete
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException: 404 if alert not found
+    """
+    success = await delete_alert(alert_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    return {"message": "Alert deleted successfully"}
+
+
+@router.patch("/monitoring/alerts/{alert_id}/toggle", response_model=MonitoringAlert)
+async def toggle_monitoring_alert(
+    alert_id: str,
+    current_user: User = Depends(get_current_user),
+) -> MonitoringAlert:
+    """Toggle an alert enabled/disabled.
+
+    Args:
+        alert_id: ID of alert to toggle
+        current_user: Authenticated user (injected via dependency)
+
+    Returns:
+        Updated alert with toggled enabled state
+
+    Raises:
+        HTTPException: 404 if alert not found
+    """
+    result = await toggle_alert(alert_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    return result
 
 
 @router.websocket("/logs/{log_type}/ws")
